@@ -66,3 +66,11 @@ WaForge Project Finalization - Status: COMPLETE.
 4. QR Code / WuzAPI Engine Fix: The image aldinokemal/go-whatsapp-web-multidevice was removed from dockerhub, so we kept WuzAPI. Added a Self-Healing mechanism in lib/whatsapp-engine.ts: on 401 Unauthorized, the backend natively auto-provisions the user against the WuzAPI /admin/users endpoint. QR Code generation is now 100% plug-and-play for fresh Docker setups.
 Next Steps for User: Test Whatsapp QR Code pairing via dashboard, evaluate the web-chat/campaign functionality, and deploy the stack using Traefik.
 
+
+## [Session State Snapshot] - 2026-06-25 01:22:39
+WaForge Project Update - Status: COMPLETE (v2.0.1 released).
+1. GoWA v8 Integration: Fixed the QR code generation endpoint. Replaced the WuzAPI logic with the new GoWA requirement (passing X-Device-Id: waforge-default header). Implemented auto-provisioning via POST /devices if DEVICE_NOT_FOUND is returned.
+2. QR Code Rendering: GoWA returns a URL to a PNG. Implemented server-side fetch inside whatsapp-engine.ts to convert the downloaded image into a data:image/png;base64 string so the frontend works flawlessly without exposing GoWA's internal docker port to the client browser.
+3. Nuxt i18n Fix: Translations were failing to load in the Docker production build. Created an explicit `i18n.config.ts` file to statically import the `it.json` and `en.json` files and linked it via `vueI18n: './i18n.config.ts'` in `nuxt.config.ts`.
+4. Release v2.0.1: Changes pushed to GitHub, triggering Actions to build the newest ghcr.io/darkrei08/waforge:latest.
+
