@@ -1,1 +1,46 @@
-node_modules
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+bun.lockb
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Nuxt
+.nuxt/
+.output/
+dist/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Database
+prisma/*.db
+prisma/*.db-journal
+data/
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# IDEs and OS files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Coverage
+coverage/
+.nyc_output/

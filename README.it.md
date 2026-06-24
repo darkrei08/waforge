@@ -5,13 +5,13 @@
 <h1 align="center">WA Sender Pro</h1>
 
 <p align="center">
-  <strong>Premium dashboard for mass and personalized WhatsApp messaging.</strong>
+  <strong>Dashboard premium per l'invio massivo e personalizzato di messaggi WhatsApp.</strong>
   <br/>
-  Designed with a modern, secure, and scalable architecture.
+  Progettata con architettura moderna, sicura e scalabile.
 </p>
 
 <p align="center">
-  <a href="README.it.md">🇮🇹 Leggi in Italiano</a>
+  <a href="README.md">🇬🇧 Read in English</a>
 </p>
 
 <p align="center">
@@ -34,17 +34,17 @@
 
 ## 📸 Screenshots
 
-> UI designed with **Google Stitch** — "Pro Connect" Design System (Glassmorphism, native Dark Mode, WhatsApp Green palette).
+> UI progettata con **Google Stitch** — Design System "Pro Connect" (Glassmorphism, Dark Mode nativa, WhatsApp Green palette).
 
-| Dashboard | QR Connection |
+| Dashboard | Connessione QR |
 |:---------:|:--------------:|
 | ![Dashboard](docs/screenshots/dashboard.png) | ![Connect](docs/screenshots/connect.png) |
 
-| Contacts Management | Campaigns |
+| Gestione Contatti | Campagne |
 |:-----------------:|:--------:|
 | ![Contacts](docs/screenshots/contacts.png) | ![Campaigns](docs/screenshots/campaigns.png) |
 
-| Settings | API Status Monitor |
+| Impostazioni | API Status Monitor |
 |:------------:|:------------------:|
 | ![Settings](docs/screenshots/settings.png) | ![API Status](docs/screenshots/api-status.png) |
 
@@ -52,32 +52,32 @@
 
 ## 🚀 Tech Stack
 
-| Layer | Technology | Notes |
+| Layer | Tecnologia | Note |
 |-------|-----------|------|
 | **Framework** | [Nuxt 3](https://nuxt.com) (Nitro Engine) | SSR, API Routes, Auto-imports |
 | **UI** | [Vue 3](https://vuejs.org) + Composition API | `<script setup>`, Pinia state |
 | **Runtime** | [Bun](https://bun.sh) | Ultra-fast JS runtime & package manager |
-| **Styling** | [Tailwind CSS](https://tailwindcss.com) | Design System "Pro Connect" from Stitch |
-| **ORM** | [Prisma](https://prisma.io) + SQLite | Typesafe, portable, zero-config DB |
-| **WhatsApp** | Dual Engine (WuzAPI / gowa) | Based on whatsmeow, Multi-Device API |
+| **Styling** | [Tailwind CSS](https://tailwindcss.com) | Design System "Pro Connect" da Stitch |
+| **ORM** | [Prisma](https://prisma.io) + SQLite | Typesafe, portabile, zero-config DB |
+| **WhatsApp** | Dual Engine (WuzAPI / gowa) | Basati su whatsmeow, Multi-Device API |
 | **Skeleton** | [phantom-ui](https://github.com/Aejkatappaja/phantom-ui) | Web Component skeleton loaders |
 | **i18n** | @nuxtjs/i18n | Italiano / English |
-| **Icons** | [Lucide Vue](https://lucide.dev) | 1400+ optimized SVG icons |
+| **Icons** | [Lucide Vue](https://lucide.dev) | 1400+ icone SVG ottimizzate |
 
-### 🔌 Supported WhatsApp Engines
+### 🔌 Motori WhatsApp Supportati
 
-The project supports **two interchangeable WhatsApp backends** via the `WHATSAPP_ENGINE` environment variable:
+Il progetto supporta **due backend WhatsApp** intercambiabili tramite variabile d'ambiente `WHATSAPP_ENGINE`:
 
-| Engine | Repository | Protocol | Default |
+| Engine | Repository | Protocollo | Default |
 |--------|-----------|------------|---------|
-| **WuzAPI** | [asternic/wuzapi](https://github.com/asternic/wuzapi) | REST API on whatsmeow | ✅ Primary |
-| **gowa** | [aldinokemal/go-whatsapp-web-multidevice](https://github.com/aldinokemal/go-whatsapp-web-multidevice) | REST API on whatsmeow | Fallback |
+| **WuzAPI** | [asternic/wuzapi](https://github.com/asternic/wuzapi) | REST API su whatsmeow | ✅ Primary |
+| **gowa** | [aldinokemal/go-whatsapp-web-multidevice](https://github.com/aldinokemal/go-whatsapp-web-multidevice) | REST API su whatsmeow | Fallback |
 
-Both eliminate the browser/Selenium dependency — they communicate directly via the WhatsApp Web Multi-Device protocol.
+Entrambi eliminano la dipendenza da browser/Selenium — comunicano direttamente col protocollo WhatsApp Web Multi-Device.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architettura
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -112,33 +112,33 @@ Both eliminate the browser/Selenium dependency — they communicate directly via
 
 ---
 
-## 🔒 Security (Secure by Design)
+## 🔒 Sicurezza (Secure by Design)
 
-The project rigorously implements **OWASP Top 10** and **NIST CSF 2.0** guidelines:
+Il progetto implementa rigorosamente le linee guida **OWASP Top 10** e **NIST CSF 2.0**:
 
-| OWASP | Protection | Implementation |
+| OWASP | Protezione | Implementazione |
 |-------|-----------|-----------------|
-| **A01** | Broken Access Control | Auth middleware, API key validation on `/api/*` |
-| **A02** | Cryptographic Failures | Secrets not exposed, HTTPS policy (HSTS) |
+| **A01** | Broken Access Control | Middleware auth, API key validation su `/api/*` |
+| **A02** | Cryptographic Failures | Secret non esposti, HTTPS policy (HSTS) |
 | **A03** | Injection | Prisma ORM (no raw SQL), Zod validation, XSS tag stripping, SSTI prevention |
 | **A04** | Insecure Design | Rate limiting middleware, anti-ban jitter |
-| **A05** | Security Misconfiguration | CSP, X-Frame-Options, no-sniff, `X-Powered-By` disabled |
-| **A09** | Security Logging | Structured NIST CSF 2.0 logger, audit trail for auth and injection |
+| **A05** | Security Misconfiguration | CSP, X-Frame-Options, no-sniff, `X-Powered-By` disabilitato |
+| **A09** | Security Logging | Logger strutturato NIST CSF 2.0, audit trail per auth e injection |
 
 ---
 
-## 📁 Project Structure
+## 📁 Struttura del Progetto
 
 ```
 wa-sender-pro/
-├── pages/               # Vue Pages (file-based routing)
-├── components/          # Reusable Vue Components
-├── layouts/             # Sidebar Layout + Theme/i18n
+├── pages/               # Pagine Vue (file-based routing)
+├── components/          # Componenti Vue riutilizzabili
+├── layouts/             # Layout Sidebar + Theme/i18n
 ├── stores/              # Pinia State Management
-├── lib/                 # Core utilities
-│   ├── whatsapp-engine.ts   # Dual engine abstraction
-│   ├── wuzapi.ts            # WuzAPI Client
-│   ├── csv-parser.ts        # CSV/Excel parser
+├── lib/                 # Utility core
+│   ├── whatsapp-engine.ts   # Astrazione dual engine
+│   ├── wuzapi.ts            # Client WuzAPI
+│   ├── csv-parser.ts        # Parser CSV/Excel
 │   ├── validation.ts        # Zod schemas (OWASP A03)
 │   ├── security-logger.ts   # Audit logger (NIST CSF 2.0)
 │   └── spintax.ts           # Spintax engine (anti-ban)
@@ -146,61 +146,61 @@ wa-sender-pro/
 │   ├── api/             # REST endpoints
 │   ├── middleware/       # Rate limit, auth, headers
 │   └── utils/           # Prisma, job queue, helpers
-├── prisma/              # DB Schema + migrations
+├── prisma/              # Schema DB + migrazioni
 ├── locales/             # i18n (it.json, en.json)
-├── docs/screenshots/    # UI Screenshots (Google Stitch)
-├── Dockerfile           # Production Build (Nitro)
-└── docker-compose.yml   # Multi-container orchestration
+├── docs/screenshots/    # Screenshot UI (Google Stitch)
+├── Dockerfile           # Build produzione (Nitro)
+└── docker-compose.yml   # Orchestrazione multi-container
 ```
 
 ---
 
 ## 🛠️ Quick Start
 
-### Prerequisites
+### Prerequisiti
 
 - [Bun](https://bun.sh) >= 1.1
-- [Docker](https://docker.com) (for WuzAPI/gowa)
+- [Docker](https://docker.com) (per WuzAPI/gowa)
 
-### Installation
+### Installazione
 
 ```bash
-# 1. Clone the repository
+# 1. Clona il repository
 git clone https://github.com/darkrei08/wa-sender-pro.git
 cd wa-sender-pro
 
-# 2. Install dependencies
+# 2. Installa le dipendenze
 bun install
 
-# 3. Configure the environment
+# 3. Configura l'ambiente
 cp .env.example .env
-# Edit .env with your values (APP_SECRET, WUZAPI_TOKEN, etc.)
+# Modifica .env con i tuoi valori (APP_SECRET, WUZAPI_TOKEN, ecc.)
 
-# 4. Initialize the database
+# 4. Inizializza il database
 bun run db:push
 
-# 5. Start WuzAPI via Docker
+# 5. Avvia WuzAPI via Docker
 docker-compose -f docker-compose.dev.yml up -d
 
-# 6. Start the dev server
+# 6. Avvia il dev server
 bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Apri [http://localhost:3000](http://localhost:3000) nel browser.
 
-### 🐳 Docker (Production)
+### 🐳 Docker (Produzione)
 
-Three options for deployment:
+Tre opzioni per il deployment:
 
-#### Option 1 — Pre-built image from GitHub Container Registry
+#### Opzione 1 — Immagine pre-built da GitHub Container Registry
 
-The image is available on `ghcr.io` and updates automatically on each release:
+L'immagine è disponibile su `ghcr.io` e viene aggiornata automaticamente ad ogni release:
 
 ```bash
-# Pull the image
+# Pull dell'immagine
 docker pull ghcr.io/darkrei08/wa-sender-pro:latest
 
-# Direct start (app only, WuzAPI separate)
+# Avvio diretto (app sola, WuzAPI separato)
 docker run -d \
   --name wa-sender-pro \
   -p 3000:3000 \
@@ -212,9 +212,9 @@ docker run -d \
   ghcr.io/darkrei08/wa-sender-pro:latest
 ```
 
-#### Option 2 — Docker Compose with registry image (recommended)
+#### Opzione 2 — Docker Compose con immagine dal registry (consigliato)
 
-No need to clone the repo. Create a `docker-compose.yml` file:
+Non serve clonare il repo. Crea un file `docker-compose.yml`:
 
 ```yaml
 services:
@@ -227,7 +227,7 @@ services:
     volumes:
       - wuzapi_data:/app/dbdata
 
-  # ─── WhatsApp Engine: gowa (fallback/alternative) ─────────
+  # ─── WhatsApp Engine: gowa (fallback/alternativa) ─────────
   gowa:
     image: aldinokemal/go-whatsapp-web-multidevice:latest
     ports: ["3001:3000"]
@@ -241,7 +241,7 @@ services:
     image: ghcr.io/darkrei08/wa-sender-pro:latest
     ports: ["3000:3000"]
     environment:
-      # Choose which engine to use: "wuzapi" or "gowa"
+      # Scegli quale engine usare: "wuzapi" o "gowa"
       WHATSAPP_ENGINE: wuzapi
       WUZAPI_URL: http://wuzapi:3100
       WUZAPI_TOKEN: your-token
@@ -263,7 +263,7 @@ volumes:
 docker-compose up -d
 ```
 
-#### Option 3 — Local build
+#### Opzione 3 — Build locale
 
 ```bash
 git clone https://github.com/darkrei08/wa-sender-pro.git
@@ -272,17 +272,17 @@ docker-compose up -d --build
 ```
 
 > [!TIP]
-> Images are available for `linux/amd64` and `linux/arm64`. Available tags: `latest`, `v1.0.0`, `sha-<commit>`.
+> Le immagini sono disponibili per `linux/amd64` e `linux/arm64`. Tag disponibili: `latest`, `v1.0.0`, `sha-<commit>`.
 
 ---
 
-## ⚖️ License
+## ⚖️ Licenza
 
-This project is licensed under the **GNU Affero General Public License v3.0 (AGPLv3)**.
+Questo progetto è rilasciato sotto licenza **GNU Affero General Public License v3.0 (AGPLv3)**.
 
 > [!IMPORTANT]
-> The AGPLv3 is a strong copyleft license. This means that if you modify this software and make it available to others over a network (e.g., as a SaaS, an API, or a web service), **you must release your modified source code under the same AGPLv3 license**.
->
-> If you proceed to develop or build upon this codebase for a public-facing service, the derivative work must be open source.
+> La licenza AGPLv3 è una licenza copyleft forte. Questo significa che se modifichi questo software e lo rendi disponibile ad altri tramite una rete (es. come SaaS, API o servizio web), **devi rilasciare il codice sorgente delle tue modifiche sotto la stessa licenza AGPLv3**.
+> 
+> Se un developer procede allo sviluppo basato su questo codice per un servizio pubblico in rete, il codice derivato deve essere rilasciato in formato open source.
 
-See the [LICENSE](LICENSE) file for details.
+Vedi il file [LICENSE](LICENSE) per tutti i dettagli.
