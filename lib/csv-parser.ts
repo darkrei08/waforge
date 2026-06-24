@@ -3,6 +3,8 @@
  * Handles: comma/semicolon delimiters, UTF-8-BOM, numeric phones from Excel
  */
 
+import parsePhoneNumber from 'libphonenumber-js'
+
 export interface ParsedContact {
   name: string
   prefix: string
@@ -21,14 +23,33 @@ export interface ParseResult {
 }
 
 /**
- * Sanitize phone number: remove non-digits, strip .0 (Excel float issue)
+ * Sanitize phone number using libphonenumber-js
+ * Extracts prefix, national number, and full digits
  */
-function sanitizePhone(prefix: string, phone: string): string {
+function sanitizePhone(prefix: string, phone: string): { full: string; pref: string; nat: string } {
   let p = String(prefix || '').trim()
   let n = String(phone || '').trim()
   if (p.endsWith('.0')) p = p.slice(0, -2)
   if (n.endsWith('.0')) n = n.slice(0, -2)
-  return (p + n).replace(/\D/g, '')
+
+  let full = (p + n).replace(/\D/g, '')
+  let pref = p.startsWith('+') ? p : (p ? `+${p}` : '+39')
+  let nat = n
+
+  try {
+    const combined = n.startsWith('+') ? n : (p ? `${p.startsWith('+') ? p : '+' + p}${n}` : `+39${n}`)
+    const phoneNumber = parsePhoneNumber(combined)
+    
+    if (phoneNumber && phoneNumber.isValid()) {
+      full = phoneNumber.number.replace('+', '')
+      pref = `+${phoneNumber.countryCallingCode}`
+      nat = phoneNumber.nationalNumber
+    }
+  } catch (e) {
+    // Fallback
+  }
+
+  return { full, pref, nat }
 }
 
 /**
@@ -71,8 +92,8 @@ export function parseCSV(text: string): ParseResult {
       continue
     }
 
-    const fullPhone = sanitizePhone(prefix, phone)
-    if (fullPhone.length < 5) {
+    const sanitized = sanitizePhone(prefix, phone)
+    if (sanitized.full.length < 5) {
       errors.push({ row: i + 1, reason: `Numero non valido: ${phone}` })
       continue
     }
@@ -88,9 +109,9 @@ export function parseCSV(text: string): ParseResult {
 
     contacts.push({
       name: name || `Contatto ${i}`,
-      prefix: prefix.startsWith('+') ? prefix : `+${prefix}`,
-      phone,
-      fullPhone,
+      prefix: sanitized.pref,
+      phone: sanitized.nat,
+      fullPhone: sanitized.full,
       email: getCol(cells, 'email') || undefined,
       company: getCol(cells, 'Company') || getCol(cells, 'azienda') || undefined,
       customFields: Object.keys(customFields).length > 0 ? customFields : undefined,

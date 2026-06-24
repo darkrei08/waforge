@@ -33,6 +33,14 @@
             <Megaphone class="w-5 h-5" />
             <span class="font-medium text-sm">{{ t('nav.campaigns') }}</span>
           </NuxtLink>
+          <NuxtLink :to="localePath('/templates')" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary border-l-2 border-primary">
+            <MessageSquareText class="w-5 h-5" />
+            <span class="font-medium text-sm">{{ t('nav.templates') }}</span>
+          </NuxtLink>
+          <NuxtLink :to="localePath('/chat')" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary border-l-2 border-primary">
+            <MessageCircle class="w-5 h-5" />
+            <span class="font-medium text-sm">{{ t('nav.chat') }}</span>
+          </NuxtLink>
         </nav>
       </div>
 
@@ -71,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { LayoutDashboard, Users, Megaphone, Settings, Activity, QrCode, Sun, Moon, LogOut } from 'lucide-vue-next'
+import { LayoutDashboard, Users, Megaphone, Settings, Activity, QrCode, Sun, Moon, LogOut, MessageSquareText, MessageCircle } from 'lucide-vue-next'
 import { useI18n, useLocalePath, useSwitchLocalePath } from '#i18n'
 import { useColorMode } from '#imports'
 import { useAuthStore } from '~/stores/auth'

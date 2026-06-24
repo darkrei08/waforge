@@ -21,52 +21,51 @@ module.exports = {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
-        // ── Design System "Pro Connect" (from Google Stitch) ────────────────
-        // Surface hierarchy (dark mode native)
+        // Surface hierarchy
         surface: {
-          DEFAULT: "#051424",
-          dim: "#051424",
-          bright: "#2c3a4c",
-          variant: "#273647",
+          DEFAULT: "rgb(var(--surface) / <alpha-value>)",
+          dim: "rgb(var(--surface-dim) / <alpha-value>)",
+          bright: "rgb(var(--surface-bright) / <alpha-value>)",
+          variant: "rgb(var(--surface-variant) / <alpha-value>)",
         },
         "surface-container": {
-          lowest: "#010f1f",
-          low: "#0d1c2d",
-          DEFAULT: "#122131",
-          high: "#1c2b3c",
-          highest: "#273647",
+          lowest: "rgb(var(--surface-container-lowest) / <alpha-value>)",
+          low: "rgb(var(--surface-container-low) / <alpha-value>)",
+          DEFAULT: "rgb(var(--surface-container) / <alpha-value>)",
+          high: "rgb(var(--surface-container-high) / <alpha-value>)",
+          highest: "rgb(var(--surface-container-highest) / <alpha-value>)",
         },
         "on-surface": {
-          DEFAULT: "#d4e4fa",
-          variant: "#bbcbb9",
+          DEFAULT: "rgb(var(--on-surface) / <alpha-value>)",
+          variant: "rgb(var(--on-surface-variant) / <alpha-value>)",
         },
         // Primary (WhatsApp Green)
         primary: {
-          DEFAULT: "#4ff07f",
-          container: "#25d366",
-          fixed: "#66ff8e",
-          "fixed-dim": "#3de273",
+          DEFAULT: "rgb(var(--primary) / <alpha-value>)",
+          container: "rgb(var(--primary-container) / <alpha-value>)",
+          fixed: "rgb(var(--primary-fixed) / <alpha-value>)",
+          "fixed-dim": "rgb(var(--primary-fixed-dim) / <alpha-value>)",
         },
         "on-primary": {
-          DEFAULT: "#003915",
-          container: "#005523",
+          DEFAULT: "rgb(var(--on-primary) / <alpha-value>)",
+          container: "rgb(var(--on-primary-container) / <alpha-value>)",
         },
         // Secondary (Blue accents)
         secondary: {
-          DEFAULT: "#adc6ff",
-          container: "#0566d9",
-          fixed: "#d8e2ff",
-          "fixed-dim": "#adc6ff",
+          DEFAULT: "rgb(var(--secondary) / <alpha-value>)",
+          container: "rgb(var(--secondary-container) / <alpha-value>)",
+          fixed: "rgb(var(--secondary-fixed) / <alpha-value>)",
+          "fixed-dim": "rgb(var(--secondary-fixed-dim) / <alpha-value>)",
         },
         // Tertiary (Emerald accents)
         tertiary: {
-          DEFAULT: "#5eecaf",
-          container: "#3acf95",
+          DEFAULT: "rgb(var(--tertiary) / <alpha-value>)",
+          container: "rgb(var(--tertiary-container) / <alpha-value>)",
         },
         // Functional
         error: {
-          DEFAULT: "#ffb4ab",
-          container: "#93000a",
+          DEFAULT: "rgb(var(--error) / <alpha-value>)",
+          container: "rgb(var(--error-container) / <alpha-value>)",
         },
         outline: {
           DEFAULT: "#869584",

@@ -3,6 +3,8 @@
     "home": "Dashboard",
     "contacts": "Contacts",
     "campaigns": "Campaigns",
+    "templates": "Templates",
+    "chat": "Live Chat",
     "settings": "Settings",
     "api_status": "API Status"
   },

@@ -27,6 +27,7 @@
     "bullmq": "^5.79.1",
     "ioredis": "^5.11.1",
     "jose": "^5.3.0",
+    "libphonenumber-js": "^1.13.7",
     "nuxt": "^4.4.8",
     "vue": "^3.5.38",
     "vue-router": "^5.1.0",

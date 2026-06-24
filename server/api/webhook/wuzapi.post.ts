@@ -52,9 +52,8 @@ export default defineEventHandler(async (event) => {
         teamId,
         contactId: contact.id,
         direction: 'INBOUND',
-        body: textContent,
-        wuzapiMsgId: msgData.Info?.Id,
-        sentAt: new Date()
+        content: textContent,
+        wuzapiMsgId: msgData.Info?.Id
       },
       include: { contact: true }
     })

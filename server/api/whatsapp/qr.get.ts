@@ -4,10 +4,13 @@
  */
 
 import { defineEventHandler } from 'h3'
-import { getQRCode } from '~/lib/whatsapp-engine'
+import { getQRCode, ENGINE } from '~/lib/whatsapp-engine'
 
 export default defineEventHandler(async () => {
-  const qrCode = await getQRCode()
+  const token = ENGINE === 'wuzapi'
+    ? (process.env.WUZAPI_TOKEN || 'secret-token')
+    : (process.env.GOWA_TOKEN || 'secret-token')
+  const qrCode = await getQRCode(token)
 
   return {
     data: {

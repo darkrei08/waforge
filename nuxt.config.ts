@@ -9,6 +9,8 @@ export default defineNuxtConfig({
     '@nuxtjs/color-mode'
   ],
 
+  css: ['~/assets/css/main.css'],
+
   i18n: {
     locales: [
       { code: 'it', file: 'it.json', name: 'Italiano' },

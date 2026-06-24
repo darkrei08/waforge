@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Mode */
+    --surface: 255 255 255;
+    --surface-dim: 240 240 240;
+    --surface-bright: 250 250 250;
+    --surface-variant: 230 230 230;
+
+    --surface-container-lowest: 255 255 255;
+    --surface-container-low: 248 248 248;
+    --surface-container: 240 240 240;
+    --surface-container-high: 232 232 232;
+    --surface-container-highest: 224 224 224;
+
+    --on-surface: 5 20 36;
+    --on-surface-variant: 60 70 61;
+
+    --primary: 37 211 102;
+    --primary-container: 20 180 80;
+    --primary-fixed: 102 255 142;
+    --primary-fixed-dim: 61 226 115;
+    
+    --on-primary: 255 255 255;
+    --on-primary-container: 0 57 21;
+
+    --secondary: 5 102 217;
+    --secondary-container: 173 198 255;
+    --secondary-fixed: 216 226 255;
+    --secondary-fixed-dim: 173 198 255;
+
+    --tertiary: 58 207 149;
+    --tertiary-container: 94 236 175;
+
+    --error: 255 84 73;
+    --error-container: 255 210 204;
+  }
+
+  .dark {
+    /* Dark Mode (from existing config) */
+    --surface: 5 20 36;
+    --surface-dim: 5 20 36;
+    --surface-bright: 44 58 76;
+    --surface-variant: 39 54 71;
+
+    --surface-container-lowest: 1 15 31;
+    --surface-container-low: 13 28 45;
+    --surface-container: 18 33 49;
+    --surface-container-high: 28 43 60;
+    --surface-container-highest: 39 54 71;
+
+    --on-surface: 212 228 250;
+    --on-surface-variant: 187 203 185;
+
+    --primary: 79 240 127;
+    --primary-container: 37 211 102;
+    --primary-fixed: 102 255 142;
+    --primary-fixed-dim: 61 226 115;
+    
+    --on-primary: 0 57 21;
+    --on-primary-container: 0 85 35;
+
+    --secondary: 173 198 255;
+    --secondary-container: 5 102 217;
+    --secondary-fixed: 216 226 255;
+    --secondary-fixed-dim: 173 198 255;
+
+    --tertiary: 94 236 175;
+    --tertiary-container: 58 207 149;
+
+    --error: 255 180 171;
+    --error-container: 147 0 10;
+  }
+}

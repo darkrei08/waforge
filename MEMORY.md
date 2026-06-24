@@ -49,3 +49,11 @@ Test registration endpoint, verify user creation, and monitor app behavior using
 ## [Session State Snapshot] - 2026-06-25 00:21:24
 Fix login and registration bugs (authStore.fetchUser missing, cookie secure attribute drop on HTTP). Integrated Traefik production labels.
 
+
+## [Session State Snapshot] - 2026-06-25 00:31:54
+WaForge project: Added Templates management (pages/templates.vue, stores/templates.ts) with real-time WhatsApp rich text preview. Wired it into the main layout and translations. Also fixed the Google Stitch design system theme mapping: moved colors to CSS variables in assets/css/main.css and updated tailwind.config.js to correctly support light and dark mode toggles natively instead of static dark colors.
+
+
+## [Session State Snapshot] - 2026-06-25 00:35:40
+WaForge project: Implemented Live Chat CRM module. Created UI pages/chat.vue with split-pane layout and WebSockets auto-updating. Created stores/chat.ts to manage real-time messages. Implemented backend endpoints /api/chat/index.get.ts, /api/chat/[contactId]/messages.get.ts, and /api/chat/send.post.ts. Fixed Prisma schema bug in the webhook wuzapi.post.ts (body -> content). Updated task.md and created walkthrough.md.
+

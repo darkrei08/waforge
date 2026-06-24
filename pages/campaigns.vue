@@ -87,6 +87,11 @@
               <option value="" disabled>Seleziona template...</option>
               <option v-for="tmpl in templates" :key="tmpl.id" :value="tmpl.id">{{ tmpl.name }}</option>
             </select>
+            
+            <div v-if="selectedTemplatePreview" class="mt-4 p-4 bg-black/20 border border-white/5 rounded-xl">
+              <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest mb-2 block">Anteprima Messaggio</span>
+              <div class="text-sm text-on-surface whitespace-pre-wrap leading-relaxed" v-html="selectedTemplatePreview"></div>
+            </div>
           </div>
 
           <!-- Step 3: Rate Limit -->
@@ -129,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { Plus, Play, Pause } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useCampaignsStore } from '~/stores/campaigns'
@@ -141,6 +146,19 @@ const showWizard = ref(false)
 const wizardStep = ref(1)
 const templates = ref<any[]>([])
 const newCampaign = ref({ name: '', templateId: '', delayMin: 15, delayMax: 45 })
+
+function formatWhatsAppText(text: string) {
+  if (!text) return ''
+  return text
+    .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+    .replace(/_(.*?)_/g, '<em>$1</em>')
+    .replace(/~(.*?)~/g, '<del>$1</del>')
+}
+
+const selectedTemplatePreview = computed(() => {
+  const tmpl = templates.value.find(t => t.id === newCampaign.value.templateId)
+  return tmpl ? formatWhatsAppText(tmpl.body) : ''
+})
 
 function statusClass(status: string) {
   const map: Record<string, string> = {
