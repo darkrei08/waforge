@@ -49,9 +49,10 @@ async function apiCall(path: string, token: string, method = 'GET', body?: unkno
     token,
   }
 
-  // gowa uses Basic Auth (admin:token)
+  // gowa uses Basic Auth (admin:token) and requires X-Device-Id
   if (ENGINE === 'gowa') {
     headers['Authorization'] = `Basic ${Buffer.from(`admin:${token}`).toString('base64')}`
+    headers['X-Device-Id'] = 'waforge-default'
   }
 
   const res = await fetch(`${cfg.base}${path}`, {
@@ -82,7 +83,24 @@ async function apiCall(path: string, token: string, method = 'GET', body?: unkno
     const txt = await res.text()
     throw new Error(`[${ENGINE}] ${res.status}: ${txt}`)
   }
-  return res.json()
+
+  const data = await res.json()
+
+  // Auto-provision gowa device for fresh setups
+  if (ENGINE === 'gowa' && data.code === 'DEVICE_NOT_FOUND' && retry) {
+    try {
+      await fetch(`${cfg.base}/devices`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ device_id: 'waforge-default' })
+      })
+      return apiCall(path, token, method, body, false)
+    } catch (e) {
+      // Ignore and fall through
+    }
+  }
+
+  return data
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -114,7 +132,24 @@ export async function getEngineStatus(token: string): Promise<EngineStatus> {
 export async function getQRCode(token: string): Promise<string | null> {
   try {
     const data = await apiCall(cfg.qr, token)
-    return data.data?.QRCode ?? data.QRCode ?? null
+    
+    if (ENGINE === 'wuzapi') {
+      return data.data?.QRCode ?? data.QRCode ?? null
+    } else {
+      // GoWA v8 returns a URL to the PNG in data.results.qr_link
+      const qrLink = data.results?.qr_link
+      if (qrLink) {
+        // Fetch the image from the engine and return it as base64 data URI
+        // so the frontend doesn't need to directly access the engine's port
+        // Also replace localhost with gowa container name if needed
+        const fetchUrl = qrLink.replace('localhost:3000', 'gowa:3000').replace('localhost:3200', 'gowa:3000')
+        const imgRes = await fetch(fetchUrl)
+        const arrayBuffer = await imgRes.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        return `data:image/png;base64,${buffer.toString('base64')}`
+      }
+      return null
+    }
   } catch {
     return null
   }

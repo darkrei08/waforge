@@ -12,13 +12,13 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   i18n: {
+    vueI18n: './i18n.config.ts',
     locales: [
       { code: 'it', file: 'it.json', name: 'Italiano' },
       { code: 'en', file: 'en.json', name: 'English' }
     ],
     defaultLocale: 'it',
-    lazy: false,
-    langDir: 'locales/'
+    strategy: 'no_prefix'
   },
 
   colorMode: {
