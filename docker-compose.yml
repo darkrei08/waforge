@@ -60,6 +60,7 @@ services:
       - CAMPAIGN_DELAY_MAX=${CAMPAIGN_DELAY_MAX:-45}
       - MAX_MESSAGES_PER_HOUR=${MAX_MESSAGES_PER_HOUR:-100}
       - SPINTAX_ENABLED=${SPINTAX_ENABLED:-true}
+      - ENABLE_DEBUG_WIDGET=${ENABLE_DEBUG_WIDGET:-true}
     depends_on:
       db:
         condition: service_healthy
