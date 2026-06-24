@@ -10,6 +10,10 @@ import { UpdateTemplateSchema } from '~/lib/validation'
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   if (!id) throw createError({ statusCode: 400, statusMessage: 'Missing template ID' })
+  const teamId = event.context.user.teamId
+
+  const existing = await prisma.template.findFirst({ where: { id, teamId } })
+  if (!existing) throw createError({ statusCode: 404, statusMessage: 'Template not found or access denied' })
 
   const data = await readValidatedBody(event, UpdateTemplateSchema)
 

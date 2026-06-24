@@ -8,9 +8,10 @@ import { prisma } from '~/server/utils/prisma'
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   if (!id) throw createError({ statusCode: 400, statusMessage: 'Missing campaign ID' })
+  const teamId = event.context.user.teamId
 
-  const campaign = await prisma.campaign.findUnique({
-    where: { id },
+  const campaign = await prisma.campaign.findFirst({
+    where: { id, teamId },
     include: {
       template: true,
       messages: {

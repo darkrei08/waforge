@@ -9,11 +9,13 @@ import { CreateContactSchema } from '~/lib/validation'
 
 export default defineEventHandler(async (event) => {
   const data = await readValidatedBody(event, CreateContactSchema)
+  const teamId = event.context.user.teamId
 
   const fullPhone = (data.prefix + data.phone).replace(/\D/g, '')
 
   const contact = await prisma.contact.create({
     data: {
+      teamId,
       name: data.name,
       prefix: data.prefix,
       phone: data.phone,

@@ -9,9 +9,15 @@ import { CreateCampaignSchema } from '~/lib/validation'
 
 export default defineEventHandler(async (event) => {
   const data = await readValidatedBody(event, CreateCampaignSchema)
+  const teamId = event.context.user.teamId
+
+  // Verify template belongs to team
+  const template = await prisma.template.findFirst({ where: { id: data.templateId, teamId } })
+  if (!template) throw createError({ statusCode: 404, statusMessage: 'Template not found or access denied' })
 
   const campaign = await prisma.campaign.create({
     data: {
+      teamId,
       name: data.name,
       templateId: data.templateId,
       contactIds: Array.isArray(data.contactIds)

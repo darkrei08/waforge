@@ -11,6 +11,7 @@ import { securityLog } from '~/lib/security-logger'
 
 export default defineEventHandler(async (event) => {
   const { csv } = await readValidatedBody(event, BulkImportSchema)
+  const teamId = event.context.user.teamId
 
   const result = parseCSV(csv)
 
@@ -20,8 +21,9 @@ export default defineEventHandler(async (event) => {
   for (const contact of result.contacts) {
     try {
       await prisma.contact.upsert({
-        where: { fullPhone: contact.fullPhone },
+        where: { teamId_fullPhone: { teamId, fullPhone: contact.fullPhone } },
         create: {
+          teamId,
           name: contact.name,
           prefix: contact.prefix,
           phone: contact.phone,

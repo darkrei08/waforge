@@ -9,9 +9,10 @@ import { BulkDeleteSchema } from '~/lib/validation'
 
 export default defineEventHandler(async (event) => {
   const { ids } = await readValidatedBody(event, BulkDeleteSchema)
+  const teamId = event.context.user.teamId
 
   const result = await prisma.contact.deleteMany({
-    where: { id: { in: ids } },
+    where: { id: { in: ids }, teamId },
   })
 
   return { data: { deleted: result.count } }

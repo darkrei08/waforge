@@ -3,7 +3,19 @@
     <!-- Sidebar -->
     <aside class="w-[280px] bg-surface-container/50 backdrop-blur-xl border-r border-white/5 flex flex-col justify-between">
       <div class="p-6">
-        <h1 class="text-xl font-bold text-primary mb-8 tracking-tighter">WA Sender Pro</h1>
+        <h1 class="text-xl font-bold text-primary mb-6 tracking-tighter">WA Sender Pro</h1>
+
+        <!-- Team/User Info -->
+        <div v-if="authStore.user" class="mb-8 p-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
+          <div class="overflow-hidden">
+            <p class="text-sm font-medium text-white truncate">{{ authStore.currentTeam?.name || 'Workspace' }}</p>
+            <p class="text-xs text-gray-400 truncate">{{ authStore.user?.email }}</p>
+          </div>
+          <button @click="authStore.logout" class="p-2 hover:bg-red-500/10 text-gray-400 hover:text-red-400 rounded-lg transition-colors" title="Logout">
+            <LogOut class="w-4 h-4" />
+          </button>
+        </div>
+
         <nav class="space-y-2">
           <NuxtLink :to="localePath('/')" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors" exact-active-class="bg-primary/10 text-primary border-l-2 border-primary">
             <LayoutDashboard class="w-5 h-5" />
@@ -59,14 +71,16 @@
 </template>
 
 <script setup lang="ts">
-import { LayoutDashboard, Users, Megaphone, Settings, Activity, QrCode, Sun, Moon } from 'lucide-vue-next'
+import { LayoutDashboard, Users, Megaphone, Settings, Activity, QrCode, Sun, Moon, LogOut } from 'lucide-vue-next'
 import { useI18n, useLocalePath, useSwitchLocalePath } from '#i18n'
 import { useColorMode } from '#imports'
+import { useAuthStore } from '~/stores/auth'
 
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const switchLocalePath = useSwitchLocalePath()
 const colorMode = useColorMode()
+const authStore = useAuthStore()
 
 const toggleColorMode = () => {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'

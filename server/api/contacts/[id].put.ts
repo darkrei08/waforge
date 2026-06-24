@@ -10,15 +10,17 @@ import { UpdateContactSchema } from '~/lib/validation'
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   if (!id) throw createError({ statusCode: 400, statusMessage: 'Missing contact ID' })
+  const teamId = event.context.user.teamId
 
   const data = await readValidatedBody(event, UpdateContactSchema)
+
+  // Verify contact belongs to team
+  const existing = await prisma.contact.findFirst({ where: { id, teamId } })
+  if (!existing) throw createError({ statusCode: 404, statusMessage: 'Contact not found' })
 
   // Recompute fullPhone if prefix or phone changed
   const updateData: Record<string, unknown> = { ...data }
   if (data.prefix || data.phone) {
-    const existing = await prisma.contact.findUnique({ where: { id } })
-    if (!existing) throw createError({ statusCode: 404, statusMessage: 'Contact not found' })
-
     const prefix = data.prefix || existing.prefix
     const phone = data.phone || existing.phone
     updateData.fullPhone = (prefix + phone).replace(/\D/g, '')

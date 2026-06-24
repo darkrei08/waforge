@@ -9,10 +9,11 @@ import { PaginationSchema } from '~/lib/validation'
 
 export default defineEventHandler(async (event) => {
   const { page, limit, search } = readValidatedQuery(event, PaginationSchema)
+  const teamId = event.context.user.teamId
 
   const where = search
-    ? { name: { contains: search } }
-    : {}
+    ? { teamId, name: { contains: search } }
+    : { teamId }
 
   const [campaigns, total] = await Promise.all([
     prisma.campaign.findMany({
