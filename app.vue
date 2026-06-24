@@ -13,6 +13,6 @@ import { useRuntimeConfig } from '#app'
 
 const config = useRuntimeConfig()
 const enableDebugWidget = computed(() => {
-  return process.dev || config.public.enableDebugWidget === 'true'
+  return process.dev || String(config.public.enableDebugWidget) === 'true'
 })
 </script>

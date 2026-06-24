@@ -18,6 +18,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Install openssl so Prisma can detect OpenSSL 3.x correctly instead of defaulting to 1.1.x
+RUN apk add --no-cache openssl
+
 RUN addgroup --system --gid 1001 nuxtjs && \
     adduser --system --uid 1001 nuxtjs
 
@@ -38,4 +41,4 @@ LABEL org.opencontainers.image.description="WaForge — Dashboard WhatsApp Mass 
 LABEL org.opencontainers.image.licenses="AGPL-3.0"
 
 # Run migrations then start Nitro server
-CMD ["sh", "-c", "npx prisma migrate deploy 2>/dev/null; node .output/server/index.mjs"]
+CMD ["sh", "-c", "npx prisma@5.22.0 migrate deploy; node .output/server/index.mjs"]

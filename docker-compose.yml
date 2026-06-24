@@ -53,14 +53,14 @@ services:
       - NUXT_PUBLIC_APP_URL=${NUXT_PUBLIC_APP_URL:-http://localhost:3000}
       - APP_SECRET=${APP_SECRET:-change-me}
       - WHATSAPP_ENGINE=${WHATSAPP_ENGINE:-wuzapi}
-      - WUZAPI_URL=http://wuzapi:3100
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-waforge}?schema=public
+      - WUZAPI_URL=${WUZAPI_URL:-http://wuzapi:3100}
       - WUZAPI_TOKEN=${WUZAPI_TOKEN:-secret-token}
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@${POSTGRES_HOST:-db}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-waforge}?schema=public
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
       - CAMPAIGN_DELAY_MAX=${CAMPAIGN_DELAY_MAX:-45}
       - MAX_MESSAGES_PER_HOUR=${MAX_MESSAGES_PER_HOUR:-100}
       - SPINTAX_ENABLED=${SPINTAX_ENABLED:-true}
-      - ENABLE_DEBUG_WIDGET=${ENABLE_DEBUG_WIDGET:-true}
+      - NUXT_PUBLIC_ENABLE_DEBUG_WIDGET=${ENABLE_DEBUG_WIDGET:-true}
     depends_on:
       db:
         condition: service_healthy

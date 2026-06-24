@@ -3,7 +3,7 @@
     <!-- Sidebar -->
     <aside class="w-[280px] bg-surface-container/50 backdrop-blur-xl border-r border-white/5 flex flex-col justify-between">
       <div class="p-6">
-        <h1 class="text-xl font-bold text-primary mb-6 tracking-tighter">WA Sender Pro</h1>
+        <h1 class="text-xl font-bold text-primary mb-6 tracking-tighter">WaForge</h1>
 
         <!-- Team/User Info -->
         <div v-if="authStore.user" class="mb-8 p-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">

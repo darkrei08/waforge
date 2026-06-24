@@ -12,20 +12,37 @@ declare global {
   var __prisma: PrismaClient | undefined
 }
 
+// Legge dinamicamente process.env a runtime aggirando il bundler
+const getEnv = (key: string) => {
+  if (typeof process !== 'undefined' && process.env) {
+    return process.env[key]
+  }
+  return undefined
+}
+
 // Utility per costruire il DB URL evitando problemi di dotenv-expand in Nitro
 const getDbUrl = () => {
-  const dbUrl = process.env.DATABASE_URL || process.env['DATABASE_URL']
+  let dbUrl = getEnv('DATABASE_URL') || getEnv('NUXT_DATABASE_URL')
+  
   // Se la variabile esiste e non contiene sintassi non espansa come ${POSTGRES_USER}
   if (dbUrl && !dbUrl.includes('${')) {
     return dbUrl
   }
   
-  // Costruzione manuale per il runtime usando le variabili iniettate
-  const user = process.env.POSTGRES_USER || process.env['POSTGRES_USER'] || 'postgres'
-  const pass = process.env.POSTGRES_PASSWORD || process.env['POSTGRES_PASSWORD'] || 'postgres'
-  const host = process.env.POSTGRES_HOST || process.env['POSTGRES_HOST'] || 'localhost'
-  const port = process.env.POSTGRES_PORT || process.env['POSTGRES_PORT'] || '5432'
-  const db = process.env.POSTGRES_DB || process.env['POSTGRES_DB'] || 'waforge'
+  // Costruzione sicura per il runtime usando le variabili iniettate
+  const user = getEnv('POSTGRES_USER') || 'postgres'
+  const pass = getEnv('POSTGRES_PASSWORD') || 'postgres'
+  const host = getEnv('POSTGRES_HOST') || 'localhost'
+  const port = getEnv('POSTGRES_PORT') || '5432'
+  const db = getEnv('POSTGRES_DB') || 'waforge'
+
+  // Security Check: Non permettere l'uso di credenziali di default in produzione se le variabili d'ambiente non sono fornite
+  const isProd = getEnv('NODE_ENV') === 'production'
+  if (isProd && (!getEnv('POSTGRES_PASSWORD') || !getEnv('POSTGRES_USER'))) {
+    console.warn('⚠️ [SECURITY WARNING] POSTGRES_USER o POSTGRES_PASSWORD non definiti in produzione. Utilizzo dei fallback locali, il che rappresenta un rischio di sicurezza (CWE-798).')
+    // In un sistema strict si dovrebbe lanciare un errore:
+    // throw new Error("Missing secure database credentials in production environment.")
+  }
 
   return `postgresql://${user}:${pass}@${host}:${port}/${db}?schema=public`
 }

@@ -12,7 +12,7 @@
           </svg>
         </div>
         <h1 class="text-3xl font-bold tracking-tight">Bentornato</h1>
-        <p class="text-gray-400 mt-2 text-sm">Accedi al tuo workspace WA Sender Pro</p>
+        <p class="text-gray-400 mt-2 text-sm">Accedi al tuo workspace WaForge</p>
       </div>
 
       <form @submit.prevent="handleLogin" class="space-y-5">

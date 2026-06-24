@@ -25,5 +25,18 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { user, isAuthenticated, currentTeam, logout }
+  const fetchUser = async () => {
+    try {
+      const data: any = await $fetch('/api/auth/me')
+      if (data && data.user) {
+        user.value = data.user
+      } else {
+        user.value = null
+      }
+    } catch (e) {
+      user.value = null
+    }
+  }
+
+  return { user, isAuthenticated, currentTeam, fetchUser, logout }
 })

@@ -11,8 +11,16 @@ declare global {
   var __campaignWorker: Worker | undefined
 }
 
+// Legge dinamicamente process.env a runtime aggirando il bundler
+const getEnv = (key: string) => {
+  if (typeof process !== 'undefined' && process.env) {
+    return process.env[key]
+  }
+  return undefined
+}
+
 const getRedisUrl = () => {
-  return process.env.REDIS_URL || process.env['REDIS_URL'] || 'redis://localhost:6379'
+  return getEnv('REDIS_URL') || getEnv('NUXT_REDIS_URL') || 'redis://localhost:6379'
 }
 
 export const connection = globalThis.__redis || new IORedis(getRedisUrl(), {

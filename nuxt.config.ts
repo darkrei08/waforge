@@ -23,6 +23,14 @@ export default defineNuxtConfig({
     classSuffix: ''
   },
 
+  runtimeConfig: {
+    redisUrl: process.env.REDIS_URL || '',
+    databaseUrl: process.env.DATABASE_URL || '',
+    public: {
+      enableDebugWidget: process.env.ENABLE_DEBUG_WIDGET || 'false'
+    }
+  },
+
   nitro: {
     externals: {
       external: ['@prisma/client']

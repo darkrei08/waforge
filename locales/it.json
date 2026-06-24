@@ -12,5 +12,16 @@
     "active_campaigns": "Campagne Attive",
     "messages_sent": "Messaggi Inviati",
     "recent_campaigns": "Campagne Recenti"
+  },
+  "connect": {
+    "title": "Connetti WhatsApp",
+    "waiting": "In attesa di generare il codice QR...",
+    "refresh": "Ricarica QR Code",
+    "instructions": {
+      "step_1": "Apri WhatsApp sul tuo telefono",
+      "step_2": "Tocca Menu (⋮) su Android o Impostazioni (⚙) su iPhone",
+      "step_3": "Tocca Dispositivi collegati e poi Collega un dispositivo",
+      "step_4": "Inquadra il codice QR in questa schermata per collegarti"
+    }
   }
 }
