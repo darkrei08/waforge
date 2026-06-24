@@ -62,25 +62,62 @@ services:
       - WUZAPI_TOKEN=${WUZAPI_TOKEN:-secret-token}
       - GOWA_URL=http://gowa:3000
       - GOWA_TOKEN=${GOWA_TOKEN:-secret-token}
-      - DATABASE_URL=file:/app/data/wa-sender-pro.db
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/wasender?schema=public
+      - REDIS_URL=redis://redis:6379
       - CAMPAIGN_DELAY_MIN=${CAMPAIGN_DELAY_MIN:-15}
       - CAMPAIGN_DELAY_MAX=${CAMPAIGN_DELAY_MAX:-45}
       - MAX_MESSAGES_PER_HOUR=${MAX_MESSAGES_PER_HOUR:-100}
       - SPINTAX_ENABLED=${SPINTAX_ENABLED:-true}
-    volumes:
-      - app_data:/app/data
     depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       wuzapi:
         condition: service_healthy
     networks:
       - wa-net
 
+  # ─── PostgreSQL ─────────────────────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: wa-sender-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: wasender
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - wa-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: wa-sender-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - wa-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   wuzapi_data:
     driver: local
-  # gowa_data:
-  #   driver: local
-  app_data:
+  pg_data:
+    driver: local
+  redis_data:
     driver: local
 
 networks:
