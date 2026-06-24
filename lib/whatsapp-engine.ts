@@ -134,7 +134,11 @@ export async function getQRCode(token: string): Promise<string | null> {
     const data = await apiCall(cfg.qr, token)
     
     if (ENGINE === 'wuzapi') {
-      return data.data?.QRCode ?? data.QRCode ?? null
+      const qr = data.data?.QRCode ?? data.QRCode ?? null
+      if (qr && !qr.startsWith('data:image')) {
+        return `data:image/png;base64,${qr}`
+      }
+      return qr
     } else {
       // GoWA v8 returns a URL to the PNG in data.results.qr_link
       const qrLink = data.results?.qr_link

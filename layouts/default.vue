@@ -21,25 +21,40 @@
             <LayoutDashboard class="w-5 h-5" />
             <span class="font-medium text-sm">{{ t('nav.home') }}</span>
           </NuxtLink>
-          <NuxtLink :to="localePath('/connect')" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary border-l-2 border-primary">
-            <QrCode class="w-5 h-5" />
-            <span class="font-medium text-sm">{{ t('connect.title') }}</span>
+          <NuxtLink :to="localePath('/connect')" class="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary border-l-2 border-primary">
+            <div class="flex items-center gap-3">
+              <QrCode class="w-5 h-5" />
+              <span class="font-medium text-sm">{{ t('connect.title') }}</span>
+            </div>
+            <div class="w-2 h-2 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)]" :class="waStore.connected ? 'bg-primary shadow-primary/50' : 'bg-red-500 shadow-red-500/50'"></div>
           </NuxtLink>
-          <NuxtLink :to="localePath('/contacts')" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary border-l-2 border-primary">
-            <Users class="w-5 h-5" />
-            <span class="font-medium text-sm">{{ t('nav.contacts') }}</span>
+          <NuxtLink :to="waStore.connected ? localePath('/contacts') : ''" class="flex items-center justify-between p-3 rounded-lg transition-colors" :class="waStore.connected ? 'hover:bg-white/5' : 'opacity-50 cursor-not-allowed'" :active-class="waStore.connected ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''">
+            <div class="flex items-center gap-3">
+              <Users class="w-5 h-5" />
+              <span class="font-medium text-sm">{{ t('nav.contacts') }}</span>
+            </div>
+            <Lock v-if="!waStore.connected" class="w-4 h-4" />
           </NuxtLink>
-          <NuxtLink :to="localePath('/campaigns')" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary border-l-2 border-primary">
-            <Megaphone class="w-5 h-5" />
-            <span class="font-medium text-sm">{{ t('nav.campaigns') }}</span>
+          <NuxtLink :to="waStore.connected ? localePath('/campaigns') : ''" class="flex items-center justify-between p-3 rounded-lg transition-colors" :class="waStore.connected ? 'hover:bg-white/5' : 'opacity-50 cursor-not-allowed'" :active-class="waStore.connected ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''">
+            <div class="flex items-center gap-3">
+              <Megaphone class="w-5 h-5" />
+              <span class="font-medium text-sm">{{ t('nav.campaigns') }}</span>
+            </div>
+            <Lock v-if="!waStore.connected" class="w-4 h-4" />
           </NuxtLink>
-          <NuxtLink :to="localePath('/templates')" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary border-l-2 border-primary">
-            <MessageSquareText class="w-5 h-5" />
-            <span class="font-medium text-sm">{{ t('nav.templates') }}</span>
+          <NuxtLink :to="waStore.connected ? localePath('/templates') : ''" class="flex items-center justify-between p-3 rounded-lg transition-colors" :class="waStore.connected ? 'hover:bg-white/5' : 'opacity-50 cursor-not-allowed'" :active-class="waStore.connected ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''">
+            <div class="flex items-center gap-3">
+              <MessageSquareText class="w-5 h-5" />
+              <span class="font-medium text-sm">{{ t('nav.templates') }}</span>
+            </div>
+            <Lock v-if="!waStore.connected" class="w-4 h-4" />
           </NuxtLink>
-          <NuxtLink :to="localePath('/chat')" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary border-l-2 border-primary">
-            <MessageCircle class="w-5 h-5" />
-            <span class="font-medium text-sm">{{ t('nav.chat') }}</span>
+          <NuxtLink :to="waStore.connected ? localePath('/chat') : ''" class="flex items-center justify-between p-3 rounded-lg transition-colors" :class="waStore.connected ? 'hover:bg-white/5' : 'opacity-50 cursor-not-allowed'" :active-class="waStore.connected ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''">
+            <div class="flex items-center gap-3">
+              <MessageCircle class="w-5 h-5" />
+              <span class="font-medium text-sm">{{ t('nav.chat') }}</span>
+            </div>
+            <Lock v-if="!waStore.connected" class="w-4 h-4" />
           </NuxtLink>
         </nav>
       </div>
@@ -79,16 +94,23 @@
 </template>
 
 <script setup lang="ts">
-import { LayoutDashboard, Users, Megaphone, Settings, Activity, QrCode, Sun, Moon, LogOut, MessageSquareText, MessageCircle } from 'lucide-vue-next'
+import { onMounted } from 'vue'
+import { LayoutDashboard, Users, Megaphone, Settings, Activity, QrCode, Sun, Moon, LogOut, MessageSquareText, MessageCircle, Lock } from 'lucide-vue-next'
 import { useI18n, useLocalePath, useSwitchLocalePath } from '#i18n'
 import { useColorMode } from '#imports'
 import { useAuthStore } from '~/stores/auth'
+import { useWhatsappStore } from '~/stores/whatsapp'
 
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const switchLocalePath = useSwitchLocalePath()
 const colorMode = useColorMode()
 const authStore = useAuthStore()
+const waStore = useWhatsappStore()
+
+onMounted(() => {
+  waStore.fetchStatus()
+})
 
 const toggleColorMode = () => {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
