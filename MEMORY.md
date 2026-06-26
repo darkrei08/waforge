@@ -79,3 +79,35 @@ WaForge Project Update - Status: COMPLETE (v2.1.0 released locally).
 1. Missing Functions Completed: Added CSV export API and UI button, User Profile management (name and password), and Detailed Campaign Logs UI (showing sent/failed status and error reasons per message).
 2. Bugfix QR Code & Countdown: Fixed an issue where the connect screen spammed the backend for new session tokens on every countdown refresh. Preserved `tokenId` in URL and added a silent retry for when QR code generation takes slightly longer on WuzAPI, fixing the disappearing progress bar.
 3. Release v2.1.0: Merged all changes into `main` and ran `ai-release minor` locally to bump package.json and tag `v2.1.0`. Remote authentication failed, awaiting user input to manually push the release to GitHub.
+
+## [Session State Snapshot] - 2026-06-26 20:00:21
+WaForge Project Update - Status: COMPLETE (v2.1.0 - i18n & QR Code fix stabilizzati).
+DATA: 2026-06-26
+
+=== COSA E' STATO FATTO ===
+1. i18n Fix (CRITICO): Risolto errore fatale di compilazione Vue I18n v9+:
+   - Rimossi {{Variable}} (doppie graffe obsolete) da it.json/en.json
+   - Sostituiti caratteri pipe {a|b} nei template spintax con [a|b]
+   - Creato .dockerignore per escludere .nuxt/ dal contesto Docker
+2. QR Code & WuzAPI Network Fix:
+   - URL interno Docker corretto: http://wuzapi:8080 (non 3100)
+   - Aggiornati docker-compose.yml, lib/wuzapi.ts, lib/whatsapp-engine.ts
+   - connect.vue: logica di retry silenziosa per QR quando WuzAPI e' lento
+3. Build Docker: Compilazione riuscita al 100%. Stack avviato (10/10 container Healthy/Started)
+4. Git: Commit pushato su branch fix/i18n-qrcode
+
+=== STATO GRAFO ===
+- AST extraction: 97 code files, 12 docs processati
+- Semantic extraction: FALLITA per errore di config Gemini (Invalid port ':1')
+- Workaround: grafo AST parziale disponibile in graphify-out/
+
+=== PROBLEMI APERTI ===
+- graphify semantic backend 'gemini' ha 'Invalid port :1' error (problema config COCKPIT)
+- Release v2.1.0 non ancora pushata su GitHub (auth fallita nella sessione precedente)
+
+=== PROSSIMI STEP ===
+1. Fare push del branch fix/i18n-qrcode su GitHub e aprire PR verso main
+2. Tagare release v2.1.0 e fare push dei tag
+3. Risolvere errore porta graphify (controllare config Cockpit Tools)
+4. Sviluppare funzioni mancanti: bulk message scheduling, CSV import migliorato
+
