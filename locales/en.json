@@ -6,6 +6,8 @@
     "campaigns": "Campaigns",
     "templates": "Templates",
     "chat": "Live Chat",
+    "team": "Team Members",
+    "devices": "Devices",
     "settings": "Settings",
     "api_status": "API Status"
   },

@@ -1,44 +1,39 @@
 /**
- * WhatsApp Connection Store
+ * WhatsApp Connection Store (Multi-Device)
  */
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
+export interface WASession {
+  id: string
+  status: string
+  phone: string | null
+  engine: string
+  connected: boolean
+  loggedIn: boolean
+  updatedAt: string
+}
+
 export const useWhatsappStore = defineStore('whatsapp', () => {
-  const connected = ref(false)
-  const loggedIn = ref(false)
-  const phone = ref<string | null>(null)
-  const engine = ref('wuzapi')
-  const qrCode = ref<string | null>(null)
+  const sessions = ref<WASession[]>([])
   const loading = ref(false)
 
-  const statusLabel = computed(() => connected.value ? 'connected' : 'disconnected')
+  const connected = computed(() => sessions.value.some(s => s.connected))
 
-  async function fetchStatus() {
+  async function fetchSessions() {
     try {
-      const res = await $fetch<{ data: any }>('/api/whatsapp/status')
-      connected.value = res.data.connected
-      loggedIn.value = res.data.loggedIn
-      phone.value = res.data.phone || null
-      engine.value = res.data.activeEngine
+      const res = await $fetch<{ data: WASession[] }>('/api/whatsapp/sessions')
+      sessions.value = res.data || []
     } catch { /* silent */ }
   }
 
-  async function fetchQR() {
-    loading.value = true
-    try {
-      const res = await $fetch<{ data: any }>('/api/whatsapp/qr')
-      qrCode.value = res.data.qrCode
-    } catch { qrCode.value = null }
-    finally { loading.value = false }
+  async function disconnect(tokenId: string) {
+    await $fetch('/api/whatsapp/disconnect', { 
+      method: 'POST',
+      body: { tokenId }
+    })
+    await fetchSessions()
   }
 
-  async function disconnect() {
-    await $fetch('/api/whatsapp/disconnect', { method: 'POST' })
-    connected.value = false
-    loggedIn.value = false
-    phone.value = null
-  }
-
-  return { connected, loggedIn, phone, engine, qrCode, loading, statusLabel, fetchStatus, fetchQR, disconnect }
+  return { sessions, connected, loading, fetchSessions, disconnect }
 })

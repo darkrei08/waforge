@@ -72,9 +72,9 @@ async function apiCall(path: string, token: string, method = 'GET', body?: unkno
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': token,
+            'Authorization': process.env.WUZAPI_TOKEN || 'secret-token',
           },
-          body: JSON.stringify({ name: 'WaForge AutoUser', token })
+          body: JSON.stringify({ name: 'WaForge Team User', token })
         })
         return apiCall(path, token, method, body, false)
       } catch (e) {

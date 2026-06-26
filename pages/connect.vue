@@ -27,18 +27,18 @@
             </div>
 
             <!-- Device Info Card -->
-            <div v-if="waStore.phone || waStore.engine" class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl p-5 min-w-[280px] space-y-3">
+            <div v-if="localPhone || localEngine" class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl p-5 min-w-[280px] space-y-3">
               <div class="flex items-center gap-2 text-sm text-white/60 font-semibold uppercase tracking-wider">
                 <Smartphone class="w-4 h-4" />
                 {{ t('connect.device_connected') }}
               </div>
-              <div v-if="waStore.phone" class="flex items-center justify-between">
+              <div v-if="localPhone" class="flex items-center justify-between">
                 <span class="text-sm text-white/60">{{ t('connect.device_phone') }}</span>
-                <span class="text-sm text-white font-mono font-semibold">+{{ waStore.phone }}</span>
+                <span class="text-sm text-white font-mono font-semibold">+{{ localPhone }}</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-sm text-white/60">{{ t('connect.device_engine') }}</span>
-                <span class="text-sm text-white font-semibold">{{ waStore.engine?.toUpperCase() }}</span>
+                <span class="text-sm text-white font-semibold">{{ localEngine?.toUpperCase() }}</span>
               </div>
             </div>
 
@@ -80,7 +80,7 @@
           </div>
 
           <!-- QR Validity Info -->
-          <div v-if="!waStore.connected" class="flex items-center gap-2 p-3 bg-primary/5 border border-primary/10 rounded-lg">
+          <div v-if="!localConnected" class="flex items-center gap-2 p-3 bg-primary/5 border border-primary/10 rounded-lg">
             <Info class="w-4 h-4 text-primary shrink-0" />
             <p class="text-sm text-on-surface-variant">{{ t('connect.validity_info') }}</p>
           </div>
@@ -99,7 +99,7 @@
             <!-- QR Code or Connected State -->
             <div v-else class="w-full h-full flex items-center justify-center rounded-lg overflow-hidden relative">
               <img v-if="qrCodeData" :src="qrCodeData" class="w-full h-full object-contain mix-blend-multiply" />
-              <div v-else-if="waStore.connected" class="text-center text-emerald-600 flex flex-col items-center">
+              <div v-else-if="localConnected" class="text-center text-emerald-600 flex flex-col items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -111,7 +111,7 @@
           </div>
 
           <!-- Countdown Progress Bar -->
-          <div v-if="qrCodeData && !waStore.connected" class="w-72 mb-4">
+          <div v-if="qrCodeData && !localConnected" class="w-72 mb-4">
             <div v-if="countdown > 0" class="space-y-1.5">
               <div class="flex items-center justify-between">
                 <span class="text-xs text-on-surface-variant">{{ t('connect.qr_expires_in', { seconds: countdown }) }}</span>
@@ -129,7 +129,7 @@
             </p>
           </div>
 
-          <button v-if="!waStore.connected" @click="reloadQr" class="px-6 py-3 bg-primary hover:bg-primary-fixed-dim text-surface font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] transition-all flex items-center gap-2">
+          <button v-if="!localConnected" @click="reloadQr" class="px-6 py-3 bg-primary hover:bg-primary-fixed-dim text-surface font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] transition-all flex items-center gap-2">
             <RefreshCw class="w-5 h-5" :class="{ 'animate-spin': loadingQr }" />
             {{ t('connect.refresh') }}
           </button>
@@ -162,6 +162,11 @@ const qrCodeData = ref<string | null>(null)
 const showSuccess = ref(false)
 const wasConnected = ref(false)
 
+const tokenId = ref('')
+const localConnected = ref(false)
+const localPhone = ref('')
+const localEngine = ref('')
+
 // Countdown timer
 const QR_VALIDITY_SECONDS = 20
 const countdown = ref(QR_VALIDITY_SECONDS)
@@ -170,7 +175,7 @@ let pollInterval: any = null
 let countdownInterval: any = null
 
 const fetchQrCode = async () => {
-  if (waStore.connected) {
+  if (localConnected.value) {
     loadingQr.value = false
     qrCodeData.value = null
     return
@@ -178,8 +183,11 @@ const fetchQrCode = async () => {
   
   loadingQr.value = true
   try {
-    const res = await $fetch<{ data: { qrCode: string | null } }>('/api/whatsapp/qr')
+    const res = await $fetch<{ data: { qrCode: string | null, tokenId: string } }>('/api/whatsapp/qr')
     qrCodeData.value = res.data?.qrCode || null
+    if (res.data?.tokenId) {
+      tokenId.value = res.data.tokenId
+    }
     // Reset countdown on new QR
     if (qrCodeData.value) {
       startCountdown()
@@ -216,24 +224,36 @@ const reloadQr = async () => {
 }
 
 const disconnect = async () => {
+  if (!tokenId.value) return
   try {
-    await $fetch('/api/whatsapp/disconnect', { method: 'POST' })
-    await waStore.fetchStatus()
+    await $fetch('/api/whatsapp/disconnect', { method: 'POST', body: { tokenId: tokenId.value } })
+    localConnected.value = false
+    localPhone.value = ''
+    await waStore.fetchSessions()
     await fetchQrCode()
   } catch (e) {}
 }
 
 const pollStatus = async () => {
-  const prevConnected = waStore.connected
-  await waStore.fetchStatus()
+  if (!tokenId.value) return
+  const prevConnected = localConnected.value
+  
+  try {
+    const res = await $fetch<{ data: any }>(`/api/whatsapp/status?tokenId=${tokenId.value}`)
+    localConnected.value = res.data.connected
+    localPhone.value = res.data.phone
+    localEngine.value = res.data.activeEngine
+  } catch (e) {
+    localConnected.value = false
+  }
   
   // Detect transition: disconnected → connected
-  if (!prevConnected && waStore.connected && !wasConnected.value) {
+  if (!prevConnected && localConnected.value && !wasConnected.value) {
     wasConnected.value = true
     onConnectionSuccess()
   }
   
-  if (waStore.connected) {
+  if (localConnected.value) {
     qrCodeData.value = null
     stopCountdown()
   }
@@ -246,19 +266,20 @@ const onConnectionSuccess = () => {
     pollInterval = null
   }
   
+  waStore.fetchSessions()
   showSuccess.value = true
   
-  // Redirect to dashboard after 3 seconds
+  // Redirect to devices page after 3 seconds
   setTimeout(() => {
     showSuccess.value = false
-    router.push(localePath('/'))
+    router.push(localePath('/devices'))
   }, 3000)
 }
 
 onMounted(() => {
-  wasConnected.value = waStore.connected
+  wasConnected.value = localConnected.value
   fetchQrCode()
-  pollStatus()
+  
   // Poll status every 3 seconds to detect when user scans QR
   pollInterval = setInterval(() => {
     pollStatus()
