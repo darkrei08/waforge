@@ -13,7 +13,7 @@ const ENGINE = (process.env.WHATSAPP_ENGINE || 'wuzapi') as 'wuzapi' | 'gowa'
 
 const ENDPOINTS = {
   wuzapi: {
-    base: process.env.WUZAPI_URL || 'http://wuzapi:3100',
+    base: process.env.WUZAPI_URL || 'http://wuzapi:8080',
     sendText: '/chat/send/text',
     status: '/app/status',
     qr: '/app/qrcode',

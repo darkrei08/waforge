@@ -3,7 +3,7 @@
  * Docs: https://github.com/asternic/wuzapi
  */
 
-const WUZAPI_URL = process.env.WUZAPI_URL || 'http://localhost:3100'
+const WUZAPI_URL = process.env.WUZAPI_URL || 'http://wuzapi:8080'
 const WUZAPI_TOKEN = process.env.WUZAPI_TOKEN || ''
 
 const defaultHeaders = {

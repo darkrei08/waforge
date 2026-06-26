@@ -236,7 +236,12 @@ const disconnect = async () => {
 }
 
 const pollStatus = async () => {
-  if (!tokenId.value) return
+  if (!tokenId.value) {
+    if (!loadingQr.value && !qrCodeData.value) {
+      fetchQrCode()
+    }
+    return
+  }
   const prevConnected = localConnected.value
   
   try {
