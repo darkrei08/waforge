@@ -9,7 +9,7 @@
  * Switch via env var: WHATSAPP_ENGINE=wuzapi | gowa
  */
 
-export const ENGINE = (process.env.WHATSAPP_ENGINE || 'wuzapi') as 'wuzapi' | 'gowa'
+export const ENGINE = (process.env.WHATSAPP_ENGINE || 'gowa') as 'wuzapi' | 'gowa'
 
 const ENDPOINTS = {
   wuzapi: {

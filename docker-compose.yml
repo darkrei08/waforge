@@ -52,10 +52,10 @@ services:
       - NODE_ENV=${NODE_ENV:-production}
       - NUXT_PUBLIC_APP_URL=${NUXT_PUBLIC_APP_URL:-http://localhost:3000}
       - APP_SECRET=${APP_SECRET:-change-me}
-      - WHATSAPP_ENGINE=${WHATSAPP_ENGINE:-wuzapi}
+      - WHATSAPP_ENGINE=${WHATSAPP_ENGINE:-gowa}
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-waforge}?schema=public
-      - WUZAPI_URL=${WUZAPI_URL:-http://wuzapi:8080}
+      - WUZAPI_URL=${WUZAPI_URL:-http://wuzapi:3100}
       - WUZAPI_TOKEN=${WUZAPI_TOKEN:-secret-token}
       - GOWA_URL=${GOWA_URL:-http://gowa:3000}
       - GOWA_TOKEN=${GOWA_TOKEN:-secret-token}
