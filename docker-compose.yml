@@ -25,6 +25,8 @@ services:
       - rest
       - --basic-auth=admin:${GOWA_TOKEN:-secret-token}
       - --port=3000
+      - --webhook=http://waforge-app:3000/api/webhook/gowa
+      - --webhook-secret=${GOWA_APP_SECRET:-my-secret-key}
     volumes:
       - gowa_data:/app/storages
     healthcheck:
@@ -59,6 +61,7 @@ services:
       - WUZAPI_TOKEN=${WUZAPI_TOKEN:-secret-token}
       - GOWA_URL=${GOWA_URL:-http://gowa:3000}
       - GOWA_TOKEN=${GOWA_TOKEN:-secret-token}
+      - GOWA_APP_SECRET=${GOWA_APP_SECRET:-my-secret-key}
       - CAMPAIGN_DELAY_MAX=${CAMPAIGN_DELAY_MAX:-45}
       - MAX_MESSAGES_PER_HOUR=${MAX_MESSAGES_PER_HOUR:-100}
       - SPINTAX_ENABLED=${SPINTAX_ENABLED:-true}

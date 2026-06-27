@@ -21,7 +21,7 @@ const ENDPOINTS = {
   },
   gowa: {
     base: process.env.GOWA_URL || 'http://gowa:3000',
-    sendText: '/app/send/message',
+    sendText: '/send/message',
     status: '/app/status',
     qr: '/app/login',
     logout: '/app/logout',
@@ -213,13 +213,55 @@ export async function sendMessage(
     } else {
       // gowa format
       body = {
-        Phone: `${cleanPhone}@s.whatsapp.net`,
-        Message: message,
+        phone: cleanPhone,
+        message: message,
       }
     }
 
     const data = await apiCall(cfg.sendText, token, 'POST', body)
     const msgId = data.data?.Id ?? data.MessageId ?? 'ok'
+    return { success: true, messageId: msgId }
+  } catch (err) {
+    return { success: false, error: String(err) }
+  }
+}
+
+export async function sendMedia(
+  token: string,
+  phone: string,
+  mediaType: 'image' | 'video' | 'audio' | 'document',
+  fileUrl: string,
+  caption?: string
+): Promise<SendResult> {
+  try {
+    let cleanPhone = phone.replace(/[\+\s\-]/g, '')
+    if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2)
+    if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
+      cleanPhone = `39${cleanPhone}`
+    }
+
+    let endpoint = ''
+    let body: Record<string, unknown> = {}
+
+    if (ENGINE === 'wuzapi') {
+      endpoint = `/chat/send/${mediaType}`
+      body = {
+        Phone: `${cleanPhone}@s.whatsapp.net`,
+        Url: fileUrl,
+        Caption: caption || ''
+      }
+    } else {
+      // GOWA format
+      endpoint = `/send/${mediaType}`
+      body = {
+        phone: cleanPhone,
+        [mediaType]: fileUrl, // expects e.g. "image": "http://..."
+        caption: caption || ''
+      }
+    }
+
+    const data = await apiCall(endpoint, token, 'POST', body)
+    const msgId = data.data?.Id ?? data.MessageId ?? data.results?.message_id ?? 'ok'
     return { success: true, messageId: msgId }
   } catch (err) {
     return { success: false, error: String(err) }
