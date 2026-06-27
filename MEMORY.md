@@ -124,3 +124,11 @@ DATA: 2026-06-27
 === PROSSIMI STEP ===
 1. Risolvere eventuale errore porta graphify per il semantico (Config Cockpit).
 2. Prossimo rilascio: preparare la merge su main per la versione successiva (v2.2.0).
+
+## 2026-06-27: QR Code Generation Fix & Hotfix v2.2.3
+### Bug
+User was unable to generate QR codes, getting 'No QR Code available'. The app was defaulting to the WuzAPI engine, which did not support the GET /app/qrcode endpoint.
+### Fix
+- Updated lib/whatsapp-engine.ts to default to 'gowa' engine.
+- Updated docker-compose.yml to default WHATSAPP_ENGINE to 'gowa'.
+- Released hotfix v2.2.3.
