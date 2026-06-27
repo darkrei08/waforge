@@ -58,11 +58,12 @@
 | **UI** | [Vue 3](https://vuejs.org) + Composition API | `<script setup>`, Pinia state |
 | **Runtime** | [Bun](https://bun.sh) | Ultra-fast JS runtime & package manager |
 | **Styling** | [Tailwind CSS](https://tailwindcss.com) | Design System "Pro Connect" da Stitch |
-| **ORM** | [Prisma](https://prisma.io) + SQLite | Typesafe, portabile, zero-config DB |
+| **ORM** | [Prisma](https://prisma.io) + PostgreSQL | Typesafe, portabile DB |
 | **WhatsApp** | Dual Engine (WuzAPI / gowa) | Basati su whatsmeow, Multi-Device API |
 | **Skeleton** | [phantom-ui](https://github.com/Aejkatappaja/phantom-ui) | Web Component skeleton loaders |
 | **i18n** | @nuxtjs/i18n | Italiano / English |
 | **Icons** | [Lucide Vue](https://lucide.dev) | 1400+ icone SVG ottimizzate |
+| **Auth** | JWT + OAuth2 | Accesso standard + SSO (es. PocketID) |
 
 ### 🔌 Motori WhatsApp Supportati
 
@@ -100,7 +101,7 @@ Entrambi eliminano la dipendenza da browser/Selenium — comunicano direttamente
 │         │                                       │             │
 │  ┌──────▼───────┐                      ┌───────▼──────────┐  │
 │  │ Prisma ORM   │                      │ WhatsApp Engine  │  │
-│  │ (SQLite)     │                      │ (WuzAPI / gowa)  │  │
+│  │ (PostgreSQL) │                      │ (WuzAPI / gowa)  │  │
 │  └──────────────┘                      └──────────────────┘  │
 └──────────────────────────────────────────────────────────────┘
                                                 │
