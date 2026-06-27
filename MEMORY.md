@@ -164,3 +164,12 @@ After fixing the QR code generation, the user reported that scanning the code wo
 - Corretto il parsing della risposta API di WuzAPI per risolvere l'errore "Body is unusable" che nascondeva i reali errori di invio.
 - Aggiunta la sanificazione automatica e l'inserimento del prefisso internazionale per i numeri italiani (39).
 - Rilasciata la patch v2.3.2.
+
+### Session: 2026-06-27 (Campaigns Re-design, Team API Check, Reschedule & Logs Widget)
+- **Modifiche UI Campagne**: Convertita la grid in una tabella dettagliata in `pages/campaigns.vue` per migliore gestione massiva.
+- **Modifiche API Campagne**: Creati endpoints PATCH e DELETE per le singole campagne e implementato il pulsante per eliminare.
+- **Rischedulazione**: Aggiunto supporto alla modifica di `scheduledAt` per rischedulare campagne non in stato DRAFT/RUNNING.
+- **Widget Log**: Sostituita la semplice tabella log con un widget in stile terminale scuro/developer tools per le campagne, mostrando timestamp, contatto formattato ed errori.
+- **Gestione Teams**: Verificato l'esistente `pages/team.vue` che implementa già i requisiti dell'utente (modifica, inviti, permessi).
+- **Controllo Codice**: Compilazione con successo (`npm run build` / `typecheck`) per prevenire bug, eseguendo sviluppo con strict pattern.
+- **Release**: Versioni incrementate a `v2.2.7` e `v2.2.8` e rilasciate sul branch di produzione.
