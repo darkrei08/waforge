@@ -67,7 +67,7 @@
           <span v-if="loading">Accesso in corso...</span>
           <span v-else>Accedi</span>
         </button>
-        <div class="mt-6">
+        <div v-if="config.public.oauthEnabled" class="mt-6">
           <div class="relative">
             <div class="absolute inset-0 flex items-center">
               <div class="w-full border-t border-black/10 dark:border-white/10"></div>
@@ -114,6 +114,7 @@ const loading = ref(false)
 const router = useRouter()
 const authStore = useAuthStore()
 const colorMode = useColorMode()
+const config = useRuntimeConfig()
 
 const toggleColorMode = () => {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'

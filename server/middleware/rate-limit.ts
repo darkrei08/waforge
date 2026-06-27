@@ -37,9 +37,9 @@ export default defineEventHandler((event) => {
   const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown'
   const now = Date.now()
 
-  // Configurare limiti diversi per l'auth (prevenzione brute-force)
-  const isAuth = path.startsWith('/api/auth/')
-  const limit = isAuth ? 10 : MAX_REQUESTS
+  // Configurare limiti diversi per il login/register (prevenzione brute-force)
+  const isAuthAction = path === '/api/auth/login' || path === '/api/auth/register' || path === '/api/auth/invite' || path === '/api/auth/oauth/pocketid'
+  const limit = isAuthAction ? 10 : MAX_REQUESTS
 
   let entry = store.get(ip)
 

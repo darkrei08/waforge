@@ -30,7 +30,8 @@ export default defineNuxtConfig({
     redisUrl: process.env.REDIS_URL || '',
     databaseUrl: process.env.DATABASE_URL || '',
     public: {
-      enableDebugWidget: process.env.ENABLE_DEBUG_WIDGET || 'false'
+      enableDebugWidget: process.env.ENABLE_DEBUG_WIDGET || 'false',
+      oauthEnabled: !!process.env.OAUTH_CLIENT_ID
     }
   },
 
