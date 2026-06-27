@@ -8,11 +8,11 @@
  */
 
 import { defineEventHandler } from 'h3'
-import { readValidatedBody } from '~/server/utils/validation'
+import { zodReadBody } from '~/server/utils/validation'
 import { UpdateSettingsSchema } from '~/lib/validation'
 
 export default defineEventHandler(async (event) => {
-  const data = await readValidatedBody(event, UpdateSettingsSchema)
+  const data = await zodReadBody(event, UpdateSettingsSchema)
 
   // For now, we acknowledge the settings.
   // In production, these would be written to a settings table.

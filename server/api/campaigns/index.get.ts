@@ -4,11 +4,11 @@
 
 import { defineEventHandler } from 'h3'
 import { prisma } from '~/server/utils/prisma'
-import { readValidatedQuery } from '~/server/utils/validation'
+import { zodReadQuery } from '~/server/utils/validation'
 import { PaginationSchema } from '~/lib/validation'
 
 export default defineEventHandler(async (event) => {
-  const { page, limit, search } = readValidatedQuery(event, PaginationSchema)
+  const { page, limit, search } = zodReadQuery(event, PaginationSchema)
   const teamId = event.context.user.teamId
 
   const where = search

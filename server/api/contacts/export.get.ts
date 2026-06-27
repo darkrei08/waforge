@@ -5,7 +5,7 @@
 import { defineEventHandler } from 'h3'
 import { prisma } from '~/server/utils/prisma'
 import { generateCSV } from '~/lib/csv-parser'
-import { readValidatedQuery } from '~/server/utils/validation'
+import { zodReadQuery } from '~/server/utils/validation'
 import { z } from 'zod'
 
 const ExportQuerySchema = z.object({
@@ -13,7 +13,7 @@ const ExportQuerySchema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const { search } = await readValidatedQuery(event, ExportQuerySchema)
+  const { search } = await zodReadQuery(event, ExportQuerySchema)
   const teamId = event.context.user.teamId
 
   const where = search

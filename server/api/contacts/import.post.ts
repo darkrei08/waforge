@@ -4,13 +4,13 @@
 
 import { defineEventHandler } from 'h3'
 import { prisma } from '~/server/utils/prisma'
-import { readValidatedBody } from '~/server/utils/validation'
+import { zodReadBody } from '~/server/utils/validation'
 import { BulkImportSchema } from '~/lib/validation'
 import { parseCSV } from '~/lib/csv-parser'
 import { securityLog } from '~/lib/security-logger'
 
 export default defineEventHandler(async (event) => {
-  const { csv } = await readValidatedBody(event, BulkImportSchema)
+  const { csv } = await zodReadBody(event, BulkImportSchema)
   const teamId = event.context.user.teamId
 
   const result = parseCSV(csv)

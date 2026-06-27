@@ -4,11 +4,11 @@
 
 import { defineEventHandler } from 'h3'
 import { prisma } from '~/server/utils/prisma'
-import { readValidatedBody } from '~/server/utils/validation'
+import { zodReadBody } from '~/server/utils/validation'
 import { CreateCampaignSchema } from '~/lib/validation'
 
 export default defineEventHandler(async (event) => {
-  const data = await readValidatedBody(event, CreateCampaignSchema)
+  const data = await zodReadBody(event, CreateCampaignSchema)
   const teamId = event.context.user.teamId
 
   // Verify template belongs to team

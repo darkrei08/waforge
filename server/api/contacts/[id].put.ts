@@ -4,7 +4,7 @@
 
 import { defineEventHandler, getRouterParam, createError } from 'h3'
 import { prisma } from '~/server/utils/prisma'
-import { readValidatedBody } from '~/server/utils/validation'
+import { zodReadBody } from '~/server/utils/validation'
 import { UpdateContactSchema } from '~/lib/validation'
 
 export default defineEventHandler(async (event) => {
@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   if (!id) throw createError({ statusCode: 400, statusMessage: 'Missing contact ID' })
   const teamId = event.context.user.teamId
 
-  const data = await readValidatedBody(event, UpdateContactSchema)
+  const data = await zodReadBody(event, UpdateContactSchema)
 
   // Verify contact belongs to team
   const existing = await prisma.contact.findFirst({ where: { id, teamId } })
