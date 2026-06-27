@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-surface dark:bg-[#12161f] text-on-surface transition-colors duration-300 flex">
     <!-- Toast Notifications -->
     <Teleport to="body">
-      <TransitionGroup name="toast" tag="div" class="fixed bottom-6 right-6 z-[100] flex flex-col-reverse gap-3 pointer-events-none">
+      <TransitionGroup name="toast" tag="div" class="fixed top-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
         <div v-for="toast in toasts" :key="toast.id"
              class="pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-xl border shadow-2xl backdrop-blur-xl animate-slide-in-right min-w-[300px] max-w-[420px]"
              :class="toast.type === 'success'
