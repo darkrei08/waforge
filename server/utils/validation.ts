@@ -11,7 +11,7 @@ import type { H3Event } from 'h3'
  * Read and validate the request body against a Zod schema.
  * Throws H3 createError on validation failure.
  */
-export async function readValidatedBody<T extends z.ZodType>(
+export async function zodReadBody<T extends z.ZodType>(
   event: H3Event,
   schema: T
 ): Promise<z.infer<T>> {
@@ -37,7 +37,7 @@ export async function readValidatedBody<T extends z.ZodType>(
  * Read and validate query parameters against a Zod schema.
  * Throws H3 createError on validation failure.
  */
-export function readValidatedQuery<T extends z.ZodType>(
+export function zodReadQuery<T extends z.ZodType>(
   event: H3Event,
   schema: T
 ): z.infer<T> {

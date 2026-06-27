@@ -4,12 +4,12 @@
 
 import { defineEventHandler } from 'h3'
 import { prisma } from '~/server/utils/prisma'
-import { readValidatedBody } from '~/server/utils/validation'
+import { zodReadBody } from '~/server/utils/validation'
 import { CreateContactSchema } from '~/lib/validation'
 import parsePhoneNumber from 'libphonenumber-js'
 
 export default defineEventHandler(async (event) => {
-  const data = await readValidatedBody(event, CreateContactSchema)
+  const data = await zodReadBody(event, CreateContactSchema)
   const teamId = event.context.user.teamId
 
   let fullPhone = (data.prefix + data.phone).replace(/\D/g, '')
