@@ -187,3 +187,8 @@ WaForge Project Update - Fixes:
 - Creazione Webhook GOWA sicuro con HMAC (server/api/webhook/gowa.ts).
 - Aggiornamento stores/chat.ts per UI e stati in real-time.
 - Cron worker Nitro implementato (server/tasks/whatsapp-scheduled.ts).
+
+### [2026-06-27 17:18:00] Task C: Device Test Button & Toast UI Fix
+- Aggiunto endpoint `server/api/whatsapp/test.post.ts` per l'invio di un messaggio WhatsApp di test al device stesso.
+- Modificata UI `pages/devices.vue` aggiungendo il bottone 'Test Messaggio'.
+- Spostate le notifiche toast di connessione da top-right a bottom-right (`layouts/default.vue`) modificando anche il flex-direction per evitare overlap con i pulsanti.
