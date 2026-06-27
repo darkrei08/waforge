@@ -1,5 +1,5 @@
 <template>
-  <div class="p-8 max-w-2xl mx-auto space-y-6 animate-fade-in">
+  <div class="p-8 max-w-2xl space-y-6 animate-fade-in">
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ t('profile.title') || 'Profilo Utente' }}</h1>
       <p class="text-on-surface-variant mt-1">Gestisci i tuoi dati personali e la sicurezza.</p>

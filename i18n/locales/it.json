@@ -161,5 +161,8 @@
   "common": {
     "logout": "Logout",
     "toast_connected": "WhatsApp connesso con successo!"
+  },
+  "profile": {
+    "title": "Profilo Utente"
   }
 }

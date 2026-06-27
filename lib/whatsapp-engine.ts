@@ -56,68 +56,71 @@ async function apiCall(path: string, token: string, method = 'GET', body?: unkno
     headers['X-Device-Id'] = token
   }
 
-  const res = await fetch(`${cfg.base}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-    cache: 'no-store',
-  })
+  try {
+    const res = await $fetch(`${cfg.base}${path}`, {
+      method: method as any,
+      headers,
+      body: body ? body : undefined,
+    })
 
-  let data: any
-  
-  if (!res.ok) {
-    if (res.status === 401 && ENGINE === 'wuzapi' && retry) {
-      // Auto-provision user for fresh Docker setups
+    // Auto-provision gowa device for fresh setups (if returns 200 with code DEVICE_NOT_FOUND)
+    if (ENGINE === 'gowa' && res && res.code === 'DEVICE_NOT_FOUND' && retry) {
       try {
-        await fetch(`${cfg.base}/admin/users`, {
+        await $fetch(`${cfg.base}/devices`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': process.env.WUZAPI_TOKEN || '',
-          },
-          body: JSON.stringify({ name: 'WaForge Team User', token })
+          headers,
+          body: { device_id: token }
         })
         return apiCall(path, token, method, body, false)
       } catch (e) {
-        // Ignore and fall through to throw original error
+        // Ignore and fall through
       }
     }
-
-    const txt = await res.text()
-    try {
-      data = JSON.parse(txt)
-    } catch {
-      throw new Error(`[${ENGINE}] ${res.status}: ${txt}`)
-    }
     
-    // Fallback if no specific code is handled
-    if (data.code !== 'DEVICE_NOT_FOUND') {
-      throw new Error(`[${ENGINE}] ${res.status}: ${JSON.stringify(data)}`)
-    }
-  } else {
-    const txt = await res.text()
-    try {
-      data = JSON.parse(txt)
-    } catch {
-      data = txt // some endpoints might just return OK or plain text
-    }
-  }
+    return res
+  } catch (err: any) {
+    if (err.response) {
+      const status = err.response.status
+      const data = err.response._data || {}
 
-  // Auto-provision gowa device for fresh setups
-  if (ENGINE === 'gowa' && data.code === 'DEVICE_NOT_FOUND' && retry) {
-    try {
-      await fetch(`${cfg.base}/devices`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ device_id: token })
-      })
-      return apiCall(path, token, method, body, false)
-    } catch (e) {
-      // Ignore and fall through
-    }
-  }
+      if (status === 401 && ENGINE === 'wuzapi' && retry) {
+        try {
+          await $fetch(`${cfg.base}/admin/users`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': process.env.WUZAPI_TOKEN || '',
+            },
+            body: { name: 'WaForge Team User', token }
+          })
+          return apiCall(path, token, method, body, false)
+        } catch (e) {
+          // Ignore and fall through to throw original error
+        }
+      }
 
-  return data
+      if (data && data.code !== 'DEVICE_NOT_FOUND') {
+        throw new Error(`[${ENGINE}] ${status}: ${JSON.stringify(data)}`)
+      }
+
+      // Auto-provision gowa device for fresh setups (if returns error with code DEVICE_NOT_FOUND)
+      if (ENGINE === 'gowa' && data.code === 'DEVICE_NOT_FOUND' && retry) {
+        try {
+          await $fetch(`${cfg.base}/devices`, {
+            method: 'POST',
+            headers,
+            body: { device_id: token }
+          })
+          return apiCall(path, token, method, body, false)
+        } catch (e) {
+          // Ignore and fall through
+        }
+      }
+
+      return data
+    }
+    throw err
+  }
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────

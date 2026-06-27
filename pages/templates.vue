@@ -66,10 +66,10 @@
                   <div>
                     <span class="block font-medium text-sm text-on-surface mb-1">Legenda Variabili / Formattazione</span>
                     <ul class="space-y-1 text-xs text-on-surface-variant" v-pre>
-                      <li><code>{{Name}}</code> - Nome del contatto</li>
-                      <li><code>{{Phone}}</code> - Numero di telefono</li>
-                      <li><code>{{Email}}</code> - Indirizzo Email</li>
-                      <li><code>{{Company}}</code> - Nome azienda (se presente)</li>
+                      <li><code>{Name}</code> - Nome del contatto</li>
+                      <li><code>{Phone}</code> - Numero di telefono</li>
+                      <li><code>{Email}</code> - Indirizzo Email</li>
+                      <li><code>{Company}</code> - Nome azienda (se presente)</li>
                     </ul>
                     <div class="mt-3 text-[11px] text-on-surface-variant leading-relaxed">
                       <strong class="text-on-surface">Formattazione testo WhatsApp supportata:</strong><br/>
