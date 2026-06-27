@@ -132,3 +132,11 @@ User was unable to generate QR codes, getting 'No QR Code available'. The app wa
 - Updated lib/whatsapp-engine.ts to default to 'gowa' engine.
 - Updated docker-compose.yml to default WHATSAPP_ENGINE to 'gowa'.
 - Released hotfix v2.2.3.
+
+## 2026-06-27: Final GoWA QR Fix (v2.2.4)
+### Bug
+Even after switching to GoWA, QR generation failed because the lib sent a POST to /app/login (GoWA requires GET for login endpoint) and it passed an incorrect hardcoded device_id ('waforge-default') during auto-provisioning instead of using the session token.
+### Fix
+- Updated lib/whatsapp-engine.ts to use GET method for GoWA /app/login endpoint.
+- Updated lib/whatsapp-engine.ts to use the actual session token dynamically for GoWA device provisioning.
+- Released hotfix v2.2.4.
