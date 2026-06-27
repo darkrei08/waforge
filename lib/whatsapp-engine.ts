@@ -49,10 +49,11 @@ async function apiCall(path: string, token: string, method = 'GET', body?: unkno
     token,
   }
 
-  // gowa uses Basic Auth (admin:token) and requires X-Device-Id
+  // gowa uses Basic Auth (admin:secret) and requires X-Device-Id
   if (ENGINE === 'gowa') {
-    headers['Authorization'] = `Basic ${Buffer.from(`admin:${token}`).toString('base64')}`
-    headers['X-Device-Id'] = 'waforge-default'
+    const gowaToken = process.env.GOWA_TOKEN || 'secret-token'
+    headers['Authorization'] = `Basic ${Buffer.from(`admin:${gowaToken}`).toString('base64')}`
+    headers['X-Device-Id'] = token
   }
 
   const res = await fetch(`${cfg.base}${path}`, {
@@ -163,7 +164,12 @@ export async function getQRCode(token: string): Promise<string | null> {
           .replace('localhost:3000', 'gowa:3000')
           .replace('localhost:3200', 'gowa:3000')
           .replace('127.0.0.1:3000', 'gowa:3000')
-        const imgRes = await fetch(fetchUrl)
+        const gowaToken = process.env.GOWA_TOKEN || 'secret-token'
+        const imgRes = await fetch(fetchUrl, {
+          headers: {
+            'Authorization': `Basic ${Buffer.from(`admin:${gowaToken}`).toString('base64')}`
+          }
+        })
         if (!imgRes.ok) return null
         const arrayBuffer = await imgRes.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
