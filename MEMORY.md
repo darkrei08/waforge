@@ -140,3 +140,10 @@ Even after switching to GoWA, QR generation failed because the lib sent a POST t
 - Updated lib/whatsapp-engine.ts to use GET method for GoWA /app/login endpoint.
 - Updated lib/whatsapp-engine.ts to use the actual session token dynamically for GoWA device provisioning.
 - Released hotfix v2.2.4.
+
+## 2026-06-27: Fix GoWA Status Parsing for UI Unlock (v2.2.5)
+### Bug
+After fixing the QR code generation, the user reported that scanning the code worked but the UI did not unlock the 'Chats' section. It remained 'Disconnected / OFFLINE'. The root cause was that GoWA v8 wraps the connection status in 'results.is_connected' and 'results.is_logged_in', while WuzAPI and older engines used 'Connected' and 'LoggedIn'. Due to this parsing failure, our engine falsely reported to Nuxt that the device was disconnected.
+### Fix
+- Updated 'getEngineStatus' in 'lib/whatsapp-engine.ts' to fall back to 'data.results?.is_connected' and 'data.results?.is_logged_in' for GoWA.
+- Released hotfix v2.2.5.
