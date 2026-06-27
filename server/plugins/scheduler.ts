@@ -1,4 +1,3 @@
-import { defineNitroPlugin } from 'nitro/types'
 import { prisma } from '../utils/prisma'
 import { startCampaign } from '../utils/job-queue'
 
