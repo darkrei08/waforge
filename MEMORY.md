@@ -147,3 +147,8 @@ After fixing the QR code generation, the user reported that scanning the code wo
 ### Fix
 - Updated 'getEngineStatus' in 'lib/whatsapp-engine.ts' to fall back to 'data.results?.is_connected' and 'data.results?.is_logged_in' for GoWA.
 - Released hotfix v2.2.5.
+
+### [2026-06-27] Task A: Device Customization & GoWA Disconnect Fix
+- **Disconnection Fix**: Updated `lib/whatsapp-engine.ts` to use `DELETE /devices/{id}` for GoWA instead of `POST /app/logout`. Added try-catch in `server/api/whatsapp/disconnect.post.ts` to ignore engine 404s and proceed with local DB cleanup, fixing the "Errore durante la disconnessione" block.
+- **Device Personalization**: Added `name` and `tags` to `WhatsAppSession` in `prisma/schema.prisma`. Implemented `server/api/whatsapp/[id].patch.ts` to save names and tags. Updated `pages/devices.vue` to display a pencil icon opening a modal to edit name and tags, and correctly show the Team name.
+- **Environment**: Created `.env` from `.env.example` and added SMTP/OAuth configurations to `docker-compose.yml`.
