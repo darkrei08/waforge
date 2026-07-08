@@ -74,6 +74,7 @@
     "total": "{count} contatti totali",
     "delete_selected": "Elimina ({count})",
     "import_csv": "Importa CSV",
+    "export_csv": "Esporta CSV",
     "search_placeholder": "Cerca contatti...",
     "th_name": "Nome",
     "th_phone": "Telefono",

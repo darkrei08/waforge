@@ -298,6 +298,11 @@ onMounted(() => {
 onUnmounted(() => {
   if (pollInterval) clearInterval(pollInterval)
   stopCountdown()
+  
+  // Clean up pending session if it was not connected
+  if (tokenId.value && !localConnected.value) {
+    $fetch('/api/whatsapp/disconnect', { method: 'POST', body: { tokenId: tokenId.value } }).catch(() => {})
+  }
 })
 </script>
 

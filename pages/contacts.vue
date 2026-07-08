@@ -10,13 +10,17 @@
                 class="px-4 py-2.5 bg-error/20 hover:bg-error/30 text-error text-sm font-semibold rounded-lg border border-error/30 transition-all">
           <Trash2 class="w-4 h-4 inline mr-1" /> {{ t('contacts.delete_selected', { count: store.selected.size }) }}
         </button>
+        <button @click="showCsvInfo = true"
+                class="px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-semibold rounded-lg border border-primary/20 transition-all" title="Info formato CSV">
+          <Info class="w-4 h-4 inline mr-1" /> Info CSV
+        </button>
         <button @click="handleExport"
                 class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-on-surface text-sm font-semibold rounded-lg border border-white/10 transition-all">
-          <Download class="w-4 h-4 inline mr-1" /> {{ t('contacts.export_csv') || 'Esporta CSV' }}
+          <Upload class="w-4 h-4 inline mr-1" /> {{ t('contacts.export_csv') }}
         </button>
         <button @click="showImport = true"
                 class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-on-surface text-sm font-semibold rounded-lg border border-white/10 transition-all">
-          <Upload class="w-4 h-4 inline mr-1" /> {{ t('contacts.import_csv') }}
+          <Download class="w-4 h-4 inline mr-1" /> {{ t('contacts.import_csv') }}
         </button>
       </div>
     </div>
@@ -153,12 +157,49 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- CSV Info Modal -->
+    <Teleport to="body">
+      <div v-if="showCsvInfo" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showCsvInfo = false">
+        <div class="w-full max-w-lg bg-surface-container-high border border-white/10 rounded-2xl p-6 shadow-2xl animate-slide-in">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
+              <Info class="w-5 h-5 text-primary" /> Info Formato CSV
+            </h3>
+            <button @click="showCsvInfo = false" class="text-on-surface-variant hover:text-on-surface">
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div class="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3">
+            <p class="text-sm text-on-surface-variant mb-4">
+              Per importare correttamente i contatti, il file CSV deve contenere la seguente struttura di colonne nella prima riga:
+            </p>
+            <div class="space-y-2">
+              <div v-for="header in csvTemplateHeaders" :key="header.name" class="flex items-start gap-2 text-sm">
+                <code class="font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{{ header.name }}</code>
+                <span class="text-on-surface-variant flex-1">
+                  {{ header.description }}
+                  <span v-if="header.required" class="text-error font-semibold text-xs ml-1">(Obbligatorio)</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex justify-end mt-6">
+            <button @click="downloadCsvTemplate" class="px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-lg hover:bg-primary-fixed-dim transition-all flex items-center gap-2">
+              <Download class="w-4 h-4" /> Scarica Template CSV
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Upload, Trash2, Search, Download, X } from 'lucide-vue-next'
+import { Upload, Trash2, Search, Download, X, Info } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useContactsStore } from '~/stores/contacts'
 import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
@@ -168,6 +209,7 @@ const store = useContactsStore()
 const { csvTemplateHeaders } = useWhatsAppFormat()
 
 const showImport = ref(false)
+const showCsvInfo = ref(false)
 const csvText = ref('')
 const fileName = ref('')
 const importResult = ref<any>(null)
