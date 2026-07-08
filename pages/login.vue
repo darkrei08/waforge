@@ -142,18 +142,11 @@ const handleLogin = async () => {
   loading.value = true
 
   try {
-    const { data, error: fetchError } = await useFetch('/api/auth/login', {
+    const response: any = await $fetch('/api/auth/login', {
       method: 'POST',
       body: { email: email.value, password: password.value }
     })
 
-    if (fetchError.value) {
-      error.value = fetchError.value.data?.message || 'Errore di connessione'
-      loading.value = false
-      return
-    }
-
-    const response = data.value as any
     if (response && response.success) {
       await authStore.fetchUser()
       router.push('/')
@@ -161,7 +154,7 @@ const handleLogin = async () => {
       error.value = response?.message || 'Credenziali non valide'
     }
   } catch (e: any) {
-    error.value = 'Errore imprevisto. Riprova.'
+    error.value = e.data?.message || 'Errore imprevisto. Riprova.'
   } finally {
     loading.value = false
   }

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { navigateTo } from '#app'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<any>(null)
@@ -17,12 +17,7 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('Logout error', e)
     }
     user.value = null
-    const router = useRouter()
-    if (router) {
-      router.push('/login')
-    } else {
-      window.location.href = '/login'
-    }
+    await navigateTo('/login', { replace: true })
   }
 
   const fetchUser = async () => {

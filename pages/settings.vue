@@ -89,7 +89,7 @@ const error = ref('')
 
 async function handleSave() {
   error.value = ''
-  if (store.settings.defaultDelayMin >= store.settings.defaultDelayMax) {
+  if (store.settings.delayMin >= store.settings.delayMax) {
     error.value = 'Il ritardo minimo deve essere minore del ritardo massimo.'
     return
   }

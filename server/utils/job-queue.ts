@@ -28,7 +28,7 @@ export const connection = globalThis.__redis || new IORedis(getRedisUrl(), {
 })
 if (process.env.NODE_ENV !== 'production') globalThis.__redis = connection
 
-export const campaignQueue = globalThis.__campaignQueue || new Queue('campaigns', { connection })
+export const campaignQueue = globalThis.__campaignQueue || new Queue('campaigns', { connection: connection as any })
 if (process.env.NODE_ENV !== 'production') globalThis.__campaignQueue = campaignQueue
 
 // ── Worker (Processore in Background) ────────────────────────────────────────
@@ -95,7 +95,7 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
   // (per semplicità lasciamo a un job di cleanup o al frontend)
   return { success: result.success, messageId: result.messageId }
 
-}, { connection, concurrency: 5 })
+}, { connection: connection as any, concurrency: 5 })
 
 if (process.env.NODE_ENV !== 'production') globalThis.__campaignWorker = campaignWorker
 

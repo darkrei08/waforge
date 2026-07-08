@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   const campaign = await prisma.campaign.findFirst({ where: { id, teamId } })
   if (!campaign) throw createError({ statusCode: 404, statusMessage: 'Campaign not found or access denied' })
 
-  const progress = await getCampaignProgress(id)
+  const progress = await getCampaignProgress(id, teamId)
 
   if (!progress) {
     throw createError({ statusCode: 404, statusMessage: 'Campaign not found' })

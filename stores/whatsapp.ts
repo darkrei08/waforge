@@ -29,10 +29,12 @@ export const useWhatsappStore = defineStore('whatsapp', () => {
   const statusLabel = computed(() => connected.value ? 'Connesso' : 'Disconnesso')
 
   async function fetchSessions() {
+    loading.value = true
     try {
       const res = await $fetch<{ data: WASession[] }>('/api/whatsapp/sessions')
       sessions.value = res.data || []
     } catch { /* silent */ }
+    finally { loading.value = false }
   }
 
   /** Alias for fetchSessions — used by api-status page */

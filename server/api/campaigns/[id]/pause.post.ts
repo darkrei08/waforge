@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   const campaign = await prisma.campaign.findFirst({ where: { id, teamId } })
   if (!campaign) throw createError({ statusCode: 404, statusMessage: 'Campaign not found or access denied' })
 
-  const paused = pauseCampaign(id)
+  const paused = await pauseCampaign(id, teamId)
 
   if (!paused) {
     throw createError({ statusCode: 404, statusMessage: 'No active campaign with this ID' })

@@ -149,7 +149,16 @@ const mockConnect = () => {
 
 const disconnect = async () => {
   try {
-    await $fetch('/api/whatsapp/disconnect', { method: 'POST' })
+    const sessions: any = await $fetch('/api/whatsapp/sessions')
+    const tokenId = sessions?.data?.[0]?.sessionId
+    if (!tokenId) {
+       console.error('No session to disconnect')
+       return
+    }
+    await $fetch('/api/whatsapp/disconnect', { 
+      method: 'POST',
+      body: { tokenId }
+    })
     console.log('Requested disconnect successfully')
   } catch (error) {
     console.error('Failed to disconnect', error)
@@ -162,6 +171,10 @@ onMounted(() => {
   logInterval = setInterval(() => {
     fetchLogs()
   }, 2000)
+})
+
+onUnmounted(() => {
+  if (logInterval) clearInterval(logInterval)
 })
 </script>
 

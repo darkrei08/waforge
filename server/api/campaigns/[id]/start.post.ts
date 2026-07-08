@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   if (!campaign) throw createError({ statusCode: 404, statusMessage: 'Campaign not found or access denied' })
 
   // Start in background (non-blocking)
-  startCampaign(id).catch(err => {
+  await startCampaign(id, teamId).catch(err => {
     console.error(`[Campaign ${id}] Error:`, err)
   })
 

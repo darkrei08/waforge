@@ -28,8 +28,13 @@ export const useChatStore = defineStore('chat', () => {
   const messages = ref<Record<string, ChatMessage[]>>({}) // contactId -> messages
   const activeContactId = ref<string | null>(null)
   const loading = ref(false)
+  const isConnected = ref(false)
   const ws = ref<WebSocket | null>(null)
   
+  let reconnectAttempts = 0
+  const maxReconnectAttempts = 5
+  const baseDelay = 1000 // 1 second
+
   const authStore = useAuthStore()
 
   async function fetchConversations() {
@@ -86,6 +91,8 @@ export const useChatStore = defineStore('chat', () => {
     
     socket.onopen = () => {
       console.log('[WS] Connected to Chat CRM')
+      isConnected.value = true
+      reconnectAttempts = 0 // Reset attempts on successful connection
     }
 
     socket.onmessage = (event) => {
@@ -134,9 +141,18 @@ export const useChatStore = defineStore('chat', () => {
     }
 
     socket.onclose = () => {
-      console.log('[WS] Disconnected, reconnecting in 3s...')
+      console.log('[WS] Disconnected')
+      isConnected.value = false
       ws.value = null
-      setTimeout(connectWebSocket, 3000)
+      
+      if (reconnectAttempts < maxReconnectAttempts) {
+        const delay = Math.min(baseDelay * Math.pow(2, reconnectAttempts), 30000) // Max 30s
+        reconnectAttempts++
+        console.log(`[WS] Reconnecting in ${delay}ms... (Attempt ${reconnectAttempts})`)
+        setTimeout(connectWebSocket, delay)
+      } else {
+        console.error('Max websocket reconnect attempts reached.')
+      }
     }
 
     ws.value = socket

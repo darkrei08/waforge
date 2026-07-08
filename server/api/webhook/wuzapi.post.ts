@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
           fullPhone: phone,
           name: msgData.Info?.PushName || phone, // Nome su WA
           isActive: true
-        }
+        } as any
       })
     }
 

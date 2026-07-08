@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject } from 'vue'
 import { Plus, Edit2, Trash2, Info } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useTemplatesStore, type Template } from '~/stores/templates'
@@ -115,9 +115,11 @@ import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
 const { t } = useI18n()
 const store = useTemplatesStore()
 const { formatWhatsAppText } = useWhatsAppFormat()
+const addToast = inject('addToast') as Function
 
 const showWizard = ref(false)
 const isEditing = ref(false)
+const isSaving = ref(false)
 const formData = ref({ id: '', name: '', description: '', body: '' })
 
 function openWizard(tmpl?: Template) {
@@ -132,17 +134,43 @@ function openWizard(tmpl?: Template) {
 }
 
 async function handleSave() {
-  if (isEditing.value) {
-    await store.updateTemplate(formData.value.id, formData.value)
-  } else {
-    await store.createTemplate(formData.value)
+  if (!formData.value.name || !formData.value.body) return
+  isSaving.value = true
+  
+  try {
+    if (isEditing.value && formData.value.id) {
+      await store.updateTemplate(formData.value.id, {
+        name: formData.value.name,
+        body: formData.value.body,
+        description: formData.value.description
+      })
+      addToast('Template aggiornato con successo', 'success')
+    } else {
+      await store.createTemplate({
+        name: formData.value.name,
+        body: formData.value.body,
+        description: formData.value.description
+      })
+      addToast('Template creato con successo', 'success')
+    }
+    showWizard.value = false
+    await store.fetchTemplates()
+  } catch (err: any) {
+    addToast(err.data?.message || err.message || 'Errore durante il salvataggio del template', 'error')
+  } finally {
+    isSaving.value = false
   }
-  showWizard.value = false
 }
 
 async function handleDelete(id: string) {
   if (confirm(t('templates.confirm_delete'))) {
-    await store.deleteTemplate(id)
+    try {
+      await store.deleteTemplate(id)
+      addToast('Template eliminato con successo', 'success')
+      await store.fetchTemplates()
+    } catch (err: any) {
+      addToast(err.data?.message || err.message || 'Errore durante l\'eliminazione', 'error')
+    }
   }
 }
 

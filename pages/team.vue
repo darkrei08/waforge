@@ -81,7 +81,7 @@
     <!-- Invite Modal -->
     <Teleport to="body">
       <Transition name="fade">
-        <div v-if="showInviteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div v-if="showInviteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" @click.self="showInviteModal = false">
           <div class="bg-surface-container w-full max-w-md rounded-2xl shadow-2xl border border-white/10 overflow-hidden transform transition-all" @click.stop>
             <div class="p-6 border-b border-white/10 flex items-center justify-between">
               <h3 class="text-xl font-bold">Invita Utente</h3>

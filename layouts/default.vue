@@ -42,33 +42,57 @@
             <LayoutDashboard class="w-5 h-5" />
             <span class="font-medium text-sm">{{ t('nav.home') }}</span>
           </NuxtLink>
-          <NuxtLink :to="waStore.connected ? localePath('/contacts') : '#'" @click="!waStore.connected && $event.preventDefault()" class="flex items-center justify-between p-3 rounded-lg transition-colors" :class="waStore.connected ? 'hover:bg-white/5' : 'opacity-50 cursor-not-allowed'" :active-class="waStore.connected ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''">
+          <a v-if="!waStore.connected" class="flex items-center justify-between p-3 rounded-lg transition-colors opacity-50 cursor-not-allowed">
             <div class="flex items-center gap-3">
               <Users class="w-5 h-5" />
               <span class="font-medium text-sm">{{ t('nav.contacts') }}</span>
             </div>
-            <Lock v-if="!waStore.connected" class="w-4 h-4" />
+            <Lock class="w-4 h-4" />
+          </a>
+          <NuxtLink v-else :to="localePath('/contacts')" class="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary border-l-2 border-primary">
+            <div class="flex items-center gap-3">
+              <Users class="w-5 h-5" />
+              <span class="font-medium text-sm">{{ t('nav.contacts') }}</span>
+            </div>
           </NuxtLink>
-          <NuxtLink :to="waStore.connected ? localePath('/campaigns') : '#'" @click="!waStore.connected && $event.preventDefault()" class="flex items-center justify-between p-3 rounded-lg transition-colors" :class="waStore.connected ? 'hover:bg-white/5' : 'opacity-50 cursor-not-allowed'" :active-class="waStore.connected ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''">
+          <a v-if="!waStore.connected" class="flex items-center justify-between p-3 rounded-lg transition-colors opacity-50 cursor-not-allowed">
             <div class="flex items-center gap-3">
               <Megaphone class="w-5 h-5" />
               <span class="font-medium text-sm">{{ t('nav.campaigns') }}</span>
             </div>
-            <Lock v-if="!waStore.connected" class="w-4 h-4" />
+            <Lock class="w-4 h-4" />
+          </a>
+          <NuxtLink v-else :to="localePath('/campaigns')" class="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary border-l-2 border-primary">
+            <div class="flex items-center gap-3">
+              <Megaphone class="w-5 h-5" />
+              <span class="font-medium text-sm">{{ t('nav.campaigns') }}</span>
+            </div>
           </NuxtLink>
-          <NuxtLink :to="waStore.connected ? localePath('/templates') : '#'" @click="!waStore.connected && $event.preventDefault()" class="flex items-center justify-between p-3 rounded-lg transition-colors" :class="waStore.connected ? 'hover:bg-white/5' : 'opacity-50 cursor-not-allowed'" :active-class="waStore.connected ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''">
+          <a v-if="!waStore.connected" class="flex items-center justify-between p-3 rounded-lg transition-colors opacity-50 cursor-not-allowed">
             <div class="flex items-center gap-3">
               <MessageSquareText class="w-5 h-5" />
               <span class="font-medium text-sm">{{ t('nav.templates') }}</span>
             </div>
-            <Lock v-if="!waStore.connected" class="w-4 h-4" />
+            <Lock class="w-4 h-4" />
+          </a>
+          <NuxtLink v-else :to="localePath('/templates')" class="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary border-l-2 border-primary">
+            <div class="flex items-center gap-3">
+              <MessageSquareText class="w-5 h-5" />
+              <span class="font-medium text-sm">{{ t('nav.templates') }}</span>
+            </div>
           </NuxtLink>
-          <NuxtLink :to="waStore.connected ? localePath('/chat') : '#'" @click="!waStore.connected && $event.preventDefault()" class="flex items-center justify-between p-3 rounded-lg transition-colors" :class="waStore.connected ? 'hover:bg-white/5' : 'opacity-50 cursor-not-allowed'" :active-class="waStore.connected ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''">
+          <a v-if="!waStore.connected" class="flex items-center justify-between p-3 rounded-lg transition-colors opacity-50 cursor-not-allowed">
             <div class="flex items-center gap-3">
               <MessageCircle class="w-5 h-5" />
               <span class="font-medium text-sm">{{ t('nav.chat') }}</span>
             </div>
-            <Lock v-if="!waStore.connected" class="w-4 h-4" />
+            <Lock class="w-4 h-4" />
+          </a>
+          <NuxtLink v-else :to="localePath('/chat')" class="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary border-l-2 border-primary">
+            <div class="flex items-center gap-3">
+              <MessageCircle class="w-5 h-5" />
+              <span class="font-medium text-sm">{{ t('nav.chat') }}</span>
+            </div>
           </NuxtLink>
         </nav>
       </div>

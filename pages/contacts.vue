@@ -18,7 +18,7 @@
                 class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-on-surface text-sm font-semibold rounded-lg border border-white/10 transition-all">
           <Download class="w-4 h-4 inline mr-1" /> {{ t('contacts.export_csv') }}
         </button>
-        <button @click="showImport = true"
+        <button @click="openImportModal()"
                 class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-on-surface text-sm font-semibold rounded-lg border border-white/10 transition-all">
           <Upload class="w-4 h-4 inline mr-1" /> {{ t('contacts.import_csv') }}
         </button>
@@ -220,6 +220,16 @@ const importResult = ref<any>(null)
 const importError = ref<string | null>(null)
 const isImporting = ref(false)
 
+function openImportModal() {
+  // Reset all state when opening the modal
+  csvText.value = ''
+  fileName.value = ''
+  importResult.value = null
+  importError.value = null
+  isImporting.value = false
+  showImport.value = true
+}
+
 let debounceTimer: ReturnType<typeof setTimeout>
 function debouncedSearch() {
   clearTimeout(debounceTimer)
@@ -260,8 +270,12 @@ async function handleImport() {
   
   try {
     importResult.value = await store.importCSV(csvText.value)
-    // Refresh force to update UI properly
+    // Refresh the contacts table
     await store.fetchContacts(1)
+    // Close modal after a brief delay so user can see the result
+    setTimeout(() => {
+      showImport.value = false
+    }, 1500)
   } catch (err: any) {
     importError.value = err.data?.message || err.message || 'Errore durante l\'importazione del file.'
   } finally {

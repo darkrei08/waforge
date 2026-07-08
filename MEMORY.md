@@ -192,3 +192,8 @@ WaForge Project Update - Fixes:
 - Aggiunto endpoint `server/api/whatsapp/test.post.ts` per l'invio di un messaggio WhatsApp di test al device stesso.
 - Modificata UI `pages/devices.vue` aggiungendo il bottone 'Test Messaggio'.
 - Spostate le notifiche toast di connessione da top-right a bottom-right (`layouts/default.vue`) modificando anche il flex-direction per evitare overlap con i pulsanti.
+
+### [2026-07-08] Refactoring UI & TypeScript Stability
+- **Modali e UI:** Fixati comportamenti anomali del popup CSV (ora si chiude dopo successo), del wizard campagne (stato resettato correttamente) e del modale team (click outside per chiudere).
+- **Middlewares & Stores:** Sistemato il bypass della sicurezza sulle rotte `i18n` (es. `/it/campaigns`). Rimossa la cache problematica usando `$fetch` in login/register.
+- **Backend TypeScript:** Fixata la configurazione di `tsconfig.json` che era impostata erroneamente su pattern Next.js, abbattendo oltre 120 errori. Risolti disallineamenti di tipizzazione (BullMQ/Redis in `job-queue.ts`) e aggiornate le API delle campagne per richiedere correttamente 2 argomenti (`id`, `teamId`).

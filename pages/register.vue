@@ -159,7 +159,7 @@ const handleRegister = async () => {
   loading.value = true
 
   try {
-    const { data, error: fetchError } = await useFetch('/api/auth/register', {
+    const response: any = await $fetch('/api/auth/register', {
       method: 'POST',
       body: { 
         name: name.value,
@@ -170,13 +170,6 @@ const handleRegister = async () => {
       }
     })
 
-    if (fetchError.value) {
-      error.value = fetchError.value.data?.message || 'Errore durante la registrazione'
-      loading.value = false
-      return
-    }
-
-    const response = data.value as any
     if (response && response.success) {
       await authStore.fetchUser()
       router.push('/')
@@ -184,7 +177,7 @@ const handleRegister = async () => {
       error.value = response?.message || 'Impossibile creare l\'account'
     }
   } catch (e: any) {
-    error.value = 'Errore imprevisto. Riprova.'
+    error.value = e.data?.message || 'Errore imprevisto. Riprova.'
   } finally {
     loading.value = false
   }

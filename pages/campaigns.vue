@@ -2,7 +2,7 @@
   <div class="p-8 space-y-6 animate-fade-in">
     <div class="flex items-center justify-between">
       <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ t('campaigns.title') }}</h1>
-      <button @click="showWizard = true"
+      <button @click="openWizard()"
               class="px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:shadow-[0_0_25px_rgba(37,211,102,0.5)] transition-all flex items-center gap-2">
         <Plus class="w-5 h-5" /> {{ t('campaigns.new') }}
       </button>
@@ -159,6 +159,7 @@
                        class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none" />
               </div>
             </div>
+            <p v-if="formData.delayMin >= formData.delayMax" class="text-xs text-error">Il ritardo minimo deve essere inferiore al massimo.</p>
             <p class="text-xs text-on-surface-variant">{{ t('campaigns.contacts_all') }}</p>
           </div>
 
@@ -179,7 +180,7 @@
                 {{ wizardStep > 1 ? t('campaigns.btn_back') : t('campaigns.btn_cancel') }}
               </button>
               <button v-if="wizardStep < 4" @click="wizardStep++"
-                      :disabled="wizardStep === 1 && !formData.name || wizardStep === 2 && !formData.templateId"
+                      :disabled="(wizardStep === 1 && !formData.name) || (wizardStep === 2 && !formData.templateId) || (wizardStep === 3 && formData.delayMin >= formData.delayMax)"
                       class="px-5 py-2 bg-primary text-on-primary font-semibold rounded-lg transition-all disabled:opacity-30">
                 {{ t('campaigns.btn_next') }}
               </button>
@@ -284,6 +285,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, inject } from 'vue'
+import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
 import { Plus, Play, Pause, Eye, X, Clock, Edit2, Trash2, Calendar, CheckCircle2, AlertCircle } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useCampaignsStore } from '~/stores/campaigns'
@@ -335,7 +337,18 @@ function openWizard(campaign?: any) {
     }
   } else {
     isEditing.value = false
-    formData.value = { ...initialForm }
+  showWizard.value = true
+}
+
+const editCampaign = (campaign: any) => {
+  isEditing.value = true
+  formData.value = {
+    id: campaign.id,
+    name: campaign.name,
+    templateId: campaign.templateId,
+    delayMin: campaign.delayMin,
+    delayMax: campaign.delayMax,
+    scheduledAt: campaign.scheduledAt ? new Date(campaign.scheduledAt).toISOString().slice(0, 16) : ''
   }
   showWizard.value = true
 }
@@ -375,7 +388,6 @@ async function handleDelete(id: string) {
     }
   }
 }
-import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
 const { formatWhatsAppText } = useWhatsAppFormat()
 
 const selectedTemplatePreview = computed(() => {

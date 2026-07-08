@@ -4,11 +4,11 @@ export default defineNuxtRouteMiddleware((to) => {
   // Rotte protette che richiedono almeno un dispositivo connesso
   const protectedRoutes = ['/contacts', '/campaigns', '/chat', '/templates']
 
-  // Se la rotta corrente inizia con una di quelle protette
-  const isProtected = protectedRoutes.some(route => to.path.startsWith(route))
+  // Strip i18n locale prefix before matching protected routes
+  const normalizedPath = to.path.replace(/^\/(en|it)/, '') || '/'
+  const isProtected = protectedRoutes.some(route => normalizedPath.startsWith(route))
 
   if (isProtected && !waStore.connected) {
-    // Aggiungi un parametro per far capire alla pagina devices perché siamo qui
     return navigateTo('/devices?blocked=true')
   }
 })

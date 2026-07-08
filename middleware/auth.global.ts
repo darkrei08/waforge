@@ -7,7 +7,10 @@ export default defineNuxtRouteMiddleware((to) => {
   
   const isAuthenticated = authStore.isAuthenticated
 
-  if (publicRoutes.includes(to.path)) {
+  // Strip i18n locale prefix to correctly match public routes
+  const normalizedPath = to.path.replace(/^\/(en|it)/, '') || '/'
+
+  if (publicRoutes.includes(normalizedPath)) {
     if (isAuthenticated) {
       return navigateTo('/')
     }

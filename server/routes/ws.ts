@@ -6,7 +6,7 @@ export const activeClients = new Map<string, any[]>()
 export default defineWebSocketHandler({
   async open(peer) {
     // 1. Autenticazione via query string (es. /ws?token=XYZ)
-    const url = new URL(peer.url || '', 'http://localhost')
+    const url = new URL((peer as any).url || (peer as any).request?.url || '', 'http://localhost')
     const token = url.searchParams.get('token')
     
     if (!token) {

@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
     orderBy: { createdAt: 'desc' },
   })
 
-  const csv = generateCSV(contacts)
+  const csv = generateCSV(contacts as any)
 
   // Set headers to trigger a file download
   setResponseHeader(event, 'Content-Type', 'text/csv; charset=utf-8')
