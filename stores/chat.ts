@@ -79,11 +79,8 @@ export const useChatStore = defineStore('chat', () => {
   function connectWebSocket() {
     if (ws.value) return // already connected
 
-    const token = authStore.token
-    if (!token) return
-
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const wsUrl = `${protocol}//${window.location.host}/api/ws?token=${token}`
+    const wsUrl = `${protocol}//${window.location.host}/api/ws`
     
     const socket = new WebSocket(wsUrl)
     

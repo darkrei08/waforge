@@ -66,24 +66,35 @@
 
       <!-- Save -->
       <div class="flex items-center gap-4">
-        <button @click="store.saveSettings" :disabled="store.loading"
+        <button @click="handleSave" :disabled="store.loading"
                 class="px-6 py-3 bg-primary text-on-primary font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:shadow-[0_0_25px_rgba(37,211,102,0.5)] transition-all disabled:opacity-50">
           {{ store.loading ? t('settings.btn_saving') : t('settings.btn_save') }}
         </button>
         <span v-if="store.saved" class="text-sm text-primary font-medium animate-fade-in">{{ t('settings.saved') }}</span>
+        <span v-if="error" class="text-sm text-error font-medium animate-fade-in">{{ error }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Wifi, Clock, Shield } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useSettingsStore } from '~/stores/settings'
 
 const { t } = useI18n()
 const store = useSettingsStore()
+const error = ref('')
+
+async function handleSave() {
+  error.value = ''
+  if (store.settings.defaultDelayMin >= store.settings.defaultDelayMax) {
+    error.value = 'Il ritardo minimo deve essere minore del ritardo massimo.'
+    return
+  }
+  await store.saveSettings()
+}
 
 onMounted(() => store.fetchSettings())
 </script>

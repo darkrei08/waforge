@@ -26,6 +26,7 @@ export const useWhatsappStore = defineStore('whatsapp', () => {
   const connected = computed(() => sessions.value.some(s => s.connected))
   const engine = computed(() => sessions.value[0]?.engine ?? 'WuzAPI')
   const phone = computed(() => sessions.value.find(s => s.connected)?.phone ?? null)
+  const statusLabel = computed(() => connected.value ? 'Connesso' : 'Disconnesso')
 
   async function fetchSessions() {
     try {
@@ -55,5 +56,5 @@ export const useWhatsappStore = defineStore('whatsapp', () => {
     await fetchSessions()
   }
 
-  return { sessions, connected, loading, engine, phone, fetchSessions, fetchStatus, disconnect, updateSession }
+  return { sessions, connected, loading, engine, phone, statusLabel, fetchSessions, fetchStatus, disconnect, updateSession }
 })

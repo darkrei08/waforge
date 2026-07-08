@@ -97,7 +97,7 @@
     </div>
 
     <!-- Edit Device Modal -->
-    <div v-if="editModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div v-if="editModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="editModalOpen = false">
       <div class="bg-surface border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-xl font-bold text-on-surface">Modifica Dispositivo</h3>

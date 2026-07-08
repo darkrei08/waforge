@@ -46,10 +46,13 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-if="store.loading" v-for="i in 5" :key="i" class="border-b border-white/5">
-            <td colspan="6" class="p-4"><div class="h-4 bg-white/5 rounded animate-pulse"></div></td>
-          </tr>
-          <tr v-else v-for="contact in store.contacts" :key="contact.id"
+          <template v-if="store.loading">
+            <tr v-for="i in 5" :key="i" class="border-b border-white/5">
+              <td colspan="6" class="p-4"><div class="h-4 bg-white/5 rounded animate-pulse"></div></td>
+            </tr>
+          </template>
+          <template v-else>
+            <tr v-for="contact in store.contacts" :key="contact.id"
               class="border-b border-white/5 hover:bg-white/5 transition-colors">
             <td class="p-4">
               <input type="checkbox" :checked="store.selected.has(contact.id)" @change="store.toggleSelect(contact.id)"
@@ -65,7 +68,8 @@
                 {{ contact.isActive ? t('contacts.status_active') : t('contacts.status_inactive') }}
               </span>
             </td>
-          </tr>
+            </tr>
+          </template>
         </tbody>
       </table>
 
@@ -95,6 +99,25 @@
         <div class="w-full max-w-lg bg-surface-container-high border border-white/10 rounded-2xl p-6 shadow-2xl animate-slide-in">
           <h3 class="text-lg font-bold text-on-surface mb-4">{{ t('contacts.import_title') }}</h3>
           
+          <div class="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-xl">
+            <h4 class="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+              Formato CSV Richiesto
+            </h4>
+            <div class="space-y-2">
+              <div v-for="header in csvTemplateHeaders" :key="header.name" class="flex items-start gap-2 text-sm">
+                <code class="font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{{ header.name }}</code>
+                <span class="text-on-surface-variant flex-1">
+                  {{ header.description }}
+                  <span v-if="header.required" class="text-error font-semibold text-xs ml-1">(Obbligatorio)</span>
+                </span>
+              </div>
+            </div>
+            <button @click="downloadCsvTemplate" class="mt-4 text-sm text-primary hover:text-primary-fixed-dim transition-colors flex items-center gap-1">
+              <Download class="w-4 h-4" /> Scarica Template CSV
+            </button>
+          </div>
+
           <div 
             class="relative border-2 border-dashed border-white/20 rounded-xl p-8 text-center hover:border-primary/50 transition-colors"
             @dragover.prevent
@@ -138,9 +161,11 @@ import { ref, onMounted } from 'vue'
 import { Upload, Trash2, Search, Download, X } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useContactsStore } from '~/stores/contacts'
+import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
 
 const { t } = useI18n()
 const store = useContactsStore()
+const { csvTemplateHeaders } = useWhatsAppFormat()
 
 const showImport = ref(false)
 const csvText = ref('')
@@ -181,7 +206,20 @@ function clearFile() {
 async function handleImport() {
   if (!csvText.value.trim()) return
   importResult.value = await store.importCSV(csvText.value)
-  // Non chiudiamo il modal subito per mostrare il risultato
+  // Refresh force to update UI properly
+  await store.fetchContacts(1)
+}
+
+function downloadCsvTemplate() {
+  const headers = csvTemplateHeaders.map(h => h.name).join(',')
+  const sample = 'Mario Rossi,39,3331234567,mario@azienda.com,Azienda SpA'
+  const blob = new Blob([`${headers}\n${sample}`], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.setAttribute('download', 'template_contatti.csv')
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 
 async function handleBulkDelete() {

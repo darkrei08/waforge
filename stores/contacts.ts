@@ -58,21 +58,25 @@ export const useContactsStore = defineStore('contacts', () => {
 
   async function deleteContacts(ids: string[]) {
     await $fetch('/api/contacts/bulk-delete', { method: 'POST', body: { ids } })
-    selected.value.clear()
+    selected.value = new Set()
     await fetchContacts(pagination.value.page)
   }
 
   function toggleSelect(id: string) {
-    if (selected.value.has(id)) selected.value.delete(id)
-    else selected.value.add(id)
+    const newSet = new Set(selected.value)
+    if (newSet.has(id)) newSet.delete(id)
+    else newSet.add(id)
+    selected.value = newSet
   }
 
   function selectAll() {
-    contacts.value.forEach(c => selected.value.add(c.id))
+    const newSet = new Set(selected.value)
+    contacts.value.forEach(c => newSet.add(c.id))
+    selected.value = newSet
   }
 
   function clearSelection() {
-    selected.value.clear()
+    selected.value = new Set()
   }
 
   return { contacts, pagination, search, loading, selected, hasSelection, fetchContacts, createContact, importCSV, deleteContacts, toggleSelect, selectAll, clearSelection }

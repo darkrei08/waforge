@@ -66,10 +66,10 @@
                   <div>
                     <span class="block font-medium text-sm text-on-surface mb-1">Legenda Variabili / Formattazione</span>
                     <ul class="space-y-1 text-xs text-on-surface-variant" v-pre>
-                      <li><code>{Name}</code> - Nome del contatto</li>
-                      <li><code>{Phone}</code> - Numero di telefono</li>
-                      <li><code>{Email}</code> - Indirizzo Email</li>
-                      <li><code>{Company}</code> - Nome azienda (se presente)</li>
+                      <li><code>{{Name}}</code> - Nome del contatto</li>
+                      <li><code>{{Phone}}</code> - Numero di telefono</li>
+                      <li><code>{{Email}}</code> - Indirizzo Email</li>
+                      <li><code>{{Company}}</code> - Nome azienda (se presente)</li>
                     </ul>
                     <div class="mt-3 text-[11px] text-on-surface-variant leading-relaxed">
                       <strong class="text-on-surface">Formattazione testo WhatsApp supportata:</strong><br/>
@@ -110,31 +110,15 @@ import { Plus, Edit2, Trash2, Info } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useTemplatesStore, type Template } from '~/stores/templates'
 
+import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
+
 const { t } = useI18n()
 const store = useTemplatesStore()
+const { formatWhatsAppText } = useWhatsAppFormat()
 
 const showWizard = ref(false)
 const isEditing = ref(false)
 const formData = ref({ id: '', name: '', description: '', body: '' })
-
-function formatWhatsAppText(text: string) {
-  if (!text) return ''
-  
-  const escaped = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-
-  return escaped
-    .replace(/```(.*?)```/gs, '<pre class="font-mono bg-black/20 p-2 rounded my-1">$1</pre>')
-    .replace(/`(.*?)`/g, '<code class="font-mono bg-black/20 px-1 rounded text-[0.9em]">$1</code>')
-    .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-    .replace(/_(.*?)_/g, '<em>$1</em>')
-    .replace(/~(.*?)~/g, '<del>$1</del>')
-    .replace(/^&gt; (.*$)/gm, '<blockquote class="border-l-4 border-white/20 pl-3 ml-1 my-1 italic text-on-surface-variant">$1</blockquote>')
-}
 
 function openWizard(tmpl?: Template) {
   if (tmpl) {

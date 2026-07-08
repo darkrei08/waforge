@@ -40,11 +40,13 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-white/5">
-            <tr v-if="store.loading" v-for="i in 3" :key="i" class="animate-pulse">
-              <td colspan="7" class="py-6 px-6">
-                <div class="h-4 bg-white/5 rounded w-full"></div>
-              </td>
-            </tr>
+            <template v-if="store.loading">
+              <tr v-for="i in 3" :key="i" class="animate-pulse">
+                <td colspan="7" class="py-6 px-6">
+                  <div class="h-4 bg-white/5 rounded w-full"></div>
+                </td>
+              </tr>
+            </template>
             <tr v-else-if="store.campaigns.length === 0">
               <td colspan="7" class="py-8 text-center text-on-surface-variant">Nessuna campagna trovata.</td>
             </tr>
@@ -78,7 +80,7 @@
                           class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-on-surface-variant transition-colors" title="Visualizza Log">
                     <Eye class="w-4 h-4" />
                   </button>
-                  <button v-if="campaign.status !== 'RUNNING' && campaign.status !== 'DRAFT'" @click="openReschedule(campaign)"
+                  <button v-if="['SCHEDULED', 'COMPLETED', 'FAILED', 'PAUSED'].includes(campaign.status)" @click="openReschedule(campaign)"
                           class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-on-surface-variant transition-colors" title="Rischedula">
                     <Calendar class="w-4 h-4" />
                   </button>
@@ -91,11 +93,13 @@
                     <Trash2 class="w-4 h-4" />
                   </button>
                   <button v-if="campaign.status === 'DRAFT' || campaign.status === 'PAUSED'" @click="store.startCampaign(campaign.id)"
-                          class="p-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors" title="Avvia">
+                          :disabled="store.loading"
+                          class="p-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors disabled:opacity-50" title="Avvia">
                     <Play class="w-4 h-4" />
                   </button>
                   <button v-if="campaign.status === 'RUNNING'" @click="store.pauseCampaign(campaign.id)"
-                          class="p-2 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 transition-colors" title="Pausa">
+                          :disabled="store.loading"
+                          class="p-2 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 transition-colors disabled:opacity-50" title="Pausa">
                     <Pause class="w-4 h-4" />
                   </button>
                 </div>
@@ -166,20 +170,24 @@
                    class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none" />
           </div>
 
-          <div class="flex justify-between mt-6">
-            <button @click="wizardStep > 1 ? wizardStep-- : showWizard = false"
-                    class="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors">
-              {{ wizardStep > 1 ? t('campaigns.btn_back') : t('campaigns.btn_cancel') }}
-            </button>
-            <button v-if="wizardStep < 4" @click="wizardStep++"
-                    :disabled="wizardStep === 1 && !formData.name || wizardStep === 2 && !formData.templateId"
-                    class="px-5 py-2 bg-primary text-on-primary font-semibold rounded-lg transition-all disabled:opacity-30">
-              {{ t('campaigns.btn_next') }}
-            </button>
-            <button v-else @click="handleSave"
-                    class="px-5 py-2 bg-primary text-on-primary font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] transition-all">
-              {{ isEditing ? 'Salva' : t('campaigns.btn_create') }}
-            </button>
+          <div class="flex flex-col gap-2 mt-6">
+            <p v-if="wizardStep === 1 && !formData.name" class="text-xs text-error text-right">Inserisci il nome della campagna per proseguire.</p>
+            <p v-if="wizardStep === 2 && !formData.templateId" class="text-xs text-error text-right">Seleziona un template per proseguire.</p>
+            <div class="flex justify-between">
+              <button @click="wizardStep > 1 ? wizardStep-- : showWizard = false"
+                      class="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors">
+                {{ wizardStep > 1 ? t('campaigns.btn_back') : t('campaigns.btn_cancel') }}
+              </button>
+              <button v-if="wizardStep < 4" @click="wizardStep++"
+                      :disabled="wizardStep === 1 && !formData.name || wizardStep === 2 && !formData.templateId"
+                      class="px-5 py-2 bg-primary text-on-primary font-semibold rounded-lg transition-all disabled:opacity-30">
+                {{ t('campaigns.btn_next') }}
+              </button>
+              <button v-else @click="handleSave"
+                      class="px-5 py-2 bg-primary text-on-primary font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] transition-all">
+                {{ isEditing ? 'Salva' : t('campaigns.btn_create') }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -367,22 +375,8 @@ async function handleDelete(id: string) {
     }
   }
 }
-
-function formatWhatsAppText(text: string) {
-  if (!text) return ''
-  
-  const escaped = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-
-  return escaped
-    .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-    .replace(/_(.*?)_/g, '<em>$1</em>')
-    .replace(/~(.*?)~/g, '<del>$1</del>')
-}
+import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
+const { formatWhatsAppText } = useWhatsAppFormat()
 
 const selectedTemplatePreview = computed(() => {
   const tmpl = templates.value.find(t => t.id === formData.value.templateId)
