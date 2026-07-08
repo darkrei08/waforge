@@ -16,11 +16,11 @@
         </button>
         <button @click="handleExport"
                 class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-on-surface text-sm font-semibold rounded-lg border border-white/10 transition-all">
-          <Upload class="w-4 h-4 inline mr-1" /> {{ t('contacts.export_csv') }}
+          <Download class="w-4 h-4 inline mr-1" /> {{ t('contacts.export_csv') }}
         </button>
         <button @click="showImport = true"
                 class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-on-surface text-sm font-semibold rounded-lg border border-white/10 transition-all">
-          <Download class="w-4 h-4 inline mr-1" /> {{ t('contacts.import_csv') }}
+          <Upload class="w-4 h-4 inline mr-1" /> {{ t('contacts.import_csv') }}
         </button>
       </div>
     </div>
