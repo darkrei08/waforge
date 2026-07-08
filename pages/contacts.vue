@@ -144,13 +144,17 @@
             <button @click="clearFile" class="text-on-surface-variant hover:text-error"><X class="w-4 h-4" /></button>
           </div>
 
-          <div v-if="importResult" class="mt-4 p-3 rounded-lg bg-primary/10 text-sm text-on-surface border border-primary/20">
+          <div v-if="importError" class="mt-4 p-3 rounded-lg bg-error/10 text-sm text-error border border-error/20">
+            {{ importError }}
+          </div>
+          <div v-else-if="importResult" class="mt-4 p-3 rounded-lg bg-primary/10 text-sm text-on-surface border border-primary/20">
             {{ t('contacts.import_result', { imported: importResult.imported, skipped: importResult.skipped, errors: importResult.errors?.length || 0 }) }}
           </div>
           <div class="flex justify-end gap-3 mt-4">
-            <button @click="showImport = false" class="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors">{{ t('contacts.btn_cancel') }}</button>
-            <button @click="handleImport" :disabled="!csvText.trim()"
-                    class="px-4 py-2 bg-primary text-on-primary font-semibold rounded-lg hover:bg-primary-fixed-dim transition-all disabled:opacity-30">
+            <button @click="showImport = false" class="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors" :disabled="isImporting">{{ t('contacts.btn_cancel') }}</button>
+            <button @click="handleImport" :disabled="!csvText.trim() || isImporting"
+                    class="px-4 py-2 bg-primary text-on-primary font-semibold rounded-lg hover:bg-primary-fixed-dim transition-all disabled:opacity-30 flex items-center gap-2">
+              <Loader2 v-if="isImporting" class="w-4 h-4 animate-spin" />
               {{ t('contacts.btn_import') }}
             </button>
           </div>
@@ -199,7 +203,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Upload, Trash2, Search, Download, X, Info } from 'lucide-vue-next'
+import { Upload, Trash2, Search, Download, X, Info, Loader2 } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useContactsStore } from '~/stores/contacts'
 import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
@@ -213,6 +217,8 @@ const showCsvInfo = ref(false)
 const csvText = ref('')
 const fileName = ref('')
 const importResult = ref<any>(null)
+const importError = ref<string | null>(null)
+const isImporting = ref(false)
 
 let debounceTimer: ReturnType<typeof setTimeout>
 function debouncedSearch() {
@@ -243,13 +249,24 @@ function clearFile() {
   fileName.value = ''
   csvText.value = ''
   importResult.value = null
+  importError.value = null
 }
 
 async function handleImport() {
-  if (!csvText.value.trim()) return
-  importResult.value = await store.importCSV(csvText.value)
-  // Refresh force to update UI properly
-  await store.fetchContacts(1)
+  if (!csvText.value.trim() || isImporting.value) return
+  isImporting.value = true
+  importError.value = null
+  importResult.value = null
+  
+  try {
+    importResult.value = await store.importCSV(csvText.value)
+    // Refresh force to update UI properly
+    await store.fetchContacts(1)
+  } catch (err: any) {
+    importError.value = err.data?.message || err.message || 'Errore durante l\'importazione del file.'
+  } finally {
+    isImporting.value = false
+  }
 }
 
 function downloadCsvTemplate() {
