@@ -40,12 +40,13 @@ export default defineEventHandler((event) => {
   // Configurare limiti diversi per il login/register (prevenzione brute-force)
   const isAuthAction = path === '/api/auth/login' || path === '/api/auth/register' || path === '/api/auth/invite' || path === '/api/auth/oauth/pocketid'
   const limit = isAuthAction ? 10 : MAX_REQUESTS
+  const key = isAuthAction ? `auth_${ip}` : ip
 
-  let entry = store.get(ip)
+  let entry = store.get(key)
 
   if (!entry || now > entry.resetAt) {
     entry = { count: 1, resetAt: now + WINDOW_MS }
-    store.set(ip, entry)
+    store.set(key, entry)
   } else {
     entry.count++
   }

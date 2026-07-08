@@ -337,6 +337,8 @@ function openWizard(campaign?: any) {
     }
   } else {
     isEditing.value = false
+    formData.value = { ...initialForm }
+  }
   showWizard.value = true
 }
 
