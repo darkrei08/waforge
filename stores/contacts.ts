@@ -28,6 +28,7 @@ export const useContactsStore = defineStore('contacts', () => {
   const contacts = ref<Contact[]>([])
   const pagination = ref<Pagination>({ page: 1, limit: 50, total: 0, totalPages: 0 })
   const search = ref('')
+  const selectedGroupId = ref<string | undefined>(undefined)
   const loading = ref(false)
   const selected = ref<Set<string>>(new Set())
 
@@ -37,7 +38,7 @@ export const useContactsStore = defineStore('contacts', () => {
     loading.value = true
     try {
       const res = await $fetch<{ data: Contact[]; pagination: Pagination }>('/api/contacts', {
-        query: { page, limit: pagination.value.limit, search: search.value || undefined },
+        query: { page, limit: pagination.value.limit, search: search.value || undefined, groupId: selectedGroupId.value || undefined },
       })
       contacts.value = res.data
       pagination.value = res.pagination
@@ -87,5 +88,5 @@ export const useContactsStore = defineStore('contacts', () => {
     await fetchContacts(pagination.value.page)
   }
 
-  return { contacts, pagination, search, loading, selected, hasSelection, fetchContacts, createContact, importCSV, deleteContacts, toggleSelect, selectAll, clearSelection, bulkUpdateGroups }
+  return { contacts, pagination, search, selectedGroupId, loading, selected, hasSelection, fetchContacts, createContact, importCSV, deleteContacts, toggleSelect, selectAll, clearSelection, bulkUpdateGroups }
 })
