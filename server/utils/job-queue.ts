@@ -143,8 +143,10 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
   }
 
   // ── GDPR Disclaimer (Opt-Out) ──
-  if (campaign.includeGdprDisclaimer) {
+  let gdprDisclaimerSent = false
+  if (campaign.includeGdprDisclaimer && !contact.gdprNotified) {
     body += '\n\n*Ricevi questo messaggio perché hai prestato il consenso. Rispondi STOP in qualsiasi momento per disiscriverti.*'
+    gdprDisclaimerSent = true
   }
 
   // ── ANTI-BAN: Typing Simulation ──
@@ -202,6 +204,13 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
   // Aggiorna contatori live + daily cap Redis
   if (result.success) {
     await incrementDailySendCount(teamId)
+
+    if (gdprDisclaimerSent) {
+      await prisma.contact.update({
+        where: { id: contactId },
+        data: { gdprNotified: true }
+      })
+    }
   }
   await prisma.campaign.update({
     where: { id: campaignId },

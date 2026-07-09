@@ -109,6 +109,7 @@ model Contact {
   // Consent Policy
   optInMarketing     Boolean @default(true)
   optInTransactional Boolean @default(true)
+  gdprNotified       Boolean @default(false)
 
   // WhatsApp verification (null = not checked, true/false = verified)
   isOnWhatsApp Boolean?

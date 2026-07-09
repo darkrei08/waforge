@@ -32,7 +32,7 @@ export async function getPolicyForContact(fullPhone: string): Promise<ContactPol
 export async function handleOptOutKeywords(fullPhone: string, text: string, teamId: string) {
   const normalizedText = text.trim().toUpperCase();
   
-  if (normalizedText === 'STOP' || normalizedText === 'STOP MARKETING') {
+  if (normalizedText === 'STOP MARKETING') {
     await prisma.contact.updateMany({
       where: { fullPhone, teamId },
       data: { optInMarketing: false }
@@ -40,7 +40,7 @@ export async function handleOptOutKeywords(fullPhone: string, text: string, team
     return true; // Indicates policy was changed
   }
   
-  if (normalizedText === 'STOP ALL') {
+  if (normalizedText === 'STOP' || normalizedText === 'STOP ALL') {
     await prisma.contact.updateMany({
       where: { fullPhone, teamId },
       data: { optInMarketing: false, optInTransactional: false }

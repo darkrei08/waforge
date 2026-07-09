@@ -1,5 +1,6 @@
 import { prisma } from '../../utils/prisma'
 import { broadcastToTeam } from '../../routes/ws'
+import { handleOptOutKeywords } from '../../../lib/whatsapp-policy'
 
 /**
  * Webhook per ricevere eventi in tempo reale da WuzAPI (Messaggi in arrivo)
@@ -45,6 +46,12 @@ export default defineEventHandler(async (event) => {
 
     // Estrai il testo del messaggio (WuzAPI supporta diversi tipi, per ora prendiamo text)
     const textContent = msgData.Message?.conversation || msgData.Message?.extendedTextMessage?.text || '[Media/Unsupported]'
+
+    // ── Gestione Opt-Out (GDPR) tramite libreria condivisa ──
+    const policyChanged = await handleOptOutKeywords(phone, textContent, teamId)
+    if (policyChanged) {
+      console.log(`[GDPR] Opt-out registrato per ${phone}`)
+    }
 
     // Salva il messaggio in ChatMessage (Inbound)
     const chatMsg = await prisma.chatMessage.create({
