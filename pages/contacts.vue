@@ -41,6 +41,38 @@
              class="w-full pl-10 pr-4 py-2.5 bg-surface-container border border-white/10 rounded-lg text-on-surface text-sm placeholder-on-surface-variant/50 focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all" />
     </div>
 
+    <!-- Dashboard Statistiche Verifica -->
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div @click="activeFilter = 'all'" 
+           class="p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-center items-center gap-1"
+           :class="activeFilter === 'all' ? 'bg-primary/20 border-primary/50 text-primary' : 'bg-surface-container border-white/10 hover:border-white/20 text-on-surface'">
+        <Users class="w-6 h-6 mb-1 opacity-70" />
+        <span class="text-xs font-semibold uppercase tracking-wider opacity-70">Totale</span>
+        <span class="text-2xl font-bold">{{ store.contacts.length }}</span>
+      </div>
+      <div @click="activeFilter = 'pending'" 
+           class="p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-center items-center gap-1"
+           :class="activeFilter === 'pending' ? 'bg-white/20 border-white/50 text-white' : 'bg-surface-container border-white/10 hover:border-white/20 text-on-surface-variant'">
+        <HelpCircle class="w-6 h-6 mb-1 opacity-70" />
+        <span class="text-xs font-semibold uppercase tracking-wider opacity-70">Da Verificare</span>
+        <span class="text-2xl font-bold">{{ stats.pending }}</span>
+      </div>
+      <div @click="activeFilter = 'valid'" 
+           class="p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-center items-center gap-1"
+           :class="activeFilter === 'valid' ? 'bg-primary/20 border-primary/50 text-primary' : 'bg-surface-container border-white/10 hover:border-white/20 text-primary/70'">
+        <CheckCircle2 class="w-6 h-6 mb-1 opacity-70" />
+        <span class="text-xs font-semibold uppercase tracking-wider opacity-70">Validi (WA)</span>
+        <span class="text-2xl font-bold">{{ stats.valid }}</span>
+      </div>
+      <div @click="activeFilter = 'invalid'" 
+           class="p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-center items-center gap-1"
+           :class="activeFilter === 'invalid' ? 'bg-error/20 border-error/50 text-error' : 'bg-surface-container border-white/10 hover:border-white/20 text-error/70'">
+        <XCircle class="w-6 h-6 mb-1 opacity-70" />
+        <span class="text-xs font-semibold uppercase tracking-wider opacity-70">Inesistenti</span>
+        <span class="text-2xl font-bold">{{ stats.invalid }}</span>
+      </div>
+    </div>
+
     <!-- Table -->
     <div class="bg-surface-container/40 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
       <table class="w-full">
@@ -66,7 +98,7 @@
             </tr>
           </template>
           <template v-else>
-            <tr v-for="contact in store.contacts" :key="contact.id"
+            <tr v-for="contact in filteredContacts" :key="contact.id"
               class="border-b border-white/5 hover:bg-white/5 transition-colors">
             <td class="p-4">
               <input type="checkbox" :checked="store.selected.has(contact.id)" @change="store.toggleSelect(contact.id)"
@@ -220,8 +252,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, inject } from 'vue'
-import { Upload, Trash2, Search, Download, X, Info, Loader2, CheckCircle2, Globe } from 'lucide-vue-next'
+import { ref, computed, onMounted, inject } from 'vue'
+import { Upload, Trash2, Search, Download, X, Info, Loader2, CheckCircle2, Globe, Users, HelpCircle, XCircle } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useContactsStore } from '~/stores/contacts'
 import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
@@ -240,6 +272,33 @@ const fileName = ref('')
 const importResult = ref<any>(null)
 const importError = ref<string | null>(null)
 const isImporting = ref(false)
+
+// Dashboard Stats & Filters
+const activeFilter = ref<'all' | 'pending' | 'valid' | 'invalid'>('all')
+
+const stats = computed(() => {
+  let pending = 0
+  let valid = 0
+  let invalid = 0
+  store.contacts.forEach(c => {
+    if (c.isOnWhatsApp === true) valid++
+    else if (c.isOnWhatsApp === false) invalid++
+    else pending++
+  })
+  return { pending, valid, invalid }
+})
+
+const filteredContacts = computed(() => {
+  let list = store.contacts
+  if (activeFilter.value === 'pending') {
+    list = list.filter(c => c.isOnWhatsApp === null)
+  } else if (activeFilter.value === 'valid') {
+    list = list.filter(c => c.isOnWhatsApp === true)
+  } else if (activeFilter.value === 'invalid') {
+    list = list.filter(c => c.isOnWhatsApp === false)
+  }
+  return list
+})
 
 function openImportModal() {
   // Reset all state when opening the modal
