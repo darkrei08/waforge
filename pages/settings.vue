@@ -203,10 +203,7 @@
           </div>
           <div>
             <label class="text-sm text-on-surface-variant font-medium flex items-center justify-between">
-              <div>
-                Server MCP (Model Context Protocol)
-                <span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">BETA / INCOMPLETO</span>
-              </div>
+              Server MCP (Model Context Protocol)
               <button @click="store.llmSettings.mcpServers.push('')" class="text-xs text-primary hover:text-primary-fixed-dim">+ Aggiungi</button>
             </label>
             <div class="space-y-2 mt-2">

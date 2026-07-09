@@ -9,8 +9,13 @@ export default defineEventHandler(async () => {
     const homeDir = os.homedir()
     // Resolving paths as described in the cockpit-tools SKILL.md
     const cockpitDir = path.join(homeDir, '.antigravity_cockpit')
-    const accountsFile = path.join(cockpitDir, 'accounts.json')
+    const dockerCockpitDir = '/home/nuxtjs/.antigravity_cockpit'
     
+    let accountsFile = path.join(cockpitDir, 'accounts.json')
+    if (!fs.existsSync(accountsFile) && fs.existsSync(path.join(dockerCockpitDir, 'accounts.json'))) {
+      accountsFile = path.join(dockerCockpitDir, 'accounts.json')
+    }
+
     if (fs.existsSync(accountsFile)) {
       const data = JSON.parse(fs.readFileSync(accountsFile, 'utf-8'))
       if (data && Array.isArray(data.accounts)) {

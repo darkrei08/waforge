@@ -1,5 +1,7 @@
 import { defineEventHandler, readBody, createError } from 'h3'
 import { prisma } from '~/server/utils/prisma'
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 
 export default defineEventHandler(async (event) => {
   const teamId = event.context.user.teamId
@@ -14,13 +16,13 @@ export default defineEventHandler(async (event) => {
   
   let baseURL = 'https://api.openai.com/v1'
   if (settings.useCockpit) {
-    baseURL = 'http://127.0.0.1:19528/v1'
+    baseURL = (process.env.COCKPIT_HOST_URL || 'http://127.0.0.1:19528') + '/v1'
   } else if (settings.provider === 'custom' && settings.customBaseUrl) {
     baseURL = settings.customBaseUrl
   } else if (settings.provider === 'gemini') {
     baseURL = 'https://generativelanguage.googleapis.com/v1beta/openai'
   } else if (settings.provider === 'anthropic') {
-    baseURL = 'https://api.anthropic.com/v1' // might need LiteLLM proxy in production, but let's assume OpenAI compatible proxy exists if not using Cockpit
+    baseURL = 'https://api.anthropic.com/v1'
   }
 
   const apiKey = settings.useCockpit ? (settings.cockpitAccount || 'dummy-key') : (settings.apiKey || 'dummy-key')
@@ -58,29 +60,130 @@ Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
     ]
   }
 
+  const mcpServers = settings.mcpServers || []
+  let availableTools: any[] = []
+  const mcpClients: { client: Client, transport: StdioClientTransport, serverName: string }[] = []
+
   try {
-    const res = await fetch(`${baseURL}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
+    // 1. Initialize MCP Clients if servers are defined
+    for (const cmd of mcpServers) {
+      if (!cmd.trim()) continue
+      const args = cmd.split(' ')
+      const command = args.shift()!
+      
+      const transport = new StdioClientTransport({
+        command,
+        args,
+        env: process.env
+      })
+      
+      const client = new Client({ name: 'waforge-client', version: '1.0.0' }, { capabilities: {} })
+      await client.connect(transport)
+      
+      const toolsRes = await client.listTools()
+      
+      for (const t of toolsRes.tools) {
+        availableTools.push({
+          type: 'function',
+          function: {
+            name: `${command}_${t.name}`.replace(/[^a-zA-Z0-9_-]/g, '_'),
+            description: t.description,
+            parameters: t.inputSchema
+          },
+          _mcpClient: client,
+          _originalName: t.name
+        })
+      }
+      mcpClients.push({ client, transport, serverName: command })
+    }
+
+    // 2. Agent Chat Loop
+    let maxIterations = 5
+    let currentIteration = 0
+    let finalContent = ''
+
+    while (currentIteration < maxIterations) {
+      currentIteration++
+      
+      const payload: any = {
         model: model,
         messages: messages,
         temperature: 0.7,
         max_tokens: 1500
-      })
-    })
+      }
+      
+      if (availableTools.length > 0) {
+        payload.tools = availableTools.map(t => ({ type: 'function', function: t.function }))
+      }
 
-    if (!res.ok) {
-      const errText = await res.text()
-      throw new Error(`LLM API Error: ${errText}`)
+      const res = await fetch(`${baseURL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(payload)
+      })
+
+      if (!res.ok) {
+        const errText = await res.text()
+        throw new Error(`LLM API Error: ${errText}`)
+      }
+
+      const data = await res.json()
+      const message = data.choices[0].message
+      
+      messages.push(message)
+      
+      if (message.tool_calls && message.tool_calls.length > 0) {
+        // Execute tools
+        for (const call of message.tool_calls) {
+          const fnName = call.function.name
+          const args = JSON.parse(call.function.arguments || '{}')
+          
+          const toolConfig = availableTools.find(t => t.function.name === fnName)
+          if (toolConfig) {
+            try {
+              const result = await toolConfig._mcpClient.callTool({
+                name: toolConfig._originalName,
+                arguments: args
+              })
+              messages.push({
+                role: 'tool',
+                tool_call_id: call.id,
+                content: JSON.stringify(result)
+              })
+            } catch (e: any) {
+              messages.push({
+                role: 'tool',
+                tool_call_id: call.id,
+                content: `Error: ${e.message}`
+              })
+            }
+          } else {
+            messages.push({
+              role: 'tool',
+              tool_call_id: call.id,
+              content: `Tool ${fnName} not found.`
+            })
+          }
+        }
+        continue // Continue the while loop with tool outputs
+      } else {
+        finalContent = message.content
+        break // No more tool calls
+      }
     }
 
-    const data = await res.json()
-    return { data: { result: data.choices[0].message.content } }
+    return { data: { result: finalContent } }
   } catch (err: any) {
     throw createError({ statusCode: 500, statusMessage: 'Errore durante la generazione LLM', data: err.message })
+  } finally {
+    // Cleanup MCP processes to avoid memory leaks
+    for (const c of mcpClients) {
+      try {
+        await c.client.close()
+      } catch (e) {}
+    }
   }
 })
