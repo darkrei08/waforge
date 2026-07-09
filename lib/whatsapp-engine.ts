@@ -275,6 +275,42 @@ export async function disconnectEngine(token: string): Promise<void> {
     await apiCall(cfg.logout, token, 'POST')
   }
 }
+
+/**
+ * ANTI-BAN: Simulate "typing..." presence before sending a message.
+ * Meta flags accounts that send messages without ever showing a composing indicator.
+ * We send 'composing' and wait a realistic delay proportional to message length.
+ */
+export async function sendPresence(token: string, phone: string, messageLength: number): Promise<void> {
+  try {
+    let cleanPhone = phone.replace(/[\+\s\-]/g, '')
+    if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2)
+    if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
+      cleanPhone = `39${cleanPhone}`
+    }
+
+    if (ENGINE === 'wuzapi') {
+      await apiCall('/chat/presence', token, 'POST', {
+        Phone: `${cleanPhone}@s.whatsapp.net`,
+        State: 'composing',
+      })
+    } else {
+      // GoWA: try the common presence endpoint
+      await apiCall('/send/presence', token, 'POST', {
+        phone: cleanPhone,
+        state: 'composing',
+      })
+    }
+
+    // Wait a "typing time" proportional to message length: ~30ms per char, min 1.5s, max 6s
+    const typingMs = Math.min(6000, Math.max(1500, messageLength * 30))
+    // Add ±20% gaussian-ish noise
+    const noise = typingMs * (0.8 + Math.random() * 0.4)
+    await new Promise(r => setTimeout(r, Math.floor(noise)))
+  } catch {
+    // Presence endpoint may not exist on all engines — non-blocking, best-effort
+  }
+}
 export async function checkPhone(token: string, phone: string): Promise<boolean> {
   try {
     let cleanPhone = phone.replace(/[\+\s\-]/g, '')
