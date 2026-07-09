@@ -1,5 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface dark:bg-[#12161f] text-on-surface transition-colors duration-300 flex">
+    <CookieBanner />
     <!-- Toast Notifications -->
     <Teleport to="body">
       <TransitionGroup name="toast" tag="div" class="fixed bottom-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
@@ -132,6 +133,10 @@
             <Activity class="w-5 h-5" />
             <span class="font-medium text-sm">{{ t('nav.api_status') }}</span>
           </NuxtLink>
+          <NuxtLink :to="localePath('/legal')" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary">
+            <ShieldCheck class="w-5 h-5" />
+            <span class="font-medium text-sm">Privacy & Legale</span>
+          </NuxtLink>
         </nav>
       </div>
     </aside>
@@ -144,8 +149,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { LayoutDashboard, Users, Megaphone, Settings, Activity, QrCode, Sun, Moon, LogOut, MessageSquareText, MessageCircle, Lock, CheckCircle2, AlertCircle, Info, X, Smartphone, UserPlus, UserCircle } from 'lucide-vue-next'
+import { ref, onMounted, watch, provide } from 'vue'
+import { LayoutDashboard, Users, Megaphone, Settings, Activity, QrCode, Sun, Moon, LogOut, MessageSquareText, MessageCircle, Lock, CheckCircle2, AlertCircle, Info, X, Smartphone, UserPlus, UserCircle, ShieldCheck } from 'lucide-vue-next'
 import { useI18n, useLocalePath } from '#i18n'
 import { useColorMode } from '#imports'
 import { useAuthStore } from '~/stores/auth'

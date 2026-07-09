@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
         : data.contactIds,
       delayMin: data.delayMin,
       delayMax: data.delayMax,
+      includeGdprDisclaimer: data.includeGdprDisclaimer,
       scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null,
       status: data.scheduledAt ? 'SCHEDULED' : 'DRAFT',
     },

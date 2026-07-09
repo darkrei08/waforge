@@ -165,6 +165,9 @@ model Campaign {
   delayMin Int @default(15) // seconds
   delayMax Int @default(45) // seconds
 
+  // GDPR Compliance
+  includeGdprDisclaimer Boolean @default(false)
+
   // Stats
   totalCount  Int @default(0)
   sentCount   Int @default(0)

@@ -90,6 +90,7 @@ export const CreateCampaignSchema = z.object({
   ]).default('ALL'),
   delayMin: z.number().int().min(5).max(300).default(15),   // min 5s anti-ban
   delayMax: z.number().int().min(10).max(600).default(45),
+  includeGdprDisclaimer: z.boolean().default(false),
   scheduledAt: z.string().datetime().optional().nullable(),
 }).refine(d => d.delayMin < d.delayMax, 'delayMin must be less than delayMax')
 

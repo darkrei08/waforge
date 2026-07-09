@@ -154,6 +154,20 @@
               </div>
               <div class="text-sm text-on-surface whitespace-pre-wrap leading-relaxed" v-html="selectedTemplatePreview"></div>
             </div>
+
+            <!-- GDPR Disclaimer Toggle -->
+            <div class="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between cursor-pointer hover:bg-primary/15 transition-colors"
+                 @click="formData.includeGdprDisclaimer = !formData.includeGdprDisclaimer">
+              <div>
+                <h4 class="text-sm font-bold text-primary flex items-center gap-2">
+                  <CheckCircle2 class="w-4 h-4" /> Includi Informativa GDPR & Opt-Out
+                </h4>
+                <p class="text-xs text-on-surface-variant mt-1">Aggiunge in automatico "Rispondi STOP per disiscriverti" alla fine del messaggio.</p>
+              </div>
+              <div class="w-10 h-6 bg-black/50 rounded-full relative transition-colors" :class="{ 'bg-primary': formData.includeGdprDisclaimer }">
+                <div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1 transition-transform" :class="{ 'translate-x-4': formData.includeGdprDisclaimer }"></div>
+              </div>
+            </div>
           </div>
 
           <!-- Step 3: Target & Rate Limit -->
@@ -367,7 +381,7 @@ const isEditing = ref(false)
 const wizardStep = ref(1)
 const templates = ref<any[]>([])
 
-const initialForm = { id: '', name: '', templateId: '', delayMin: 15, delayMax: 45, scheduledAt: '', contactIds: 'ALL' as any }
+const initialForm = { id: '', name: '', templateId: '', delayMin: 15, delayMax: 45, scheduledAt: '', contactIds: 'ALL' as any, includeGdprDisclaimer: false }
 const formData = ref({ ...initialForm })
 const targetMode = ref<'ALL'|'GROUPS'>('ALL')
 
@@ -407,6 +421,7 @@ function openWizard(campaign?: any) {
       templateId: campaign.templateId,
       delayMin: campaign.delayMin,
       delayMax: campaign.delayMax,
+      includeGdprDisclaimer: campaign.includeGdprDisclaimer || false,
       contactIds: parsedContacts,
       scheduledAt: campaign.scheduledAt ? new Date(campaign.scheduledAt).toISOString().slice(0, 16) : ''
     }
@@ -430,6 +445,7 @@ const editCampaign = (campaign: any) => {
     templateId: campaign.templateId,
     delayMin: campaign.delayMin,
     delayMax: campaign.delayMax,
+    includeGdprDisclaimer: campaign.includeGdprDisclaimer || false,
     contactIds: parsedContacts,
     scheduledAt: campaign.scheduledAt ? new Date(campaign.scheduledAt).toISOString().slice(0, 16) : ''
   }

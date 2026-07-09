@@ -142,6 +142,11 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
     body += zwChars[Math.floor(Math.random() * zwChars.length)]
   }
 
+  // ── GDPR Disclaimer (Opt-Out) ──
+  if (campaign.includeGdprDisclaimer) {
+    body += '\n\n*Ricevi questo messaggio perché hai prestato il consenso. Rispondi STOP in qualsiasi momento per disiscriverti.*'
+  }
+
   // ── ANTI-BAN: Typing Simulation ──
   // Simula "sta scrivendo..." prima dell'invio per sembrare umano
   await sendPresence(session.token, contact.fullPhone, body.length)
