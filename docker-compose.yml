@@ -139,6 +139,38 @@ services:
       timeout: 5s
       retries: 5
 
+  # ─── MCP Agent Starter ──────────────────────────────────────────────────────
+  mcp-agent:
+    build:
+      context: ../nuxt-mcp-agent-starter
+      dockerfile: Dockerfile
+    image: ghcr.io/darkrei08/nuxt-mcp-agent-starter:latest
+    container_name: waforge-mcp-agent
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    networks:
+      - wa-net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ─── Cockpit Agent Starter ──────────────────────────────────────────────────
+  cockpit-agent:
+    build:
+      context: ../nuxt-cockpit-agent-starter
+      dockerfile: Dockerfile
+    image: ghcr.io/darkrei08/nuxt-cockpit-agent-starter:latest
+    container_name: waforge-cockpit-agent
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    networks:
+      - wa-net
+    volumes:
+      - ~/.antigravity_cockpit:/home/nuxtjs/.antigravity_cockpit:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 volumes:
   wuzapi_data:
     driver: local

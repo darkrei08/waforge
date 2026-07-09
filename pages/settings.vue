@@ -389,7 +389,14 @@ const mcpCatalog = [
   { name: 'GitHub', cmd: 'npx -y @modelcontextprotocol/server-github', desc: 'Gestione Repository', icon: '🐙' },
   { name: 'File System', cmd: 'npx -y @modelcontextprotocol/server-filesystem /', desc: 'Accesso ai file locali', icon: '📁' },
   { name: 'SQLite', cmd: 'npx -y @modelcontextprotocol/server-sqlite --db /path/to/db', desc: 'Database SQL', icon: '🗄️' },
+  { name: 'PostgreSQL', cmd: 'npx -y @modelcontextprotocol/server-postgres postgres://localhost/db', desc: 'Database PostgreSQL', icon: '🐘' },
   { name: 'Puppeteer', cmd: 'npx -y @modelcontextprotocol/server-puppeteer', desc: 'Automazione Browser', icon: '🌐' },
+  { name: 'Google Drive', cmd: 'npx -y @modelcontextprotocol/server-gdrive', desc: 'Google Drive API', icon: '📂' },
+  { name: 'Slack', cmd: 'npx -y @modelcontextprotocol/server-slack', desc: 'Slack API', icon: '💬' },
+  { name: 'Notion', cmd: 'npx -y @modelcontextprotocol/server-notion', desc: 'Notion API', icon: '📝' },
+  { name: 'Sentry', cmd: 'npx -y @modelcontextprotocol/server-sentry', desc: 'Sentry Error Tracking', icon: '🐛' },
+  { name: 'Memory', cmd: 'npx -y @modelcontextprotocol/server-memory', desc: 'Agent Memory System', icon: '🧠' },
+  { name: 'Sequential', cmd: 'npx -y @modelcontextprotocol/server-sequential-thinking', desc: 'Sequential Thinking logic', icon: '⚙️' },
   { name: 'Twitter / X', cmd: 'npx -y @modelcontextprotocol/server-twitter', desc: 'Social Provider API', icon: '🐦' },
   { name: 'Facebook', cmd: 'npx -y @modelcontextprotocol/server-facebook', desc: 'Social Provider API', icon: '📘' }
 ]
