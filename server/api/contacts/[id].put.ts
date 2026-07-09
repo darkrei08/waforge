@@ -30,9 +30,19 @@ export default defineEventHandler(async (event) => {
     updateData.customFields = JSON.stringify(data.customFields)
   }
 
+  if (data.groupIds !== undefined) {
+    updateData.groups = {
+      set: data.groupIds.map(id => ({ id }))
+    }
+    delete updateData.groupIds
+  }
+
   const contact = await prisma.contact.update({
     where: { id },
     data: updateData,
+    include: {
+      groups: true
+    }
   })
 
   return { data: contact }

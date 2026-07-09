@@ -1,4 +1,24 @@
 export function useWhatsAppFormat() {
+  function renderSpintax(text: string): string {
+    if (!text) return ''
+    const spintaxRegex = /\{([^{}]+)\}/g
+    
+    let processed = text
+    let match = spintaxRegex.exec(processed)
+    
+    // Iterative replacement to handle nested spintax if needed, 
+    // though simple one-level regex replacement usually suffices.
+    while (match !== null) {
+      const options = match[1].split('|')
+      const randomOption = options[Math.floor(Math.random() * options.length)]
+      processed = processed.substring(0, match.index) + randomOption + processed.substring(match.index + match[0].length)
+      
+      spintaxRegex.lastIndex = 0
+      match = spintaxRegex.exec(processed)
+    }
+    return processed
+  }
+
   function formatWhatsAppText(text: string) {
     if (!text) return ''
     
@@ -27,6 +47,7 @@ export function useWhatsAppFormat() {
   ]
 
   return {
+    renderSpintax,
     formatWhatsAppText,
     csvTemplateHeaders
   }

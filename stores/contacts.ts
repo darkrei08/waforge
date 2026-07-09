@@ -79,5 +79,13 @@ export const useContactsStore = defineStore('contacts', () => {
     selected.value = new Set()
   }
 
-  return { contacts, pagination, search, loading, selected, hasSelection, fetchContacts, createContact, importCSV, deleteContacts, toggleSelect, selectAll, clearSelection }
+  async function bulkUpdateGroups(contactIds: string[], groupId: string, action: 'add' | 'remove') {
+    await $fetch('/api/contacts/bulk-group', {
+      method: 'POST',
+      body: { contactIds, groupId, action }
+    })
+    await fetchContacts(pagination.value.page)
+  }
+
+  return { contacts, pagination, search, loading, selected, hasSelection, fetchContacts, createContact, importCSV, deleteContacts, toggleSelect, selectAll, clearSelection, bulkUpdateGroups }
 })

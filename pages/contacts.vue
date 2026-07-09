@@ -14,6 +14,10 @@
                 class="px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-semibold rounded-lg border border-primary/20 transition-all" title="Prefissi Internazionali">
           <Globe class="w-4 h-4 inline mr-1" /> Prefissi
         </button>
+        <button @click="showGroupsPanel = true"
+                class="px-4 py-2.5 bg-secondary/10 hover:bg-secondary/20 text-secondary text-sm font-semibold rounded-lg border border-secondary/20 transition-all" title="Gestisci Rubriche">
+          <Users class="w-4 h-4 inline mr-1" /> Rubriche
+        </button>
         <button @click="handleVerify" :disabled="isVerifying"
                 class="px-4 py-2.5 bg-primary/20 hover:bg-primary/30 text-primary text-sm font-semibold rounded-lg border border-primary/30 transition-all">
           <Loader2 v-if="isVerifying" class="w-4 h-4 inline mr-1 animate-spin" />
@@ -248,6 +252,13 @@
 
     <!-- Prefixes Component -->
     <InternationalPrefixes :is-open="showPrefixes" @close="showPrefixes = false" />
+
+    <!-- Groups Panel -->
+    <ContactGroupsPanel 
+      :is-open="showGroupsPanel" 
+      :selected-count="store.selected.size"
+      @close="showGroupsPanel = false" 
+    />
   </div>
 </template>
 
@@ -256,17 +267,21 @@ import { ref, computed, onMounted, inject } from 'vue'
 import { Upload, Trash2, Search, Download, X, Info, Loader2, CheckCircle2, Globe, Users, HelpCircle, XCircle } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useContactsStore } from '~/stores/contacts'
+import { useContactGroupsStore } from '~/stores/contactGroups'
 import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
 import InternationalPrefixes from '~/components/InternationalPrefixes.vue'
+import ContactGroupsPanel from '~/components/ContactGroupsPanel.vue'
 
 const { t } = useI18n()
 const store = useContactsStore()
+const groupsStore = useContactGroupsStore()
 const { csvTemplateHeaders } = useWhatsAppFormat()
 const addToast = inject('addToast') as Function
 
 const showImport = ref(false)
 const showCsvInfo = ref(false)
 const showPrefixes = ref(false)
+const showGroupsPanel = ref(false)
 const csvText = ref('')
 const fileName = ref('')
 const importResult = ref<any>(null)

@@ -46,6 +46,7 @@ export const CreateContactSchema = z.object({
   company: safeString(100).optional(),
   notes:   safeString(500).optional(),
   customFields: z.record(safeString(200)).optional(),
+  groupIds: z.array(z.string().cuid()).optional(),
 })
 
 export const UpdateContactSchema = CreateContactSchema.partial()
@@ -85,7 +86,7 @@ export const CreateCampaignSchema = z.object({
   templateId: z.string().cuid('Invalid template ID'),
   contactIds: z.union([
     z.literal('ALL'),
-    z.array(z.string().cuid()).min(1, 'Select at least 1 contact').max(10000),
+    z.array(z.string().regex(/^(GROUP:)?[a-z0-9]{25}$/i, 'Invalid ID format')).min(1, 'Select at least 1 contact').max(10000),
   ]).default('ALL'),
   delayMin: z.number().int().min(5).max(300).default(15),   // min 5s anti-ban
   delayMax: z.number().int().min(10).max(600).default(45),
@@ -98,6 +99,7 @@ export const PaginationSchema = z.object({
   page:   z.coerce.number().int().min(1).default(1),
   limit:  z.coerce.number().int().min(1).max(200).default(50),
   search: z.string().trim().max(100).optional(),
+  groupId: z.string().cuid().optional(),
 })
 
 // ── Bulk delete schema ────────────────────────────────────────────────────────

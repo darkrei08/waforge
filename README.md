@@ -50,6 +50,17 @@
 
 ---
 
+## ✨ Key Features
+
+- **Contact Segmentation (Rubriche):** Group and organize contacts into custom categories (groups) to target specific audiences for different campaign purposes.
+- **Improved Campaign Wizard:** A 4-step wizard UI (Details, Template, Target, Pre-flight Summary) ensuring zero mistakes before sending.
+- **Dynamic Spintax Preview:** Test and regenerate spintax variations (e.g., `{Hello|Hi}`) in real-time directly inside the wizard.
+- **Real-Time Progress (SSE):** Monitor campaign delivery status instantly via Server-Sent Events (SSE) with minimal server load.
+- **BullMQ Auto-Cleanup:** Automated queue garbage collection to keep Redis database footprint light.
+- **Multi-Tenant & Anti-Ban:** Complete isolation between teams and rigorous evasion mechanisms (Zero-width chars, Gaussian jitter, simulation typing, etc.) built-in.
+
+---
+
 ## 🚀 Tech Stack
 
 | Layer | Technology | Notes |

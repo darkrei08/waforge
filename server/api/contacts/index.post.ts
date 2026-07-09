@@ -42,7 +42,15 @@ export default defineEventHandler(async (event) => {
       company: data.company,
       notes: data.notes,
       customFields: data.customFields ? JSON.stringify(data.customFields) : null,
+      ...(data.groupIds?.length ? {
+        groups: {
+          connect: data.groupIds.map(id => ({ id }))
+        }
+      } : {})
     },
+    include: {
+      groups: true
+    }
   })
 
   return { data: contact }

@@ -50,6 +50,17 @@
 
 ---
 
+## ✨ Funzionalità Chiave
+
+- **Segmentazione dei Contatti (Rubriche):** Raggruppa e organizza i contatti in rubriche personalizzate per inviare campagne a target specifici.
+- **Wizard delle Campagne Avanzato:** Interfaccia di creazione guidata in 4 step (Dettagli, Template, Target, Riepilogo) per eliminare gli errori prima dell'invio.
+- **Anteprima Spintax Dinamica:** Genera e verifica le variazioni dello spintax (es. `{Ciao|Salve}`) in tempo reale direttamente dall'editor.
+- **Progresso in Tempo Reale (SSE):** Monitora lo stato di consegna delle campagne istantaneamente via Server-Sent Events (SSE) minimizzando il carico del server.
+- **Auto-Cleanup BullMQ:** Gestione automatica della coda Redis per rimuovere i job completati e mantenere leggero il database.
+- **Multi-Tenant e Anti-Ban integrati:** Isolamento dei dati tra i team e meccanismi di elusione dei blocchi Meta (Zero-width chars, Gaussian jitter, simulazione digitazione).
+
+---
+
 ## 🚀 Tech Stack
 
 | Layer | Tecnologia | Note |

@@ -101,7 +101,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from '#app'
+import { navigateTo } from '#app'
 import { useAuthStore } from '~/stores/auth'
 import { useColorMode } from '#imports'
 import { Sun, Moon } from 'lucide-vue-next'
@@ -117,7 +117,6 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)
-const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const colorMode = useColorMode()
@@ -172,7 +171,7 @@ const handleRegister = async () => {
 
     if (response && response.success) {
       await authStore.fetchUser()
-      router.push('/')
+      await navigateTo('/', { replace: true })
     } else {
       error.value = response?.message || 'Impossibile creare l\'account'
     }

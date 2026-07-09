@@ -97,7 +97,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from '#app'
+import { navigateTo } from '#app'
 import { useAuthStore } from '~/stores/auth'
 import { useColorMode } from '#imports'
 import { Sun, Moon } from 'lucide-vue-next'
@@ -111,7 +111,6 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)
-const router = useRouter()
 const authStore = useAuthStore()
 const colorMode = useColorMode()
 const config = useRuntimeConfig()
@@ -148,8 +147,14 @@ const handleLogin = async () => {
     })
 
     if (response && response.success) {
-      await authStore.fetchUser()
-      router.push('/')
+      // Setta direttamente l'utente dalla risposta del login
+      // senza ri-chiamare fetchUser() che causerebbe un refresh inutile
+      if (response.user) {
+        authStore.user = response.user
+      } else {
+        await authStore.fetchUser()
+      }
+      await navigateTo('/', { replace: true })
     } else {
       error.value = response?.message || 'Credenziali non valide'
     }

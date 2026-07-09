@@ -67,7 +67,13 @@ export const connection = globalThis.__redis || new IORedis(getRedisUrl(), {
 })
 if (process.env.NODE_ENV !== 'production') globalThis.__redis = connection
 
-export const campaignQueue = globalThis.__campaignQueue || new Queue('campaigns', { connection: connection as any })
+export const campaignQueue = globalThis.__campaignQueue || new Queue('campaigns', { 
+  connection: connection as any,
+  defaultJobOptions: {
+    removeOnComplete: true, // Cleanup successful jobs
+    removeOnFail: 1000 // Keep last 1000 failed jobs for debugging
+  }
+})
 if (process.env.NODE_ENV !== 'production') globalThis.__campaignQueue = campaignQueue
 
 export const verifyQueue = globalThis.__verifyQueue || new Queue('verifications', { connection: connection as any })
@@ -244,15 +250,26 @@ export async function startCampaign(campaignId: string, teamId: string) {
       } 
     })
   } else {
-    const ids = JSON.parse(campaign.contactIds)
-    contacts = await prisma.contact.findMany({
-      where: { 
-        id: { in: ids }, 
-        teamId, 
-        isActive: true,
-        isOnWhatsApp: { not: false }
-      }
-    })
+    const parsedIds: string[] = JSON.parse(campaign.contactIds)
+    const groupIds = parsedIds.filter(id => id.startsWith('GROUP:')).map(id => id.replace('GROUP:', ''))
+    const explicitIds = parsedIds.filter(id => !id.startsWith('GROUP:'))
+
+    const conditions: any[] = []
+    if (explicitIds.length > 0) conditions.push({ id: { in: explicitIds } })
+    if (groupIds.length > 0) conditions.push({ groups: { some: { id: { in: groupIds } } } })
+
+    if (conditions.length > 0) {
+      contacts = await prisma.contact.findMany({
+        where: { 
+          teamId, 
+          isActive: true,
+          isOnWhatsApp: { not: false },
+          OR: conditions
+        }
+      })
+    } else {
+      contacts = []
+    }
   }
 
   // Trova quali contatti hanno già un messaggio per questa campagna (utile per il Resume)

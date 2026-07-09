@@ -65,6 +65,8 @@ export const useCampaignsStore = defineStore('campaigns', () => {
     await fetchCampaigns()
   }
 
+  let eventSource: EventSource | null = null
+
   async function pollProgress(id: string) {
     try {
       const res = await $fetch<{ data: CampaignProgress }>(`/api/campaigns/${id}/status`)
@@ -78,12 +80,45 @@ export const useCampaignsStore = defineStore('campaigns', () => {
 
   function startPolling(id: string) {
     stopPolling()
+    // Check initial status
     pollProgress(id)
-    pollInterval = setInterval(() => pollProgress(id), 3000)
+    
+    // Connect to SSE stream
+    eventSource = new EventSource(`/api/campaigns/${id}/stream`)
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        activeProgress.value = data
+        
+        // Find campaign and update its local state partially for immediate UI feedback
+        const c = campaigns.value.find(camp => camp.id === id)
+        if (c) {
+          c.status = data.status
+          c.sentCount = data.sentCount
+          c.failedCount = data.failedCount
+        }
+      } catch (e) {
+        console.error('Failed to parse SSE message', e)
+      }
+    }
+    
+    eventSource.addEventListener('close', () => {
+      stopPolling()
+      fetchCampaigns()
+    })
+    
+    eventSource.onerror = () => {
+      // Fallback to traditional polling if SSE fails
+      console.warn('SSE connection failed, falling back to polling')
+      stopPolling()
+      pollInterval = setInterval(() => pollProgress(id), 3000)
+    }
   }
 
   function stopPolling() {
     if (pollInterval) { clearInterval(pollInterval); pollInterval = null }
+    if (eventSource) { eventSource.close(); eventSource = null }
     activeProgress.value = null
   }
 

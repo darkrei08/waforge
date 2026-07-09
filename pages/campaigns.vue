@@ -117,9 +117,16 @@
           <h3 class="text-lg font-bold text-on-surface mb-6">{{ isEditing ? 'Modifica Campagna' : t('campaigns.create_title') }}</h3>
 
           <!-- Step indicators -->
-          <div class="flex gap-2 mb-6">
-            <div v-for="s in 4" :key="s" class="flex-1 h-1 rounded-full transition-colors"
-                 :class="wizardStep >= s ? 'bg-primary' : 'bg-white/10'"></div>
+          <div class="flex justify-between relative mb-8 before:content-[''] before:absolute before:top-4 before:left-0 before:w-full before:h-1 before:bg-white/10 before:-z-10">
+            <div v-for="(stepInfo, index) in ['Dettagli', 'Messaggio', 'Destinatari', 'Riepilogo']" :key="index" 
+                 class="flex flex-col items-center gap-2">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors border-2"
+                   :class="wizardStep > index + 1 ? 'bg-primary border-primary text-on-primary' : wizardStep === index + 1 ? 'bg-surface-container-high border-primary text-primary' : 'bg-surface-container-high border-white/20 text-on-surface-variant'">
+                <CheckCircle2 v-if="wizardStep > index + 1" class="w-4 h-4" />
+                <span v-else>{{ index + 1 }}</span>
+              </div>
+              <span class="text-xs font-semibold" :class="wizardStep >= index + 1 ? 'text-primary' : 'text-on-surface-variant'">{{ stepInfo }}</span>
+            </div>
           </div>
 
           <!-- Step 1: Name -->
@@ -139,14 +146,45 @@
             </select>
             
             <div v-if="selectedTemplatePreview" class="mt-4 p-4 bg-black/20 border border-white/5 rounded-xl">
-              <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest mb-2 block">{{ t('campaigns.preview_label') }}</span>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">{{ t('campaigns.preview_label') }}</span>
+                <button @click="regenerateSpintax" class="text-xs text-primary flex items-center gap-1 hover:text-primary-fixed-dim transition-colors" title="Genera un'altra variante Spintax">
+                  Genera variante
+                </button>
+              </div>
               <div class="text-sm text-on-surface whitespace-pre-wrap leading-relaxed" v-html="selectedTemplatePreview"></div>
             </div>
           </div>
 
-          <!-- Step 3: Rate Limit -->
+          <!-- Step 3: Target & Rate Limit -->
           <div v-if="wizardStep === 3" class="space-y-4">
-            <label class="block text-sm font-medium text-on-surface-variant">{{ t('campaigns.delay_label') }}</label>
+            <div>
+              <label class="block text-sm font-medium text-on-surface-variant mb-2">{{ t('campaigns.target_label', 'Destinatari') }}</label>
+              <div class="space-y-2">
+                <label class="flex items-center gap-2 text-sm text-on-surface cursor-pointer p-3 border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
+                       :class="{ 'bg-primary/10 border-primary/30': targetMode === 'ALL' }">
+                  <input type="radio" value="ALL" v-model="targetMode" @change="formData.contactIds = 'ALL'" class="text-primary focus:ring-primary bg-black/50 border-white/20" />
+                  <span>Tutti i contatti validi</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-on-surface cursor-pointer p-3 border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
+                       :class="{ 'bg-primary/10 border-primary/30': targetMode === 'GROUPS' }">
+                  <input type="radio" value="GROUPS" v-model="targetMode" @change="if(formData.contactIds === 'ALL') formData.contactIds = []" class="text-primary focus:ring-primary bg-black/50 border-white/20" />
+                  <span>Seleziona Rubriche specifiche</span>
+                </label>
+              </div>
+              
+              <!-- Groups selector -->
+              <div v-if="formData.contactIds !== 'ALL'" class="mt-3 p-4 bg-black/30 border border-white/10 rounded-lg space-y-2 max-h-48 overflow-y-auto">
+                <div v-if="groupsStore.loading" class="text-center py-2"><Loader2 class="w-4 h-4 animate-spin mx-auto text-primary" /></div>
+                <div v-else-if="groupsStore.groups.length === 0" class="text-center py-2 text-xs text-on-surface-variant">Nessuna rubrica disponibile.</div>
+                <label v-else v-for="group in groupsStore.groups" :key="group.id" class="flex items-center gap-2 text-sm text-on-surface cursor-pointer hover:text-primary transition-colors">
+                  <input type="checkbox" :value="'GROUP:' + group.id" v-model="formData.contactIds" class="rounded border-white/20 text-primary focus:ring-primary bg-black/50" />
+                  {{ group.name }} ({{ group._count?.contacts || 0 }})
+                </label>
+              </div>
+            </div>
+
+            <label class="block text-sm font-medium text-on-surface-variant pt-2 border-t border-white/10">{{ t('campaigns.delay_label') }}</label>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="text-xs text-on-surface-variant">{{ t('campaigns.delay_min') }}</label>
@@ -160,15 +198,44 @@
               </div>
             </div>
             <p v-if="formData.delayMin >= formData.delayMax" class="text-xs text-error">Il ritardo minimo deve essere inferiore al massimo.</p>
-            <p class="text-xs text-on-surface-variant">{{ t('campaigns.contacts_all') }}</p>
           </div>
 
-          <!-- Step 4: Schedule -->
-          <div v-if="wizardStep === 4" class="space-y-4">
-            <label class="block text-sm font-medium text-on-surface-variant">Programmazione (Opzionale)</label>
-            <p class="text-xs text-on-surface-variant mb-2">Seleziona data e ora se vuoi che la campagna parta in automatico.</p>
-            <input v-model="formData.scheduledAt" type="datetime-local"
-                   class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none" />
+          <!-- Step 4: Schedule & Summary -->
+          <div v-if="wizardStep === 4" class="space-y-6">
+            <!-- Summary Card -->
+            <div class="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3">
+              <h4 class="text-sm font-bold text-primary flex items-center gap-2">
+                <CheckCircle2 class="w-4 h-4" /> Riepilogo Campagna
+              </h4>
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span class="text-on-surface-variant text-xs block mb-1">Nome</span>
+                  <span class="font-semibold text-on-surface">{{ formData.name }}</span>
+                </div>
+                <div>
+                  <span class="text-on-surface-variant text-xs block mb-1">Template</span>
+                  <span class="font-semibold text-on-surface">{{ templates.find(t => t.id === formData.templateId)?.name || '—' }}</span>
+                </div>
+                <div>
+                  <span class="text-on-surface-variant text-xs block mb-1">Destinatari</span>
+                  <span class="font-semibold text-on-surface">
+                    <template v-if="formData.contactIds === 'ALL'">Tutti i contatti validi</template>
+                    <template v-else>{{ formData.contactIds.length }} Rubrich{{ formData.contactIds.length === 1 ? 'a' : 'e' }} selezionat{{ formData.contactIds.length === 1 ? 'a' : 'e' }}</template>
+                  </span>
+                </div>
+                <div>
+                  <span class="text-on-surface-variant text-xs block mb-1">Ritardo tra i messaggi</span>
+                  <span class="font-semibold text-on-surface">{{ formData.delayMin }}s - {{ formData.delayMax }}s</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <label class="block text-sm font-medium text-on-surface-variant">Programmazione (Opzionale)</label>
+              <p class="text-xs text-on-surface-variant mb-2">Seleziona data e ora se vuoi che la campagna parta in automatico in futuro.</p>
+              <input v-model="formData.scheduledAt" type="datetime-local"
+                     class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none" />
+            </div>
           </div>
 
           <div class="flex flex-col gap-2 mt-6">
@@ -289,17 +356,20 @@ import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
 import { Plus, Play, Pause, Eye, X, Clock, Edit2, Trash2, Calendar, CheckCircle2, AlertCircle } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useCampaignsStore } from '~/stores/campaigns'
+import { useContactGroupsStore } from '~/stores/contactGroups'
 
 const { t } = useI18n()
 const store = useCampaignsStore()
+const groupsStore = useContactGroupsStore()
 
 const showWizard = ref(false)
 const isEditing = ref(false)
 const wizardStep = ref(1)
 const templates = ref<any[]>([])
 
-const initialForm = { id: '', name: '', templateId: '', delayMin: 15, delayMax: 45, scheduledAt: '' }
+const initialForm = { id: '', name: '', templateId: '', delayMin: 15, delayMax: 45, scheduledAt: '', contactIds: 'ALL' as any }
 const formData = ref({ ...initialForm })
+const targetMode = ref<'ALL'|'GROUPS'>('ALL')
 
 const showRescheduleModal = ref(false)
 const rescheduleForm = ref({ id: '', scheduledAt: '' })
@@ -327,16 +397,22 @@ function openWizard(campaign?: any) {
   wizardStep.value = 1
   if (campaign) {
     isEditing.value = true
+    let parsedContacts = campaign.contactIds || 'ALL'
+    try { if (typeof parsedContacts === 'string' && parsedContacts !== 'ALL') parsedContacts = JSON.parse(parsedContacts) } catch(e){}
+    targetMode.value = parsedContacts === 'ALL' ? 'ALL' : 'GROUPS'
+    
     formData.value = {
       id: campaign.id,
       name: campaign.name,
       templateId: campaign.templateId,
       delayMin: campaign.delayMin,
       delayMax: campaign.delayMax,
+      contactIds: parsedContacts,
       scheduledAt: campaign.scheduledAt ? new Date(campaign.scheduledAt).toISOString().slice(0, 16) : ''
     }
   } else {
     isEditing.value = false
+    targetMode.value = 'ALL'
     formData.value = { ...initialForm }
   }
   showWizard.value = true
@@ -344,12 +420,17 @@ function openWizard(campaign?: any) {
 
 const editCampaign = (campaign: any) => {
   isEditing.value = true
+  let parsedContacts = campaign.contactIds || 'ALL'
+  try { if (typeof parsedContacts === 'string' && parsedContacts !== 'ALL') parsedContacts = JSON.parse(parsedContacts) } catch(e){}
+  targetMode.value = parsedContacts === 'ALL' ? 'ALL' : 'GROUPS'
+  
   formData.value = {
     id: campaign.id,
     name: campaign.name,
     templateId: campaign.templateId,
     delayMin: campaign.delayMin,
     delayMax: campaign.delayMax,
+    contactIds: parsedContacts,
     scheduledAt: campaign.scheduledAt ? new Date(campaign.scheduledAt).toISOString().slice(0, 16) : ''
   }
   showWizard.value = true
@@ -390,12 +471,19 @@ async function handleDelete(id: string) {
     }
   }
 }
-const { formatWhatsAppText } = useWhatsAppFormat()
+const { formatWhatsAppText, renderSpintax } = useWhatsAppFormat()
+const spintaxTrigger = ref(0)
 
 const selectedTemplatePreview = computed(() => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+  spintaxTrigger.value // Track dependency
   const tmpl = templates.value.find(t => t.id === formData.value.templateId)
-  return tmpl ? formatWhatsAppText(tmpl.body) : ''
+  return tmpl ? formatWhatsAppText(renderSpintax(tmpl.body)) : ''
 })
+
+function regenerateSpintax() {
+  spintaxTrigger.value++
+}
 
 function statusClass(status: string) {
   const map: Record<string, string> = {
@@ -434,6 +522,7 @@ async function handleSave() {
 
 onMounted(async () => {
   store.fetchCampaigns()
+  groupsStore.fetchGroups()
   try {
     const res = await $fetch<{ data: any[] }>('/api/templates')
     templates.value = res.data

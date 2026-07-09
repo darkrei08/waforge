@@ -8,12 +8,19 @@ import { zodReadQuery } from '~/server/utils/validation'
 import { PaginationSchema } from '~/lib/validation'
 
 export default defineEventHandler(async (event) => {
-  const { page, limit, search } = zodReadQuery(event, PaginationSchema)
+  const { page, limit, search, groupId } = zodReadQuery(event, PaginationSchema)
   const teamId = event.context.user.teamId
+
+  const baseWhere: any = { teamId }
+  if (groupId) {
+    baseWhere.groups = {
+      some: { id: groupId }
+    }
+  }
 
   const where = search
     ? {
-        teamId,
+        ...baseWhere,
         OR: [
           { name: { contains: search } },
           { phone: { contains: search } },
@@ -22,7 +29,7 @@ export default defineEventHandler(async (event) => {
           { company: { contains: search } },
         ],
       }
-    : { teamId }
+    : baseWhere
 
   const [contacts, total] = await Promise.all([
     prisma.contact.findMany({
@@ -30,6 +37,9 @@ export default defineEventHandler(async (event) => {
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { createdAt: 'desc' },
+      include: {
+        groups: true
+      }
     }),
     prisma.contact.count({ where }),
   ])

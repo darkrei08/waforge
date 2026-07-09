@@ -40,6 +40,7 @@ model Team {
   members TeamMembership[]
 
   contacts            Contact[]
+  contactGroups       ContactGroup[]
   templates           Template[]
   campaigns           Campaign[]
   waSessions          WhatsAppSession[]
@@ -64,6 +65,24 @@ model TeamMembership {
   createdAt DateTime @default(now())
 
   @@unique([userId, teamId])
+}
+
+// ── Contact Groups (Rubriche) ──────────────────────────────────────────────────
+
+model ContactGroup {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  name      String
+  color     String?
+  
+  contacts  Contact[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, name])
 }
 
 // ── Contacts & CRM ───────────────────────────────────────────────────────────
@@ -94,6 +113,7 @@ model Contact {
   isOnWhatsApp Boolean?
 
   // Relations
+  groups              ContactGroup[]
   messages            Message[]
   chatHistory         ChatMessage[]
   waConversations     WhatsAppConversation[]
