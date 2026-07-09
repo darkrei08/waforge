@@ -13,6 +13,14 @@ interface AppSettings {
   supportedEngines: string[]
 }
 
+interface BrandSettings {
+  primaryColor: string
+  secondaryColor: string
+  fontName: string
+  enableGlassmorphism: boolean
+  motionLevel: number
+}
+
 export const useSettingsStore = defineStore('settings', () => {
   const settings = ref<AppSettings>({
     delayMin: 15,
@@ -22,14 +30,30 @@ export const useSettingsStore = defineStore('settings', () => {
     whatsappEngine: 'wuzapi',
     supportedEngines: ['wuzapi', 'gowa'],
   })
+  
+  const brandSettings = ref<BrandSettings>({
+    primaryColor: '#25D366',
+    secondaryColor: '#128C7E',
+    fontName: 'Inter',
+    enableGlassmorphism: true,
+    motionLevel: 50,
+  })
+
   const loading = ref(false)
   const saved = ref(false)
 
   async function fetchSettings() {
     loading.value = true
     try {
-      const res = await $fetch<{ data: AppSettings }>('/api/settings')
-      settings.value = res.data
+      const [appRes, brandRes] = await Promise.all([
+        $fetch<{ data: AppSettings }>('/api/settings'),
+        $fetch<{ data: BrandSettings }>('/api/settings/brand').catch(() => ({ data: brandSettings.value }))
+      ])
+      settings.value = appRes.data
+      if (brandRes.data) {
+        brandSettings.value = brandRes.data
+        applyBrandSettingsToDOM(brandRes.data)
+      }
     } finally { loading.value = false }
   }
 
@@ -37,11 +61,43 @@ export const useSettingsStore = defineStore('settings', () => {
     loading.value = true
     saved.value = false
     try {
-      await $fetch('/api/settings', { method: 'PUT', body: settings.value })
+      await Promise.all([
+        $fetch('/api/settings', { method: 'PUT', body: settings.value }),
+        $fetch('/api/settings/brand', { method: 'PUT', body: brandSettings.value })
+      ])
       saved.value = true
+      applyBrandSettingsToDOM(brandSettings.value)
       setTimeout(() => { saved.value = false }, 3000)
     } finally { loading.value = false }
   }
 
-  return { settings, loading, saved, fetchSettings, saveSettings }
+  function hexToRgb(hex: string) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    return result ? `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : null
+  }
+
+  function applyBrandSettingsToDOM(config: BrandSettings) {
+    if (typeof document === 'undefined') return
+    const root = document.documentElement
+    
+    // Apply Colors
+    const primaryRgb = hexToRgb(config.primaryColor)
+    if (primaryRgb) root.style.setProperty('--primary', primaryRgb)
+    
+    const secondaryRgb = hexToRgb(config.secondaryColor)
+    if (secondaryRgb) root.style.setProperty('--secondary', secondaryRgb)
+    
+    // Apply Typography
+    root.style.setProperty('--font-sans', `"${config.fontName}", sans-serif`)
+    
+    // Apply UI Trends (Glassmorphism & Motion)
+    root.style.setProperty('--glass-opacity', config.enableGlassmorphism ? '0.4' : '1')
+    root.style.setProperty('--glass-blur', config.enableGlassmorphism ? '12px' : '0px')
+    
+    // Motion Level (0 to 100) -> mapped to transition duration
+    const duration = Math.max(100, 600 - (config.motionLevel * 5))
+    root.style.setProperty('--motion-duration', `${duration}ms`)
+  }
+
+  return { settings, brandSettings, loading, saved, fetchSettings, saveSettings, applyBrandSettingsToDOM }
 })
