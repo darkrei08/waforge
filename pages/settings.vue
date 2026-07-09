@@ -64,6 +64,55 @@
         </div>
       </div>
 
+      <!-- Brand Customization (2026 UX Trends) -->
+      <div class="bg-surface-container/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 animate-fade-in" style="transition-duration: var(--motion-duration, 300ms)">
+        <h2 class="text-lg font-semibold text-on-surface mb-4 flex items-center gap-2">
+          <Palette class="w-5 h-5 text-secondary" /> Brand & UI Customization
+        </h2>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm text-on-surface-variant font-medium">Primary Color</label>
+            <div class="flex items-center gap-2 mt-1">
+              <input type="color" v-model="store.brandSettings.primaryColor" class="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent" />
+              <input type="text" v-model="store.brandSettings.primaryColor" class="w-full p-2 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+            </div>
+          </div>
+          <div>
+            <label class="text-sm text-on-surface-variant font-medium">Secondary Color</label>
+            <div class="flex items-center gap-2 mt-1">
+              <input type="color" v-model="store.brandSettings.secondaryColor" class="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent" />
+              <input type="text" v-model="store.brandSettings.secondaryColor" class="w-full p-2 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+            </div>
+          </div>
+          <div>
+            <label class="text-sm text-on-surface-variant font-medium">Typography (Font Family)</label>
+            <select v-model="store.brandSettings.fontName" class="w-full mt-1 p-2 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors">
+              <option value="Inter">Inter (Default)</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Outfit">Outfit</option>
+              <option value="Space Grotesk">Space Grotesk</option>
+            </select>
+          </div>
+          <div>
+             <label class="text-sm text-on-surface-variant font-medium">Kinetic Motion Speed</label>
+             <input type="range" v-model.number="store.brandSettings.motionLevel" min="0" max="100" class="w-full mt-3 accent-primary" />
+             <p class="text-xs text-on-surface-variant mt-1 text-right">{{ store.brandSettings.motionLevel }}%</p>
+          </div>
+        </div>
+        <div class="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
+          <div>
+            <p class="text-sm text-on-surface font-medium">Glassmorphism & Depth</p>
+            <p class="text-xs text-on-surface-variant mt-1">Enable radical authenticity spatial layers</p>
+          </div>
+          <button @click="store.brandSettings.enableGlassmorphism = !store.brandSettings.enableGlassmorphism"
+                  class="w-12 h-7 rounded-full transition-colors relative"
+                  :class="store.brandSettings.enableGlassmorphism ? 'bg-primary' : 'bg-white/20'">
+            <div class="w-5 h-5 bg-white rounded-full absolute top-1 transition-transform"
+                 :class="store.brandSettings.enableGlassmorphism ? 'translate-x-6' : 'translate-x-1'"></div>
+          </button>
+        </div>
+      </div>
+
       <!-- Save -->
       <div class="flex items-center gap-4">
         <button @click="handleSave" :disabled="store.loading"
@@ -79,7 +128,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Wifi, Clock, Shield } from 'lucide-vue-next'
+import { Wifi, Clock, Shield, Palette } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useSettingsStore } from '~/stores/settings'
 

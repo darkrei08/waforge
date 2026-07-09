@@ -46,6 +46,8 @@ model Team {
   chatMessages        ChatMessage[]
   waConversations     WhatsAppConversation[]
   waScheduledMessages WhatsAppScheduledMessage[]
+
+  brandSettings Json?
 }
 
 model TeamMembership {
