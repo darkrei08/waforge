@@ -163,6 +163,17 @@
         </div>
 
         <div v-if="!store.llmSettings.useCockpit" class="space-y-4">
+          <div class="bg-primary/10 border border-primary/20 p-3 rounded-lg mb-4">
+            <p class="text-xs text-primary font-medium mb-1">Provider Supportati (Richiedono API Key o Localhost):</p>
+            <ul class="text-xs text-primary/80 list-disc list-inside space-y-0.5">
+              <li><strong>OpenAI</strong> (GPT-4, GPT-3.5)</li>
+              <li><strong>Anthropic</strong> (Claude 3.5 Sonnet, Opus, Haiku)</li>
+              <li><strong>Google Gemini</strong> (Pro, Flash)</li>
+              <li><strong>Cohere</strong> (Command R)</li>
+              <li><strong>Custom</strong> (Modelli Locali via LM Studio / Ollama)</li>
+            </ul>
+          </div>
+
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="text-sm text-on-surface-variant font-medium">Provider LLM</label>
@@ -192,7 +203,10 @@
           </div>
           <div>
             <label class="text-sm text-on-surface-variant font-medium flex items-center justify-between">
-              Server MCP (Model Context Protocol)
+              <div>
+                Server MCP (Model Context Protocol)
+                <span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">BETA / INCOMPLETO</span>
+              </div>
               <button @click="store.llmSettings.mcpServers.push('')" class="text-xs text-primary hover:text-primary-fixed-dim">+ Aggiungi</button>
             </label>
             <div class="space-y-2 mt-2">
