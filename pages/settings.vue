@@ -162,7 +162,7 @@
           </div>
         </div>
 
-        <div v-else class="space-y-4">
+        <div v-if="!store.llmSettings.useCockpit" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="text-sm text-on-surface-variant font-medium">Provider LLM</label>
