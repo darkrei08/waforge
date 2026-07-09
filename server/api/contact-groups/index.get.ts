@@ -1,8 +1,7 @@
 import { prisma } from '~/server/utils/prisma'
-import { requireAuth } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  const { teamId } = await requireAuth(event)
+  const teamId = event.context.user.teamId
 
   try {
     const groups = await prisma.contactGroup.findMany({

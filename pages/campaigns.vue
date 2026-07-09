@@ -168,7 +168,7 @@
                 </label>
                 <label class="flex items-center gap-2 text-sm text-on-surface cursor-pointer p-3 border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
                        :class="{ 'bg-primary/10 border-primary/30': targetMode === 'GROUPS' }">
-                  <input type="radio" value="GROUPS" v-model="targetMode" @change="if(formData.contactIds === 'ALL') formData.contactIds = []" class="text-primary focus:ring-primary bg-black/50 border-white/20" />
+                  <input type="radio" value="GROUPS" v-model="targetMode" @change="formData.contactIds = formData.contactIds === 'ALL' ? [] : formData.contactIds" class="text-primary focus:ring-primary bg-black/50 border-white/20" />
                   <span>Seleziona Rubriche specifiche</span>
                 </label>
               </div>

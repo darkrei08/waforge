@@ -1,5 +1,4 @@
 import { prisma } from '~/server/utils/prisma'
-import { requireAuth } from '~/server/utils/auth'
 import { z } from 'zod'
 
 const createSchema = z.object({
@@ -8,7 +7,7 @@ const createSchema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const { teamId } = await requireAuth(event)
+  const teamId = event.context.user.teamId
   
   const body = await readBody(event)
   
