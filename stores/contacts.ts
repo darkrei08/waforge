@@ -51,8 +51,8 @@ export const useContactsStore = defineStore('contacts', () => {
     return res.data
   }
 
-  async function importCSV(csv: string) {
-    const res = await $fetch<{ data: any }>('/api/contacts/import', { method: 'POST', body: { csv } })
+  async function importCSV(csv: string, groupId?: string) {
+    const res = await $fetch<{ data: any }>('/api/contacts/import', { method: 'POST', body: { csv, groupId } })
     await fetchContacts(1)
     return res.data
   }

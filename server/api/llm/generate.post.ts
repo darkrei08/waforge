@@ -3,7 +3,7 @@ import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const teamId = event.context.user.teamId
-  const { prompt, originalMessage, action } = await readBody(event)
+  const { prompt, originalMessage, action, chatHistory } = await readBody(event)
 
   const team = await prisma.team.findUnique({
     where: { id: teamId },
@@ -17,6 +17,10 @@ export default defineEventHandler(async (event) => {
     baseURL = 'http://127.0.0.1:19528/v1'
   } else if (settings.provider === 'custom' && settings.customBaseUrl) {
     baseURL = settings.customBaseUrl
+  } else if (settings.provider === 'gemini') {
+    baseURL = 'https://generativelanguage.googleapis.com/v1beta/openai'
+  } else if (settings.provider === 'anthropic') {
+    baseURL = 'https://api.anthropic.com/v1' // might need LiteLLM proxy in production, but let's assume OpenAI compatible proxy exists if not using Cockpit
   }
 
   const apiKey = settings.useCockpit ? (settings.cockpitAccount || 'dummy-key') : (settings.apiKey || 'dummy-key')
@@ -37,12 +41,22 @@ Il tuo obiettivo è riscrivere il messaggio fornito seguendo scrupolosamente le 
 4. Usa variabili di personalizzazione come {{Name}} se opportuno.
 5. Usa formattazione leggibile (*grassetto*, _corsivo_).
 Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
+  } else if (action === 'improve') {
+    systemPrompt = `Sei un copywriter esperto. Il tuo compito è migliorare il lessico, la sintassi e la leggibilità (con markdown di WhatsApp) del testo fornito.`
   }
 
-  const messages = [
-    { role: 'system', content: systemPrompt },
-    { role: 'user', content: prompt || (originalMessage ? `Migliora questo messaggio:\n\n${originalMessage}` : "Ciao!") }
-  ]
+  let messages = []
+  if (chatHistory && Array.isArray(chatHistory)) {
+    messages = [
+      { role: 'system', content: systemPrompt },
+      ...chatHistory
+    ]
+  } else {
+    messages = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: prompt || (originalMessage ? `Testo attuale:\n\n${originalMessage}\n\nRichiesta: Miglioralo.` : "Ciao!") }
+    ]
+  }
 
   try {
     const res = await fetch(`${baseURL}/chat/completions`, {

@@ -153,33 +153,57 @@
     <!-- AI Assistant Modal -->
     <Teleport to="body">
       <div v-if="showAiAssistant" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showAiAssistant = false">
-        <div class="w-full max-w-lg bg-surface-container-high border border-primary/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(37,211,102,0.15)] animate-slide-in">
-          <h3 class="text-lg font-bold text-on-surface mb-2 flex items-center gap-2">
-            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        <div class="w-full max-w-lg bg-surface-container-high border border-primary/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(37,211,102,0.15)] flex flex-col h-[600px] animate-slide-in">
+          <h3 class="text-lg font-bold text-on-surface mb-2 flex items-center gap-2 shrink-0">
+            <Sparkles class="w-5 h-5 text-primary" />
             Assistente AI
           </h3>
-          <p class="text-xs text-on-surface-variant mb-4">Usa l'intelligenza artificiale per migliorare il tuo messaggio o applicare tecniche Anti-Ban.</p>
+          <p class="text-xs text-on-surface-variant mb-4 shrink-0">Usa l'intelligenza artificiale per migliorare il tuo messaggio o applicare tecniche Anti-Ban.</p>
 
-          <div class="space-y-4">
-            <textarea v-model="aiPrompt" rows="3" placeholder="Scrivi un prompt (es. Riscrivi questo messaggio in tono più formale...)"
-                      class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none whitespace-pre-wrap"></textarea>
+          <div class="flex-1 overflow-y-auto mb-4 space-y-3 pr-2 scrollbar-thin">
+            <div class="bg-black/20 p-3 rounded-lg border border-white/5 w-11/12 text-sm text-on-surface-variant">
+              Ciao! Posso aiutarti a migliorare il messaggio o a renderlo a prova di ban. Seleziona un'azione rapida o scrivimi cosa vuoi fare.
+            </div>
             
+            <div v-for="(msg, i) in chatHistory" :key="i" 
+                 :class="msg.role === 'user' ? 'bg-primary/10 border-primary/20 ml-auto' : 'bg-black/20 border-white/5 mr-auto'"
+                 class="p-3 rounded-lg border w-11/12 text-sm whitespace-pre-wrap">
+              <span v-if="msg.role === 'user'" class="text-primary font-medium block mb-1">Tu</span>
+              <span v-else class="text-secondary font-medium block mb-1">Assistente</span>
+              <span class="text-on-surface">{{ msg.content }}</span>
+              <button v-if="msg.role === 'assistant'" @click="formData.body = msg.content; showAiAssistant = false" 
+                      class="mt-2 text-xs bg-primary/20 text-primary px-2 py-1 rounded hover:bg-primary/30 transition-colors">
+                Usa questo testo
+              </button>
+            </div>
+            <div v-if="isGeneratingAi" class="bg-black/20 p-3 rounded-lg border border-white/5 w-11/12 mr-auto flex items-center gap-2">
+              <Loader2 class="w-4 h-4 animate-spin text-primary" />
+              <span class="text-xs text-on-surface-variant">Elaborazione in corso...</span>
+            </div>
+          </div>
+
+          <div class="space-y-2 shrink-0">
             <div class="flex gap-2">
-              <button @click="handleAiGenerate('custom')" :disabled="isGeneratingAi || !aiPrompt"
-                      class="flex-1 py-2 bg-white/10 hover:bg-white/20 text-on-surface text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
-                <Loader2 v-if="isGeneratingAi" class="w-4 h-4 animate-spin" />
-                Invia Prompt
+              <button @click="handleAiGenerate('improve')" :disabled="isGeneratingAi || !formData.body"
+                      class="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-on-surface-variant hover:text-on-surface text-xs font-medium rounded-lg transition-colors border border-white/5">
+                ✨ Migliora Formattazione
               </button>
               <button @click="handleAiGenerate('antiban')" :disabled="isGeneratingAi || !formData.body"
-                      class="flex-1 py-2 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                      title="Riscrive il messaggio attuale con Spintax e tecniche Anti-Ban">
-                <Loader2 v-if="isGeneratingAi" class="w-4 h-4 animate-spin" />
-                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                Applica Anti-Ban
+                      class="flex-1 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium rounded-lg transition-colors border border-primary/20">
+                🛡️ Applica Anti-Ban
+              </button>
+            </div>
+            <div class="flex gap-2 relative">
+              <input v-model="aiPrompt" type="text" placeholder="Chiedi all'IA..." @keyup.enter="handleAiGenerate('chat')"
+                     class="flex-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none" />
+              <button @click="handleAiGenerate('chat')" :disabled="isGeneratingAi || !aiPrompt"
+                      class="px-4 bg-primary text-on-primary rounded-lg hover:bg-primary-fixed-dim transition-colors disabled:opacity-50 flex items-center justify-center">
+                <Send class="w-4 h-4" />
               </button>
             </div>
           </div>
-          <div class="flex justify-end gap-3 mt-6">
+          
+          <div class="flex justify-end gap-3 mt-4 shrink-0">
             <button @click="showAiAssistant = false" class="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors">Chiudi</button>
           </div>
         </div>
@@ -190,7 +214,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, inject } from 'vue'
-import { Plus, Edit2, Trash2, Info, Upload, Loader2 } from 'lucide-vue-next'
+import { Plus, Edit2, Trash2, Info, Upload, Loader2, Sparkles, Send } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useTemplatesStore, type Template } from '~/stores/templates'
 
@@ -211,27 +235,33 @@ const formData = ref({ id: '', name: '', description: '', body: '', mediaUrl: ''
 const showAiAssistant = ref(false)
 const aiPrompt = ref('')
 const isGeneratingAi = ref(false)
+const chatHistory = ref<{role: string, content: string}[]>([])
 
-async function handleAiGenerate(action: 'custom' | 'antiban') {
+async function handleAiGenerate(action: 'custom' | 'antiban' | 'improve' | 'chat') {
+  if (action === 'chat' && aiPrompt.value) {
+    chatHistory.value.push({ role: 'user', content: aiPrompt.value })
+  }
   isGeneratingAi.value = true
   try {
     const res = await $fetch<{ data: { result: string } }>('/api/llm/generate', {
       method: 'POST',
       body: {
-        prompt: action === 'custom' ? aiPrompt.value : undefined,
+        prompt: action === 'chat' ? aiPrompt.value : undefined,
         originalMessage: formData.value.body,
-        action
+        action,
+        chatHistory: chatHistory.value
       }
     })
     
-    if (res.data.result) {
-      formData.value.body = res.data.result
-      addToast('Messaggio generato con successo!', 'success')
-      if (action === 'custom') aiPrompt.value = ''
-      showAiAssistant.value = false
+    if (action === 'chat') {
+      chatHistory.value.push({ role: 'assistant', content: res.data.result })
+      aiPrompt.value = ''
+    } else {
+      chatHistory.value.push({ role: 'user', content: action === 'antiban' ? 'Applica Anti-Ban al testo attuale.' : 'Migliora la formattazione del testo attuale.' })
+      chatHistory.value.push({ role: 'assistant', content: res.data.result })
     }
   } catch (err: any) {
-    addToast(err.data?.message || err.message || 'Errore LLM', 'error')
+    alert(t('common.error') + ': ' + (err.data?.message || err.message))
   } finally {
     isGeneratingAi.value = false
   }

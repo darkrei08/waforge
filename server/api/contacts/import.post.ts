@@ -10,7 +10,7 @@ import { parseCSV } from '~/lib/csv-parser'
 import { securityLog } from '~/lib/security-logger'
 
 export default defineEventHandler(async (event) => {
-  const { csv } = await zodReadBody(event, BulkImportSchema)
+  const { csv, groupId } = await zodReadBody(event, BulkImportSchema)
   const teamId = event.context.user.teamId
 
   const result = parseCSV(csv)
@@ -31,12 +31,14 @@ export default defineEventHandler(async (event) => {
           email: contact.email,
           company: contact.company,
           customFields: contact.customFields ? JSON.stringify(contact.customFields) : null,
+          groups: groupId ? { connect: { id: groupId } } : undefined,
         },
         update: {
           name: contact.name,
           email: contact.email,
           company: contact.company,
           customFields: contact.customFields ? JSON.stringify(contact.customFields) : null,
+          groups: groupId ? { connect: { id: groupId } } : undefined,
         },
       })
       imported++

@@ -378,7 +378,7 @@ async function handleImport() {
   importResult.value = null
   
   try {
-    importResult.value = await store.importCSV(csvText.value)
+    importResult.value = await store.importCSV(csvText.value, store.selectedGroupId)
     // Refresh the contacts table
     await store.fetchContacts(1)
     // Close modal after a brief delay so user can see the result

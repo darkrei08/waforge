@@ -56,6 +56,7 @@ export const BulkImportSchema = z.object({
     .string()
     .max(5_000_000, 'CSV file too large (max 5MB)')  // prevent DoS
     .min(1, 'Empty CSV'),
+  groupId: z.string().cuid('Invalid Group ID').optional(),
 })
 
 // ── Template schemas ──────────────────────────────────────────────────────────

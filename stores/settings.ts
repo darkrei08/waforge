@@ -28,6 +28,7 @@ interface LlmSettings {
   useCockpit: boolean
   cockpitAccount: string
   customBaseUrl: string
+  mcpServers: string[]
 }
 
 export const useSettingsStore = defineStore('settings', () => {
@@ -54,7 +55,8 @@ export const useSettingsStore = defineStore('settings', () => {
     model: 'gpt-4o-mini',
     useCockpit: false,
     cockpitAccount: '',
-    customBaseUrl: 'http://127.0.0.1:1234/v1'
+    customBaseUrl: 'http://127.0.0.1:1234/v1',
+    mcpServers: []
   })
   const cockpitAccounts = ref<{email: string, id: string}[]>([])
   const cockpitAvailable = ref(false)

@@ -153,6 +153,8 @@
               <select v-model="store.llmSettings.provider" class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors">
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Anthropic</option>
+                <option value="gemini">Google Gemini</option>
+                <option value="cohere">Cohere</option>
                 <option value="custom">Custom (Locale / LM Studio)</option>
               </select>
             </div>
@@ -171,6 +173,22 @@
             <label class="text-sm text-on-surface-variant font-medium">API Key <span v-if="store.llmSettings.provider === 'custom'" class="text-white/30">(Opzionale)</span></label>
             <input v-model="store.llmSettings.apiKey" type="password" placeholder="sk-..."
                    class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+          </div>
+          <div>
+            <label class="text-sm text-on-surface-variant font-medium flex items-center justify-between">
+              Server MCP (Model Context Protocol)
+              <button @click="store.llmSettings.mcpServers.push('')" class="text-xs text-primary hover:text-primary-fixed-dim">+ Aggiungi</button>
+            </label>
+            <div class="space-y-2 mt-2">
+              <div v-for="(server, idx) in store.llmSettings.mcpServers" :key="idx" class="flex gap-2">
+                <input v-model="store.llmSettings.mcpServers[idx]" type="text" placeholder="es. npx -y @modelcontextprotocol/server-everything"
+                       class="flex-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+                <button @click="store.llmSettings.mcpServers.splice(idx, 1)" class="p-3 text-red-400 hover:text-red-300 bg-white/5 rounded-lg">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </div>
+              <p v-if="!store.llmSettings.mcpServers?.length" class="text-xs text-on-surface-variant">Nessun server MCP configurato. Clicca "+ Aggiungi" per collegare strumenti esterni all'LLM.</p>
+            </div>
           </div>
         </div>
       </div>
