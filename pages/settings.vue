@@ -120,29 +120,45 @@
           Integrazioni AI (LLM & Anti-Ban)
         </h2>
         
-        <div v-if="store.cockpitAvailable" class="mb-4 p-4 rounded-xl border border-primary/30 bg-primary/5 flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-on-surface text-primary flex items-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-              Cockpit Tools Rilevato
-            </p>
-            <p class="text-xs text-on-surface-variant mt-1">Usa gli account configurati in Cockpit per bilanciare il carico delle richieste API.</p>
+        <!-- Diagnostica Cockpit Tools -->
+        <div class="mb-6 p-4 rounded-xl border border-white/10 bg-black/20 flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-bold text-on-surface flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full" :class="store.cockpitAvailable ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]'"></span>
+                API Status: Cockpit Tools
+              </p>
+              <p class="text-xs text-on-surface-variant mt-1">
+                {{ store.cockpitAvailable ? 'Cockpit Daemon rilevato correttamente.' : 'Cockpit non rilevato sulla macchina locale.' }}
+              </p>
+            </div>
+            <button v-if="store.cockpitAvailable" @click="store.llmSettings.useCockpit = !store.llmSettings.useCockpit"
+                    class="w-12 h-7 rounded-full transition-colors relative shrink-0"
+                    :class="store.llmSettings.useCockpit ? 'bg-primary' : 'bg-white/20'">
+              <div class="w-5 h-5 bg-white rounded-full absolute top-1 transition-transform"
+                   :class="store.llmSettings.useCockpit ? 'translate-x-6' : 'translate-x-1'"></div>
+            </button>
           </div>
-          <button @click="store.llmSettings.useCockpit = !store.llmSettings.useCockpit"
-                  class="w-12 h-7 rounded-full transition-colors relative"
-                  :class="store.llmSettings.useCockpit ? 'bg-primary' : 'bg-white/20'">
-            <div class="w-5 h-5 bg-white rounded-full absolute top-1 transition-transform"
-                 :class="store.llmSettings.useCockpit ? 'translate-x-6' : 'translate-x-1'"></div>
-          </button>
-        </div>
 
-        <div v-if="store.llmSettings.useCockpit" class="space-y-4">
-          <div>
-            <label class="text-sm text-on-surface-variant font-medium">Seleziona Account Cockpit</label>
-            <select v-model="store.llmSettings.cockpitAccount" class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors">
-              <option value="">Seleziona account...</option>
-              <option v-for="acc in store.cockpitAccounts" :key="acc.id" :value="acc.email">{{ acc.email }}</option>
-            </select>
+          <div v-if="!store.cockpitAvailable" class="bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
+            <p class="text-xs text-red-200">Per utilizzare Cockpit Tools come proxy LLM, assicurati che il demone sia in esecuzione e che il file `~/.antigravity_cockpit/accounts.json` sia accessibile.</p>
+          </div>
+
+          <div v-else>
+            <p class="text-xs font-medium text-on-surface-variant mb-2">Account Cockpit Disponibili ({{ store.cockpitAccounts.length }}):</p>
+            <ul class="space-y-1 mb-3">
+              <li v-for="acc in store.cockpitAccounts" :key="acc.id" class="text-xs text-primary/80 bg-primary/5 px-2 py-1 rounded inline-block mr-2 border border-primary/20">
+                {{ acc.email }}
+              </li>
+            </ul>
+            
+            <div v-if="store.llmSettings.useCockpit">
+              <label class="text-xs text-on-surface-variant font-medium">Seleziona Account Attivo per WaForge</label>
+              <select v-model="store.llmSettings.cockpitAccount" class="w-full mt-1 p-2 bg-black/40 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors">
+                <option value="">Seleziona account...</option>
+                <option v-for="acc in store.cockpitAccounts" :key="acc.id" :value="acc.email">{{ acc.email }}</option>
+              </select>
+            </div>
           </div>
         </div>
 
