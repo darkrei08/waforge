@@ -5,24 +5,51 @@ import os from 'os'
 
 export default defineEventHandler(async () => {
   try {
-    const isWindows = process.platform === 'win32'
     const homeDir = os.homedir()
-    // Resolving paths as described in the cockpit-tools SKILL.md
-    const cockpitDir = path.join(homeDir, '.antigravity_cockpit')
+    let cockpitDir = path.join(homeDir, '.antigravity_cockpit')
     const dockerCockpitDir = '/home/nuxtjs/.antigravity_cockpit'
     
-    let accountsFile = path.join(cockpitDir, 'accounts.json')
-    if (!fs.existsSync(accountsFile) && fs.existsSync(path.join(dockerCockpitDir, 'accounts.json'))) {
-      accountsFile = path.join(dockerCockpitDir, 'accounts.json')
+    if (!fs.existsSync(cockpitDir) && fs.existsSync(dockerCockpitDir)) {
+      cockpitDir = dockerCockpitDir
     }
+
+    const accountsFile = path.join(cockpitDir, 'accounts.json')
+    const accountsDir = path.join(cockpitDir, 'accounts')
 
     if (fs.existsSync(accountsFile)) {
       const data = JSON.parse(fs.readFileSync(accountsFile, 'utf-8'))
       if (data && Array.isArray(data.accounts)) {
+        
+        // Enrich accounts with quota from individual files
+        const enrichedAccounts = data.accounts.map((acc: any) => {
+          let quota = null
+          let tier = 'FREE'
+          
+          try {
+            const accFilePath = path.join(accountsDir, `${acc.id}.json`)
+            if (fs.existsSync(accFilePath)) {
+              const accData = JSON.parse(fs.readFileSync(accFilePath, 'utf-8'))
+              if (accData.quota) {
+                quota = accData.quota.models
+                tier = accData.quota.subscription_tier || 'FREE'
+              }
+            }
+          } catch (e) {
+            // Ignore parse errors for individual files
+          }
+
+          return {
+            id: acc.id,
+            email: acc.email,
+            tier: tier.includes('pro') ? 'PRO' : 'FREE',
+            quota: quota
+          }
+        })
+
         return {
           data: {
             available: true,
-            accounts: data.accounts.map((a: any) => ({ email: a.email, id: a.id }))
+            accounts: enrichedAccounts
           }
         }
       }

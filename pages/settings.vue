@@ -145,19 +145,105 @@
           </div>
 
           <div v-else>
-            <p class="text-xs font-medium text-on-surface-variant mb-2">Account Cockpit Disponibili ({{ store.cockpitAccounts.length }}):</p>
-            <ul class="space-y-1 mb-3">
-              <li v-for="acc in store.cockpitAccounts" :key="acc.id" class="text-xs text-primary/80 bg-primary/5 px-2 py-1 rounded inline-block mr-2 border border-primary/20">
-                {{ acc.email }}
-              </li>
-            </ul>
-            
-            <div v-if="store.llmSettings.useCockpit">
-              <label class="text-xs text-on-surface-variant font-medium">Seleziona Account Attivo per WaForge</label>
-              <select v-model="store.llmSettings.cockpitAccount" class="w-full mt-1 p-2 bg-black/40 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors">
-                <option value="">Seleziona account...</option>
-                <option v-for="acc in store.cockpitAccounts" :key="acc.id" :value="acc.email">{{ acc.email }}</option>
-              </select>
+            <!-- Account Cockpit Disponibili -->
+            <div class="mt-4">
+              <label class="block text-sm text-on-surface-variant font-medium mb-3">Seleziona Account Attivo per WaForge</label>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div v-for="acc in cockpitStatus.accounts" :key="acc.id" 
+                     @click="store.llmSettings.cockpitAccountId = acc.id"
+                     class="relative p-4 rounded-xl border transition-all cursor-pointer flex flex-col gap-3"
+                     :class="store.llmSettings.cockpitAccountId === acc.id ? 'bg-primary/5 border-primary shadow-[0_0_15px_rgba(37,211,102,0.15)]' : 'bg-surface border-white/5 hover:border-white/20'">
+                  
+                  <!-- Intestazione Card -->
+                  <div class="flex justify-between items-start">
+                    <div class="flex items-center gap-2">
+                      <div class="w-2 h-2 rounded-full" :class="store.llmSettings.cockpitAccountId === acc.id ? 'bg-primary' : 'bg-white/20'"></div>
+                      <span class="text-sm font-semibold text-on-surface truncate max-w-[150px]" :title="acc.email">{{ acc.email.split('@')[0] }}</span>
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" 
+                          :class="acc.tier === 'PRO' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-white/10 text-white/50 border border-white/10'">
+                      {{ acc.tier }}
+                    </span>
+                  </div>
+
+                  <!-- Quote Grid -->
+                  <div class="grid grid-cols-2 gap-4 mt-2">
+                    <!-- Colonna Claude -->
+                    <div class="space-y-3">
+                      <h5 class="text-xs font-bold text-on-surface-variant">Claude</h5>
+                      <!-- Claude 5h -->
+                      <div v-if="getModelQuota(acc, '3p-5h')" class="space-y-1">
+                        <div class="flex justify-between text-[10px]">
+                          <span class="text-white/50">5h</span>
+                          <span :class="getModelQuota(acc, '3p-5h').percentage > 10 ? 'text-primary' : 'text-red-400'">{{ getModelQuota(acc, '3p-5h').percentage }}%</span>
+                        </div>
+                        <div class="h-1 bg-white/10 rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all" 
+                               :class="getModelQuota(acc, '3p-5h').percentage > 10 ? 'bg-primary' : 'bg-red-500'" 
+                               :style="`width: ${getModelQuota(acc, '3p-5h').percentage}%`"></div>
+                        </div>
+                        <div class="text-[9px] text-white/40 pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                          {{ formatDate(getModelQuota(acc, '3p-5h').reset_time) }}
+                        </div>
+                      </div>
+                      
+                      <!-- Claude Weekly -->
+                      <div v-if="getModelQuota(acc, '3p-weekly')" class="space-y-1 pt-1">
+                        <div class="flex justify-between text-[10px]">
+                          <span class="text-white/50">Weekly</span>
+                          <span :class="getModelQuota(acc, '3p-weekly').percentage > 10 ? 'text-yellow-400' : 'text-red-400'">{{ getModelQuota(acc, '3p-weekly').percentage }}%</span>
+                        </div>
+                        <div class="h-1 bg-white/10 rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all" 
+                               :class="getModelQuota(acc, '3p-weekly').percentage > 10 ? 'bg-yellow-500' : 'bg-red-500'" 
+                               :style="`width: ${getModelQuota(acc, '3p-weekly').percentage}%`"></div>
+                        </div>
+                        <div class="text-[9px] text-white/40 pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                          {{ formatDate(getModelQuota(acc, '3p-weekly').reset_time) }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Colonna Gemini -->
+                    <div class="space-y-3">
+                      <h5 class="text-xs font-bold text-on-surface-variant">Gemini</h5>
+                      <!-- Gemini 5h -->
+                      <div v-if="getModelQuota(acc, 'gemini-5h')" class="space-y-1">
+                        <div class="flex justify-between text-[10px]">
+                          <span class="text-white/50">5h</span>
+                          <span :class="getModelQuota(acc, 'gemini-5h').percentage > 10 ? 'text-primary' : 'text-red-400'">{{ getModelQuota(acc, 'gemini-5h').percentage }}%</span>
+                        </div>
+                        <div class="h-1 bg-white/10 rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all" 
+                               :class="getModelQuota(acc, 'gemini-5h').percentage > 10 ? 'bg-primary' : 'bg-red-500'" 
+                               :style="`width: ${getModelQuota(acc, 'gemini-5h').percentage}%`"></div>
+                        </div>
+                        <div class="text-[9px] text-white/40 pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                          {{ formatDate(getModelQuota(acc, 'gemini-5h').reset_time) }}
+                        </div>
+                      </div>
+                      
+                      <!-- Gemini Weekly -->
+                      <div v-if="getModelQuota(acc, 'gemini-weekly')" class="space-y-1 pt-1">
+                        <div class="flex justify-between text-[10px]">
+                          <span class="text-white/50">Weekly</span>
+                          <span :class="getModelQuota(acc, 'gemini-weekly').percentage > 10 ? 'text-primary' : 'text-red-400'">{{ getModelQuota(acc, 'gemini-weekly').percentage }}%</span>
+                        </div>
+                        <div class="h-1 bg-white/10 rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all" 
+                               :class="getModelQuota(acc, 'gemini-weekly').percentage > 10 ? 'bg-primary' : 'bg-red-500'" 
+                               :style="`width: ${getModelQuota(acc, 'gemini-weekly').percentage}%`"></div>
+                        </div>
+                        <div class="text-[9px] text-white/40 pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                          {{ formatDate(getModelQuota(acc, 'gemini-weekly').reset_time) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -273,7 +359,20 @@ const store = useSettingsStore()
 const error = ref('')
 
 const showCustomCatalogForm = ref(false)
+const cockpitStatus = ref({ available: false, accounts: [] as any[] })
 const newCustomMcp = ref({ name: '', icon: '', cmd: '' })
+
+function getModelQuota(acc: any, modelName: string) {
+  if (!acc.quota) return null
+  return acc.quota.find((m: any) => m.name === modelName)
+}
+
+function formatDate(isoStr: string) {
+  if (!isoStr) return ''
+  const d = new Date(isoStr)
+  if (isNaN(d.getTime())) return isoStr
+  return `(${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')})`
+}
 
 function saveCustomMcp() {
   if (!newCustomMcp.value.name || !newCustomMcp.value.cmd) return
@@ -304,14 +403,28 @@ function addMcpServer(cmd: string) {
   }
 }
 
-async function handleSave() {
-  error.value = ''
-  if (store.settings.delayMin >= store.settings.delayMax) {
-    error.value = 'Il ritardo minimo deve essere minore del ritardo massimo.'
-    return
+async function saveSettings() {
+  try {
+    error.value = ''
+    if (store.settings.delayMin >= store.settings.delayMax) {
+      error.value = 'Il ritardo minimo deve essere minore del ritardo massimo.'
+      return
+    }
+    await store.saveSettings()
+  } catch (err: any) {
+    error.value = err.message || 'Errore durante il salvataggio'
   }
-  await store.saveSettings()
 }
 
-onMounted(() => store.fetchSettings())
+onMounted(async () => {
+  store.fetchSettings()
+  try {
+    const res = await $fetch('/api/settings/cockpit')
+    if (res && res.data) {
+      cockpitStatus.value = res.data
+    }
+  } catch (e) {
+    console.error("Cockpit Tools check failed", e)
+  }
+})
 </script>
