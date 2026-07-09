@@ -204,9 +204,38 @@
           <div>
             <label class="text-sm text-on-surface-variant font-medium flex items-center justify-between">
               Server MCP (Model Context Protocol)
-              <button @click="store.llmSettings.mcpServers.push('')" class="text-xs text-primary hover:text-primary-fixed-dim">+ Aggiungi</button>
+              <div class="flex gap-2">
+                <button @click="showCustomCatalogForm = !showCustomCatalogForm" class="text-xs text-secondary hover:text-secondary-fixed-dim">+ Crea Preset</button>
+                <button @click="store.llmSettings.mcpServers.push('')" class="text-xs text-primary hover:text-primary-fixed-dim">+ Aggiungi Manuale</button>
+              </div>
             </label>
-            <div class="space-y-2 mt-2">
+            
+            <!-- Form per creare un preset custom -->
+            <div v-if="showCustomCatalogForm" class="mt-2 p-3 bg-white/5 border border-white/10 rounded-lg space-y-2">
+              <h4 class="text-xs font-semibold text-on-surface-variant mb-2">Nuovo Preset MCP</h4>
+              <div class="grid grid-cols-2 gap-2">
+                <input v-model="newCustomMcp.name" type="text" placeholder="Nome (es. Twitter)" class="p-2 bg-black/30 border border-white/10 rounded text-xs text-on-surface focus:border-secondary outline-none" />
+                <input v-model="newCustomMcp.icon" type="text" placeholder="Icona (es. 🐦 o URL immagine)" class="p-2 bg-black/30 border border-white/10 rounded text-xs text-on-surface focus:border-secondary outline-none" />
+                <input v-model="newCustomMcp.cmd" type="text" placeholder="Comando (es. npx -y @modelcontextprotocol/server-twitter)" class="col-span-2 p-2 bg-black/30 border border-white/10 rounded text-xs text-on-surface focus:border-secondary outline-none font-mono" />
+              </div>
+              <div class="flex justify-end pt-1">
+                <button @click="saveCustomMcp" :disabled="!newCustomMcp.name || !newCustomMcp.cmd" class="text-xs bg-secondary text-on-secondary px-3 py-1 rounded disabled:opacity-50">Salva Preset</button>
+              </div>
+            </div>
+
+            <!-- Catalogo MCP Rapido -->
+            <div class="mt-2 flex flex-wrap gap-2">
+              <button v-for="mcp in [...mcpCatalog, ...(store.llmSettings.customCatalog || [])]" :key="mcp.name"
+                      @click="addMcpServer(mcp.cmd)"
+                      class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white/5 border border-white/10 hover:border-primary/50 transition-colors text-xs text-on-surface-variant hover:text-on-surface"
+                      :title="mcp.desc || 'Preset personalizzato'">
+                <img v-if="mcp.icon && mcp.icon.startsWith('http')" :src="mcp.icon" class="w-4 h-4 rounded-sm object-cover" />
+                <span v-else>{{ mcp.icon }}</span>
+                <span>{{ mcp.name }}</span>
+              </button>
+            </div>
+
+            <div class="space-y-2 mt-4">
               <div v-for="(server, idx) in store.llmSettings.mcpServers" :key="idx" class="flex gap-2">
                 <input v-model="store.llmSettings.mcpServers[idx]" type="text" placeholder="es. npx -y @modelcontextprotocol/server-everything"
                        class="flex-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
@@ -214,7 +243,7 @@
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </button>
               </div>
-              <p v-if="!store.llmSettings.mcpServers?.length" class="text-xs text-on-surface-variant">Nessun server MCP configurato. Clicca "+ Aggiungi" per collegare strumenti esterni all'LLM.</p>
+              <p v-if="!store.llmSettings.mcpServers?.length" class="text-xs text-on-surface-variant">Nessun server MCP configurato. Clicca "+ Aggiungi Manuale" o usa un preset.</p>
             </div>
           </div>
         </div>
@@ -242,6 +271,38 @@ import { useSettingsStore } from '~/stores/settings'
 const { t } = useI18n()
 const store = useSettingsStore()
 const error = ref('')
+
+const showCustomCatalogForm = ref(false)
+const newCustomMcp = ref({ name: '', icon: '', cmd: '' })
+
+function saveCustomMcp() {
+  if (!newCustomMcp.value.name || !newCustomMcp.value.cmd) return
+  if (!store.llmSettings.customCatalog) {
+    store.llmSettings.customCatalog = []
+  }
+  store.llmSettings.customCatalog.push({ ...newCustomMcp.value })
+  newCustomMcp.value = { name: '', icon: '', cmd: '' }
+  showCustomCatalogForm.value = false
+}
+
+const mcpCatalog = [
+  { name: 'Brave Search', cmd: 'npx -y @modelcontextprotocol/server-brave-search', desc: 'Ricerca Web', icon: '🔍' },
+  { name: 'GitHub', cmd: 'npx -y @modelcontextprotocol/server-github', desc: 'Gestione Repository', icon: '🐙' },
+  { name: 'File System', cmd: 'npx -y @modelcontextprotocol/server-filesystem /', desc: 'Accesso ai file locali', icon: '📁' },
+  { name: 'SQLite', cmd: 'npx -y @modelcontextprotocol/server-sqlite --db /path/to/db', desc: 'Database SQL', icon: '🗄️' },
+  { name: 'Puppeteer', cmd: 'npx -y @modelcontextprotocol/server-puppeteer', desc: 'Automazione Browser', icon: '🌐' },
+  { name: 'Twitter / X', cmd: 'npx -y @modelcontextprotocol/server-twitter', desc: 'Social Provider API', icon: '🐦' },
+  { name: 'Facebook', cmd: 'npx -y @modelcontextprotocol/server-facebook', desc: 'Social Provider API', icon: '📘' }
+]
+
+function addMcpServer(cmd: string) {
+  if (!store.llmSettings.mcpServers) {
+    store.llmSettings.mcpServers = []
+  }
+  if (!store.llmSettings.mcpServers.includes(cmd)) {
+    store.llmSettings.mcpServers.push(cmd)
+  }
+}
 
 async function handleSave() {
   error.value = ''
