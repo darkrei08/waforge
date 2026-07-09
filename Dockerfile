@@ -41,4 +41,5 @@ LABEL org.opencontainers.image.description="WaForge — Dashboard WhatsApp Mass 
 LABEL org.opencontainers.image.licenses="AGPL-3.0"
 
 # Run migrations then start Nitro server
-CMD ["sh", "-c", "npx prisma@5.22.0 migrate deploy; node .output/server/index.mjs"]
+# Resolve any previously failed migration (safe no-op on fresh installs)
+CMD ["sh", "-c", "npx prisma@5.22.0 migrate resolve --rolled-back 20260708162400_add_optin_and_chat_wamid 2>/dev/null; npx prisma@5.22.0 migrate deploy; node .output/server/index.mjs"]
