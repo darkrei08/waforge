@@ -6,6 +6,8 @@ export interface Template {
   name: string
   body: string
   description?: string | null
+  mediaUrl?: string | null
+  mediaType?: string
   createdAt: string
   updatedAt: string
 }
@@ -26,12 +28,12 @@ export const useTemplatesStore = defineStore('templates', () => {
     }
   }
 
-  async function createTemplate(data: { name: string; body: string; description?: string }) {
+  async function createTemplate(data: { name: string; body: string; description?: string; mediaUrl?: string; mediaType?: string }) {
     await $fetch('/api/templates', { method: 'POST', body: data })
     await fetchTemplates()
   }
 
-  async function updateTemplate(id: string, data: { name: string; body: string; description?: string }) {
+  async function updateTemplate(id: string, data: { name: string; body: string; description?: string; mediaUrl?: string; mediaType?: string }) {
     await $fetch(`/api/templates/${id}`, { method: 'PUT', body: data })
     await fetchTemplates()
   }

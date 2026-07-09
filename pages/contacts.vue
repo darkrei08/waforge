@@ -10,8 +10,17 @@
                 class="px-4 py-2.5 bg-error/20 hover:bg-error/30 text-error text-sm font-semibold rounded-lg border border-error/30 transition-all">
           <Trash2 class="w-4 h-4 inline mr-1" /> {{ t('contacts.delete_selected', { count: store.selected.size }) }}
         </button>
+        <button @click="showPrefixes = true"
+                class="px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-semibold rounded-lg border border-primary/20 transition-all" title="Prefissi Internazionali">
+          <Globe class="w-4 h-4 inline mr-1" /> Prefissi
+        </button>
+        <button @click="handleVerify" :disabled="isVerifying"
+                class="px-4 py-2.5 bg-primary/20 hover:bg-primary/30 text-primary text-sm font-semibold rounded-lg border border-primary/30 transition-all">
+          <Loader2 v-if="isVerifying" class="w-4 h-4 inline mr-1 animate-spin" />
+          <CheckCircle2 v-else class="w-4 h-4 inline mr-1" /> Verifica Numeri
+        </button>
         <button @click="showCsvInfo = true"
-                class="px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-semibold rounded-lg border border-primary/20 transition-all" title="Info formato CSV">
+                class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-on-surface text-sm font-semibold rounded-lg border border-white/10 transition-all" title="Info formato CSV">
           <Info class="w-4 h-4 inline mr-1" /> Info CSV
         </button>
         <button @click="handleExport"
@@ -46,13 +55,14 @@
             <th class="p-4 text-left text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{{ t('contacts.th_phone') }}</th>
             <th class="p-4 text-left text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{{ t('contacts.th_email') }}</th>
             <th class="p-4 text-left text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{{ t('contacts.th_company') }}</th>
+            <th class="p-4 text-left text-xs font-semibold text-on-surface-variant uppercase tracking-wider">WhatsApp</th>
             <th class="p-4 text-left text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{{ t('contacts.th_status') }}</th>
           </tr>
         </thead>
         <tbody>
           <template v-if="store.loading">
             <tr v-for="i in 5" :key="i" class="border-b border-white/5">
-              <td colspan="6" class="p-4"><div class="h-4 bg-white/5 rounded animate-pulse"></div></td>
+              <td colspan="7" class="p-4"><div class="h-4 bg-white/5 rounded animate-pulse"></div></td>
             </tr>
           </template>
           <template v-else>
@@ -66,6 +76,11 @@
             <td class="p-4 text-sm text-on-surface-variant font-mono">{{ contact.prefix }}{{ contact.phone }}</td>
             <td class="p-4 text-sm text-on-surface-variant">{{ contact.email || '—' }}</td>
             <td class="p-4 text-sm text-on-surface-variant">{{ contact.company || '—' }}</td>
+            <td class="p-4">
+              <span v-if="contact.isOnWhatsApp === true" class="px-2 py-1 text-xs font-bold rounded-full bg-primary/20 text-primary">Sì</span>
+              <span v-else-if="contact.isOnWhatsApp === false" class="px-2 py-1 text-xs font-bold rounded-full bg-error/20 text-error">No</span>
+              <span v-else class="px-2 py-1 text-xs font-bold rounded-full bg-white/10 text-on-surface-variant">?</span>
+            </td>
             <td class="p-4">
               <span class="px-2 py-1 text-xs font-bold rounded-full"
                     :class="contact.isActive ? 'bg-primary/20 text-primary' : 'bg-white/10 text-on-surface-variant'">
@@ -198,22 +213,28 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Prefixes Component -->
+    <InternationalPrefixes :is-open="showPrefixes" @close="showPrefixes = false" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { Upload, Trash2, Search, Download, X, Info, Loader2 } from 'lucide-vue-next'
+import { ref, onMounted, inject } from 'vue'
+import { Upload, Trash2, Search, Download, X, Info, Loader2, CheckCircle2, Globe } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useContactsStore } from '~/stores/contacts'
 import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
+import InternationalPrefixes from '~/components/InternationalPrefixes.vue'
 
 const { t } = useI18n()
 const store = useContactsStore()
 const { csvTemplateHeaders } = useWhatsAppFormat()
+const addToast = inject('addToast') as Function
 
 const showImport = ref(false)
 const showCsvInfo = ref(false)
+const showPrefixes = ref(false)
 const csvText = ref('')
 const fileName = ref('')
 const importResult = ref<any>(null)
@@ -303,6 +324,24 @@ async function handleBulkDelete() {
 function handleExport() {
   const url = store.search ? `/api/contacts/export?search=${encodeURIComponent(store.search)}` : '/api/contacts/export'
   window.open(url, '_blank')
+}
+
+const isVerifying = ref(false)
+async function handleVerify() {
+  isVerifying.value = true
+  try {
+    const contactIds = store.hasSelection ? Array.from(store.selected) : undefined
+    const res = await $fetch<{ data: { enqueued: number } }>('/api/contacts/verify', {
+      method: 'POST',
+      body: { contactIds }
+    })
+    addToast(`${res.data.enqueued} contatti accodati per la verifica in background.`, 'success')
+    store.clearSelection()
+  } catch (err: any) {
+    addToast(err.data?.message || err.message || 'Errore durante l\'avvio della verifica', 'error')
+  } finally {
+    isVerifying.value = false
+  }
 }
 
 onMounted(() => store.fetchContacts())

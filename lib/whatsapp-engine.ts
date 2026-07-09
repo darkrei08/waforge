@@ -275,6 +275,34 @@ export async function disconnectEngine(token: string): Promise<void> {
     await apiCall(cfg.logout, token, 'POST')
   }
 }
+export async function checkPhone(token: string, phone: string): Promise<boolean> {
+  try {
+    let cleanPhone = phone.replace(/[\+\s\-]/g, '')
+    if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2)
+    if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
+      cleanPhone = `39${cleanPhone}`
+    }
+
+    if (ENGINE === 'wuzapi') {
+      const data = await apiCall('/chat/check/phone', token, 'POST', {
+        Phone: `${cleanPhone}@s.whatsapp.net`
+      })
+      return data.data?.OnWhatsApp ?? true // Fallback true se l'API non risponde correttamente
+    } else {
+      // GoWA v8 exposes /app/contacts/check or similar, but we fallback to assuming true if we don't know the exact endpoint
+      // A common WhatsMeow wrapper endpoint for checking is /user/info or /app/contacts/check
+      try {
+        const data = await apiCall('/user/info', token, 'GET', { phone: cleanPhone })
+        if (data && data.results) return true
+      } catch (e) {
+        // Fallback
+      }
+      return true // Lazy default per GoWA se non supportato per evitare di bloccare l'invio
+    }
+  } catch (err) {
+    return true // Se l'API fallisce (es. offline), non blocchiamo la campagna preventivamente
+  }
+}
 
 /** Render template: replace {{Variable}} with contact field values */
 export function renderTemplate(

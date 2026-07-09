@@ -88,6 +88,9 @@ model Contact {
   optInMarketing     Boolean @default(true)
   optInTransactional Boolean @default(true)
 
+  // WhatsApp verification (null = not checked, true/false = verified)
+  isOnWhatsApp Boolean?
+
   // Relations
   messages            Message[]
   chatHistory         ChatMessage[]
@@ -108,6 +111,10 @@ model Template {
   name        String
   body        String // supports {{Name}}, {{email}}, etc.
   description String?
+
+  // Media attachment (optional)
+  mediaUrl  String? // URL of image/video/document/audio
+  mediaType String  @default("text") // text, image, video, document, audio
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

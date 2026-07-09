@@ -1,7 +1,7 @@
 import { Queue, Worker, Job } from 'bullmq'
 import IORedis from 'ioredis'
 import { prisma } from './prisma'
-import { sendMessage, renderTemplate } from '~/lib/whatsapp-engine'
+import { sendMessage, sendMedia, renderTemplate, checkPhone } from '~/lib/whatsapp-engine'
 import { expandSpintax } from '~/lib/spintax'
 
 // Gestione Singleton per HMR di Nuxt in sviluppo
@@ -9,6 +9,8 @@ declare global {
   var __redis: IORedis | undefined
   var __campaignQueue: Queue | undefined
   var __campaignWorker: Worker | undefined
+  var __verifyQueue: Queue | undefined
+  var __verifyWorker: Worker | undefined
 }
 
 // Legge dinamicamente process.env a runtime aggirando il bundler
@@ -30,6 +32,9 @@ if (process.env.NODE_ENV !== 'production') globalThis.__redis = connection
 
 export const campaignQueue = globalThis.__campaignQueue || new Queue('campaigns', { connection: connection as any })
 if (process.env.NODE_ENV !== 'production') globalThis.__campaignQueue = campaignQueue
+
+export const verifyQueue = globalThis.__verifyQueue || new Queue('verifications', { connection: connection as any })
+if (process.env.NODE_ENV !== 'production') globalThis.__verifyQueue = verifyQueue
 
 // ── Worker (Processore in Background) ────────────────────────────────────────
 
@@ -68,7 +73,18 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
   }
 
   // Chiamata all'Engine Multi-Tenant
-  const result = await sendMessage(session.token, contact.fullPhone, body)
+  let result
+  if (campaign.template.mediaUrl && campaign.template.mediaType && campaign.template.mediaType !== 'text') {
+    result = await sendMedia(
+      session.token, 
+      contact.fullPhone, 
+      campaign.template.mediaType as any, 
+      campaign.template.mediaUrl, 
+      body
+    )
+  } else {
+    result = await sendMessage(session.token, contact.fullPhone, body)
+  }
 
   // Registra il risultato del messaggio
   await prisma.message.create({
@@ -98,6 +114,24 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
 }, { connection: connection as any, concurrency: 5 })
 
 if (process.env.NODE_ENV !== 'production') globalThis.__campaignWorker = campaignWorker
+
+export const verifyWorker = globalThis.__verifyWorker || new Worker('verifications', async (job: Job) => {
+  const { contactId, teamId, phone } = job.data
+
+  const session = await prisma.whatsAppSession.findFirst({ where: { teamId } })
+  if (!session || !session.token) return { skipped: true, reason: 'No session' }
+
+  const isValid = await checkPhone(session.token, phone)
+  
+  await prisma.contact.update({
+    where: { id: contactId },
+    data: { isOnWhatsApp: isValid }
+  })
+
+  return { success: true, isValid }
+}, { connection: connection as any, concurrency: 2 })
+
+if (process.env.NODE_ENV !== 'production') globalThis.__verifyWorker = verifyWorker
 
 // ── Azioni Pubbliche ─────────────────────────────────────────────────────────
 
@@ -183,5 +217,24 @@ export async function getCampaignProgress(campaignId: string, teamId: string) {
     ? Math.round(((campaign.sentCount + campaign.failedCount) / campaign.totalCount) * 100)
     : 0
 
+
   return { ...campaign, progress, isActive: campaign.status === 'RUNNING' }
+}
+
+export async function startVerificationJob(teamId: string, contactIds?: string[]) {
+  let contacts
+  if (contactIds && contactIds.length > 0) {
+    contacts = await prisma.contact.findMany({ where: { id: { in: contactIds }, teamId } })
+  } else {
+    // Verify only unverified ones
+    contacts = await prisma.contact.findMany({ where: { teamId, isOnWhatsApp: null } })
+  }
+
+  const jobs = contacts.map(c => ({
+    name: 'verify-contact',
+    data: { contactId: c.id, teamId, phone: c.fullPhone }
+  }))
+
+  await verifyQueue.addBulk(jobs)
+  return jobs.length
 }

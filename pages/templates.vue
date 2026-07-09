@@ -58,6 +58,24 @@
 
             <div class="grid grid-cols-2 gap-4">
               <div>
+                <label class="block text-sm font-medium text-on-surface-variant mb-1">Tipo Media (Opzionale)</label>
+                <select v-model="formData.mediaType" class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none appearance-none">
+                  <option value="text">Nessun Media (Solo Testo)</option>
+                  <option value="image">Immagine</option>
+                  <option value="video">Video</option>
+                  <option value="document">Documento</option>
+                  <option value="audio">Audio</option>
+                </select>
+              </div>
+              <div v-if="formData.mediaType !== 'text'">
+                <label class="block text-sm font-medium text-on-surface-variant mb-1">URL File Multimediale</label>
+                <input v-model="formData.mediaUrl" type="url" placeholder="https://esempio.com/file.jpg"
+                       class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
                 <label class="block text-sm font-medium text-on-surface-variant mb-1">{{ t('templates.body_label') }}</label>
                 <textarea v-model="formData.body" rows="6" :placeholder="t('templates.body_placeholder')"
                           class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none whitespace-pre-wrap"></textarea>
@@ -120,15 +138,15 @@ const addToast = inject('addToast') as Function
 const showWizard = ref(false)
 const isEditing = ref(false)
 const isSaving = ref(false)
-const formData = ref({ id: '', name: '', description: '', body: '' })
+const formData = ref({ id: '', name: '', description: '', body: '', mediaUrl: '', mediaType: 'text' })
 
 function openWizard(tmpl?: Template) {
   if (tmpl) {
     isEditing.value = true
-    formData.value = { ...tmpl, description: tmpl.description || '' }
+    formData.value = { ...tmpl, description: tmpl.description || '', mediaUrl: tmpl.mediaUrl || '', mediaType: tmpl.mediaType || 'text' }
   } else {
     isEditing.value = false
-    formData.value = { id: '', name: '', description: '', body: '' }
+    formData.value = { id: '', name: '', description: '', body: '', mediaUrl: '', mediaType: 'text' }
   }
   showWizard.value = true
 }
@@ -142,14 +160,18 @@ async function handleSave() {
       await store.updateTemplate(formData.value.id, {
         name: formData.value.name,
         body: formData.value.body,
-        description: formData.value.description
+        description: formData.value.description,
+        mediaUrl: formData.value.mediaType === 'text' ? null : formData.value.mediaUrl,
+        mediaType: formData.value.mediaType
       })
       addToast('Template aggiornato con successo', 'success')
     } else {
       await store.createTemplate({
         name: formData.value.name,
         body: formData.value.body,
-        description: formData.value.description
+        description: formData.value.description,
+        mediaUrl: formData.value.mediaType === 'text' ? null : formData.value.mediaUrl,
+        mediaType: formData.value.mediaType
       })
       addToast('Template creato con successo', 'success')
     }
