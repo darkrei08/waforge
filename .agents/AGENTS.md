@@ -20,3 +20,6 @@ Qualsiasi nuovo componente visivo (Vue/Tailwind) DEVE seguire questi standard:
 - Le API (Nitro) devono sempre validare il `readBody(event)` utilizzando **Zod**.
 - **Isolamento Dati**: Qualsiasi query al database o endpoint API deve essere strict-scoped sul `teamId` (`event.context.user.teamId`) per prevenire Broken Access Control.
 - **Multilingua**: Evita testi hardcodati nei template Vue; favorisci l'uso di `$t('chiave')` tramite `@nuxtjs/i18n`.
+
+## Build & Docker
+- **Nuxt Sourcemaps**: Per le build Docker in produzione con Nuxt 3, disabilita sempre le sourcemap (`sourcemap: { server: false, client: false }` in `nuxt.config.ts`) per velocizzare la build e prevenire warning innocui (es. `nuxt:module-preload-polyfill`).
