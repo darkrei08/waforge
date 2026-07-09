@@ -128,6 +128,20 @@ The project rigorously implements **OWASP Top 10** and **NIST CSF 2.0** guidelin
 
 ---
 
+## 🛡️ Anti-Ban Protection (Meta Anti-Fraud Evasion)
+
+WaForge includes an advanced, built-in **Anti-Ban Evasion Shield** to prevent Meta anti-fraud triggers (such as `403 Device fingerprint mismatch` or `Too many requests`). These mechanisms mimic organic human behaviors and randomize signals:
+
+- **Zero-Width Character Randomization:** Automatically appends a unique, dynamic combination of 3 to 8 invisible zero-width characters (`\u200B`, `\u200C`, `\u200D`, `\uFEFF`) to the end of every message. This ensures Meta sees a completely unique text hash for each message, breaking duplicate content detection without affecting user experience.
+- **Gaussian Jitter Scheduling:** Queue delays are mathematically randomized using the Box-Muller transform (normal/Gaussian distribution) instead of a predictable uniform timer, simulating human variation.
+- **Typing Simulation:** Simulates the `"typing..."` (`composing`) presence indicator before sending, with a dynamic waiting duration proportional to the message length (~30ms per character).
+- **Auto-Pause Emergency Stop:** Instantly pauses all active campaigns if the system detects error logs containing ban indicators (e.g., `403`, `fingerprint`, `blocked`, `too many`, `invalid device`) to prevent account termination.
+- **Daily Send Cap & Business Hours Guard:** Automatically enforces a custom daily cap per team and schedules messages exclusively during active hours (07:00 – 22:00 UTC) to bypass off-hour anomalies.
+- **Strict Concurrency Pacing:** Limits the BullMQ background worker to a concurrency of `1` message per queue to prevent sudden spikes or bursts.
+- **Contact Integrity Check:** Automatically skips phone numbers already flagged as invalid (`isOnWhatsApp === false`) to protect domain reputation.
+
+---
+
 ## 📁 Project Structure
 
 ```

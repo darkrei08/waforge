@@ -128,6 +128,20 @@ Il progetto implementa rigorosamente le linee guida **OWASP Top 10** e **NIST CS
 
 ---
 
+## 🛡️ Sistema Anti-Ban (Elusione Anti-Frode Meta)
+
+WaForge include uno **Scudo Anti-Ban** integrato avanzato per prevenire i blocchi automatici di Meta (come gli errori `403 Device fingerprint mismatch` o `Too many requests`). Questi meccanismi simulano comportamenti umani organici e randomizzano le tracce:
+
+- **Randomizzazione con caratteri Zero-Width:** Aggiunge automaticamente una combinazione dinamica di 3-8 caratteri invisibili (`\u200B`, `\u200C`, `\u200D`, `\uFEFF`) alla fine di ogni messaggio. Meta vedrà un hash di testo sempre diverso, spezzando il rilevamento dei messaggi duplicati senza compromettere l'UX.
+- **Schedulazione con Gaussian Jitter:** I ritardi tra i messaggi in coda sono randomizzati matematicamente tramite la trasformata di Box-Muller (distribuzione normale/gaussiana) invece di un timer uniforme e prevedibile, simulando la naturale variabilità umana.
+- **Simulazione della Scrittura (Typing):** Invia lo stato `"sta scrivendo..."` (`composing`) prima di spedire il messaggio, attendendo un intervallo proporzionale alla lunghezza del testo (~30ms per carattere).
+- **Auto-Pausa di Emergenza:** Mette immediatamente in pausa tutte le campagne attive del team se rileva nei log degli errori segnali tipici di ban (es. `403`, `fingerprint`, `blocked`, `too many`, `invalid device`) per prevenire la sospensione definitiva.
+- **Limite Giornaliero & Fascia Oraria Protetta:** Applica automaticamente un tetto massimo di messaggi giornalieri per team e schedula i messaggi esclusivamente nelle ore attive (07:00 – 22:00 UTC) per evitare anomalie notturne.
+- **Pacing a Concurrency Singola:** Imposta il worker di background BullMQ a concurrency `1` per evitare burst paralleli o picchi improvvisi di invio.
+- **Integrità dei Contatti:** Salta automaticamente i numeri di telefono precedentemente verificati come non registrati (`isOnWhatsApp === false`), proteggendo la reputazione del mittente.
+
+---
+
 ## 📁 Struttura del Progetto
 
 ```
