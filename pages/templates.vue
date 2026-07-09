@@ -68,9 +68,33 @@
                 </select>
               </div>
               <div v-if="formData.mediaType !== 'text'">
-                <label class="block text-sm font-medium text-on-surface-variant mb-1">URL File Multimediale</label>
-                <input v-model="formData.mediaUrl" type="url" placeholder="https://esempio.com/file.jpg"
-                       class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none" />
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-sm font-medium text-on-surface-variant">Sorgente File</label>
+                  <div class="flex items-center gap-2 text-xs">
+                    <button @click="uploadMode = 'url'" :class="uploadMode === 'url' ? 'text-primary' : 'text-on-surface-variant'" class="hover:text-primary transition-colors">URL Link</button>
+                    <span class="text-white/20">|</span>
+                    <button @click="uploadMode = 'file'" :class="uploadMode === 'file' ? 'text-primary' : 'text-on-surface-variant'" class="hover:text-primary transition-colors">Carica File</button>
+                  </div>
+                </div>
+
+                <div v-if="uploadMode === 'url'">
+                  <input v-model="formData.mediaUrl" type="url" placeholder="https://esempio.com/file.jpg"
+                         class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none" />
+                </div>
+                
+                <div v-else>
+                  <label class="relative flex items-center justify-center w-full p-3 bg-black/30 border border-dashed border-white/20 hover:border-primary/50 rounded-lg cursor-pointer transition-colors" :class="{ 'opacity-50 pointer-events-none': isUploading }">
+                    <input type="file" class="hidden" @change="handleFileUpload" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" />
+                    <div class="flex items-center gap-2 text-sm text-on-surface-variant">
+                      <Loader2 v-if="isUploading" class="w-4 h-4 animate-spin text-primary" />
+                      <Upload v-else class="w-4 h-4" />
+                      <span v-if="isUploading">Caricamento in corso...</span>
+                      <span v-else-if="formData.mediaUrl" class="text-primary truncate max-w-[200px]">File caricato ({{ formData.mediaUrl.split('/').pop() }})</span>
+                      <span v-else>Clicca per scegliere un file</span>
+                    </div>
+                  </label>
+                  <p class="text-[11px] text-on-surface-variant mt-1 text-center">Max 5MB consigliato</p>
+                </div>
               </div>
             </div>
 
@@ -124,7 +148,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, inject } from 'vue'
-import { Plus, Edit2, Trash2, Info } from 'lucide-vue-next'
+import { Plus, Edit2, Trash2, Info, Upload, Loader2 } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useTemplatesStore, type Template } from '~/stores/templates'
 
@@ -138,6 +162,8 @@ const addToast = inject('addToast') as Function
 const showWizard = ref(false)
 const isEditing = ref(false)
 const isSaving = ref(false)
+const isUploading = ref(false)
+const uploadMode = ref<'url' | 'file'>('url')
 const formData = ref({ id: '', name: '', description: '', body: '', mediaUrl: '', mediaType: 'text' })
 
 function openWizard(tmpl?: Template) {
@@ -148,7 +174,32 @@ function openWizard(tmpl?: Template) {
     isEditing.value = false
     formData.value = { id: '', name: '', description: '', body: '', mediaUrl: '', mediaType: 'text' }
   }
+  uploadMode.value = (tmpl?.mediaUrl && tmpl.mediaUrl.includes('/api/media/')) ? 'file' : 'url'
   showWizard.value = true
+}
+
+async function handleFileUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  isUploading.value = true
+  const fd = new FormData()
+  fd.append('file', file)
+
+  try {
+    const res = await $fetch<{ data: { url: string } }>('/api/upload', {
+      method: 'POST',
+      body: fd
+    })
+    formData.value.mediaUrl = res.data.url
+    addToast('File caricato con successo', 'success')
+  } catch (err: any) {
+    addToast(err.data?.message || err.message || 'Errore durante il caricamento del file', 'error')
+    target.value = '' // reset input
+  } finally {
+    isUploading.value = false
+  }
 }
 
 async function handleSave() {

@@ -77,6 +77,8 @@ services:
       - OAUTH_AUTHORIZE_URL=${OAUTH_AUTHORIZE_URL}
       - OAUTH_TOKEN_URL=${OAUTH_TOKEN_URL}
       - OAUTH_USERINFO_URL=${OAUTH_USERINFO_URL}
+    volumes:
+      - waforge_uploads:/app/data/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -141,6 +143,8 @@ volumes:
   pg_data:
     driver: local
   redis_data:
+    driver: local
+  waforge_uploads:
     driver: local
 
 networks:
