@@ -21,6 +21,14 @@ interface BrandSettings {
   motionLevel: number
 }
 
+interface LlmSettings {
+  provider: string
+  apiKey: string
+  model: string
+  useCockpit: boolean
+  cockpitAccount: string
+}
+
 export const useSettingsStore = defineStore('settings', () => {
   const settings = ref<AppSettings>({
     delayMin: 15,
@@ -39,20 +47,37 @@ export const useSettingsStore = defineStore('settings', () => {
     motionLevel: 50,
   })
 
+  const llmSettings = ref<LlmSettings>({
+    provider: 'openai',
+    apiKey: '',
+    model: 'gpt-4o-mini',
+    useCockpit: false,
+    cockpitAccount: ''
+  })
+  const cockpitAccounts = ref<{email: string, id: string}[]>([])
+  const cockpitAvailable = ref(false)
+
   const loading = ref(false)
   const saved = ref(false)
 
   async function fetchSettings() {
     loading.value = true
     try {
-      const [appRes, brandRes] = await Promise.all([
+      const [appRes, brandRes, llmRes, cockpitRes] = await Promise.all([
         $fetch<{ data: AppSettings }>('/api/settings'),
-        $fetch<{ data: BrandSettings }>('/api/settings/brand').catch(() => ({ data: brandSettings.value }))
+        $fetch<{ data: BrandSettings }>('/api/settings/brand').catch(() => ({ data: brandSettings.value })),
+        $fetch<{ data: LlmSettings }>('/api/settings/llm').catch(() => ({ data: llmSettings.value })),
+        $fetch<{ data: { available: boolean, accounts: any[] } }>('/api/settings/cockpit').catch(() => ({ data: { available: false, accounts: [] } }))
       ])
       settings.value = appRes.data
       if (brandRes.data) {
         brandSettings.value = brandRes.data
         applyBrandSettingsToDOM(brandRes.data)
+      }
+      if (llmRes.data) llmSettings.value = llmRes.data
+      if (cockpitRes.data) {
+        cockpitAvailable.value = cockpitRes.data.available
+        cockpitAccounts.value = cockpitRes.data.accounts
       }
     } finally { loading.value = false }
   }
@@ -63,7 +88,8 @@ export const useSettingsStore = defineStore('settings', () => {
     try {
       await Promise.all([
         $fetch('/api/settings', { method: 'PUT', body: settings.value }),
-        $fetch('/api/settings/brand', { method: 'PUT', body: brandSettings.value })
+        $fetch('/api/settings/brand', { method: 'PUT', body: brandSettings.value }),
+        $fetch('/api/settings/llm', { method: 'PUT', body: llmSettings.value })
       ])
       saved.value = true
       applyBrandSettingsToDOM(brandSettings.value)
@@ -99,5 +125,5 @@ export const useSettingsStore = defineStore('settings', () => {
     root.style.setProperty('--motion-duration', `${duration}ms`)
   }
 
-  return { settings, brandSettings, loading, saved, fetchSettings, saveSettings, applyBrandSettingsToDOM }
+  return { settings, brandSettings, llmSettings, cockpitAccounts, cockpitAvailable, loading, saved, fetchSettings, saveSettings, applyBrandSettingsToDOM }
 })

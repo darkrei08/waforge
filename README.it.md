@@ -53,7 +53,10 @@
 ## ✨ Funzionalità Chiave
 
 - **Segmentazione dei Contatti (Rubriche):** Raggruppa e organizza i contatti in rubriche personalizzate per inviare campagne a target specifici.
-- **Wizard delle Campagne Avanzato:** Interfaccia di creazione guidata in 4 step (Dettagli, Template, Target, Riepilogo) per eliminare gli errori prima dell'invio.
+- **🚀 Wizard Campaign**: Creazione e gestione di campagne massive con un workflow step-by-step intuitivo.
+- **✨ Assistente AI & Anti-Ban Integrato**: Utilizza modelli LLM (OpenAI, Anthropic) per generare varianti Spintax dei tuoi messaggi e applicare strategie anti-ban avanzate in tempo reale.
+- **🔌 Supporto Cockpit Tools Proxy**: Integrazione nativa con [Cockpit Tools](https://github.com/jlcodes99/cockpit-tools) per il rilevamento automatico e l'uso condiviso degli account AI, ottimizzando costi e limiti API.
+- **📱 Gestione Dispositivi (Multidevice)**: Collega e gestisci sessioni WhatsApp tramite QR code (Multi-Device supportato).
 - **Anteprima Spintax Dinamica:** Genera e verifica le variazioni dello spintax (es. `{Ciao|Salve}`) in tempo reale direttamente dall'editor.
 - **Progresso in Tempo Reale (SSE):** Monitora lo stato di consegna delle campagne istantaneamente via Server-Sent Events (SSE) minimizzando il carico del server.
 - **Auto-Cleanup BullMQ:** Gestione automatica della coda Redis per rimuovere i job completati e mantenere leggero il database.

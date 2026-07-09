@@ -100,7 +100,13 @@
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-on-surface-variant mb-1">{{ t('templates.body_label') }}</label>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-sm font-medium text-on-surface-variant">{{ t('templates.body_label') }}</label>
+                  <button @click="showAiAssistant = true" class="text-xs flex items-center gap-1 text-primary hover:text-primary-fixed-dim transition-colors">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    Assistente AI (Anti-Ban)
+                  </button>
+                </div>
                 <textarea v-model="formData.body" rows="6" :placeholder="t('templates.body_placeholder')"
                           class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none whitespace-pre-wrap"></textarea>
                 <div class="mt-2 p-3 bg-white/5 border border-white/10 rounded-lg flex items-start gap-2">
@@ -143,6 +149,42 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- AI Assistant Modal -->
+    <Teleport to="body">
+      <div v-if="showAiAssistant" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showAiAssistant = false">
+        <div class="w-full max-w-lg bg-surface-container-high border border-primary/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(37,211,102,0.15)] animate-slide-in">
+          <h3 class="text-lg font-bold text-on-surface mb-2 flex items-center gap-2">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            Assistente AI
+          </h3>
+          <p class="text-xs text-on-surface-variant mb-4">Usa l'intelligenza artificiale per migliorare il tuo messaggio o applicare tecniche Anti-Ban.</p>
+
+          <div class="space-y-4">
+            <textarea v-model="aiPrompt" rows="3" placeholder="Scrivi un prompt (es. Riscrivi questo messaggio in tono più formale...)"
+                      class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none whitespace-pre-wrap"></textarea>
+            
+            <div class="flex gap-2">
+              <button @click="handleAiGenerate('custom')" :disabled="isGeneratingAi || !aiPrompt"
+                      class="flex-1 py-2 bg-white/10 hover:bg-white/20 text-on-surface text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                <Loader2 v-if="isGeneratingAi" class="w-4 h-4 animate-spin" />
+                Invia Prompt
+              </button>
+              <button @click="handleAiGenerate('antiban')" :disabled="isGeneratingAi || !formData.body"
+                      class="flex-1 py-2 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      title="Riscrive il messaggio attuale con Spintax e tecniche Anti-Ban">
+                <Loader2 v-if="isGeneratingAi" class="w-4 h-4 animate-spin" />
+                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                Applica Anti-Ban
+              </button>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 mt-6">
+            <button @click="showAiAssistant = false" class="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors">Chiudi</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -165,6 +207,35 @@ const isSaving = ref(false)
 const isUploading = ref(false)
 const uploadMode = ref<'url' | 'file'>('url')
 const formData = ref({ id: '', name: '', description: '', body: '', mediaUrl: '', mediaType: 'text' })
+
+const showAiAssistant = ref(false)
+const aiPrompt = ref('')
+const isGeneratingAi = ref(false)
+
+async function handleAiGenerate(action: 'custom' | 'antiban') {
+  isGeneratingAi.value = true
+  try {
+    const res = await $fetch<{ data: { result: string } }>('/api/llm/generate', {
+      method: 'POST',
+      body: {
+        prompt: action === 'custom' ? aiPrompt.value : undefined,
+        originalMessage: formData.value.body,
+        action
+      }
+    })
+    
+    if (res.data.result) {
+      formData.value.body = res.data.result
+      addToast('Messaggio generato con successo!', 'success')
+      if (action === 'custom') aiPrompt.value = ''
+      showAiAssistant.value = false
+    }
+  } catch (err: any) {
+    addToast(err.data?.message || err.message || 'Errore LLM', 'error')
+  } finally {
+    isGeneratingAi.value = false
+  }
+}
 
 function openWizard(tmpl?: Template) {
   if (tmpl) {

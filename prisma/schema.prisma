@@ -49,6 +49,7 @@ model Team {
   waScheduledMessages WhatsAppScheduledMessage[]
 
   brandSettings Json?
+  llmSettings   Json?
 }
 
 model TeamMembership {

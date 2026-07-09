@@ -113,6 +113,62 @@
         </div>
       </div>
 
+      <!-- AI Integrations (LLM) -->
+      <div class="bg-surface-container/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+        <h2 class="text-lg font-semibold text-on-surface mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          Integrazioni AI (LLM & Anti-Ban)
+        </h2>
+        
+        <div v-if="store.cockpitAvailable" class="mb-4 p-4 rounded-xl border border-primary/30 bg-primary/5 flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-on-surface text-primary flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+              Cockpit Tools Rilevato
+            </p>
+            <p class="text-xs text-on-surface-variant mt-1">Usa gli account configurati in Cockpit per bilanciare il carico delle richieste API.</p>
+          </div>
+          <button @click="store.llmSettings.useCockpit = !store.llmSettings.useCockpit"
+                  class="w-12 h-7 rounded-full transition-colors relative"
+                  :class="store.llmSettings.useCockpit ? 'bg-primary' : 'bg-white/20'">
+            <div class="w-5 h-5 bg-white rounded-full absolute top-1 transition-transform"
+                 :class="store.llmSettings.useCockpit ? 'translate-x-6' : 'translate-x-1'"></div>
+          </button>
+        </div>
+
+        <div v-if="store.llmSettings.useCockpit" class="space-y-4">
+          <div>
+            <label class="text-sm text-on-surface-variant font-medium">Seleziona Account Cockpit</label>
+            <select v-model="store.llmSettings.cockpitAccount" class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors">
+              <option value="">Seleziona account...</option>
+              <option v-for="acc in store.cockpitAccounts" :key="acc.id" :value="acc.email">{{ acc.email }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div v-else class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm text-on-surface-variant font-medium">Provider LLM</label>
+              <select v-model="store.llmSettings.provider" class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors">
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm text-on-surface-variant font-medium">Modello</label>
+              <input v-model="store.llmSettings.model" type="text" placeholder="es. gpt-4o-mini"
+                     class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+            </div>
+          </div>
+          <div>
+            <label class="text-sm text-on-surface-variant font-medium">API Key</label>
+            <input v-model="store.llmSettings.apiKey" type="password" placeholder="sk-..."
+                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+          </div>
+        </div>
+      </div>
+
       <!-- Save -->
       <div class="flex items-center gap-4">
         <button @click="handleSave" :disabled="store.loading"
