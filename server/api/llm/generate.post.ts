@@ -12,11 +12,17 @@ export default defineEventHandler(async (event) => {
 
   const settings: any = team?.llmSettings || {}
   
-  const baseURL = settings.useCockpit ? 'http://127.0.0.1:19528/v1' : 'https://api.openai.com/v1'
-  const apiKey = settings.useCockpit ? (settings.cockpitAccount || 'dummy-key') : settings.apiKey
+  let baseURL = 'https://api.openai.com/v1'
+  if (settings.useCockpit) {
+    baseURL = 'http://127.0.0.1:19528/v1'
+  } else if (settings.provider === 'custom' && settings.customBaseUrl) {
+    baseURL = settings.customBaseUrl
+  }
+
+  const apiKey = settings.useCockpit ? (settings.cockpitAccount || 'dummy-key') : (settings.apiKey || 'dummy-key')
   const model = settings.model || 'gpt-4o-mini'
 
-  if (!apiKey && !settings.useCockpit) {
+  if (!apiKey && !settings.useCockpit && settings.provider !== 'custom') {
     throw createError({ statusCode: 400, statusMessage: 'API Key mancante nelle impostazioni LLM.' })
   }
 

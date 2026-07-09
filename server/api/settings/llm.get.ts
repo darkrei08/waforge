@@ -14,7 +14,8 @@ export default defineEventHandler(async (event) => {
     apiKey: '',
     model: 'gpt-4o-mini',
     useCockpit: false,
-    cockpitAccount: ''
+    cockpitAccount: '',
+    customBaseUrl: 'http://127.0.0.1:1234/v1'
   }
 
   return {

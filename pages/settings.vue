@@ -153,6 +153,7 @@
               <select v-model="store.llmSettings.provider" class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors">
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Anthropic</option>
+                <option value="custom">Custom (Locale / LM Studio)</option>
               </select>
             </div>
             <div>
@@ -161,8 +162,13 @@
                      class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
             </div>
           </div>
+          <div v-if="store.llmSettings.provider === 'custom'">
+            <label class="text-sm text-on-surface-variant font-medium">Base URL (per LM Studio / Ollama)</label>
+            <input v-model="store.llmSettings.customBaseUrl" type="text" placeholder="http://127.0.0.1:1234/v1"
+                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+          </div>
           <div>
-            <label class="text-sm text-on-surface-variant font-medium">API Key</label>
+            <label class="text-sm text-on-surface-variant font-medium">API Key <span v-if="store.llmSettings.provider === 'custom'" class="text-white/30">(Opzionale)</span></label>
             <input v-model="store.llmSettings.apiKey" type="password" placeholder="sk-..."
                    class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
           </div>
