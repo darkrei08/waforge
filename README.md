@@ -312,3 +312,8 @@ This project is licensed under the **GNU Affero General Public License v3.0 (AGP
 > If you proceed to develop or build upon this codebase for a public-facing service, the derivative work must be open source.
 
 See the [LICENSE](LICENSE) file for details.
+
+## GDPR Compliance
+
+WaForge è stato progettato con attenzione alla conformità GDPR (Privacy by Design). Include funzionalità integrate come la gestione esplicita dei consensi e il tracciamento delle preferenze opt-in/opt-out.
+Per una panoramica completa, consulta la [Documentazione GDPR](GDPR-COMPLIANCE.md) e la sezione [Privacy & Sicurezza](docs/gdpr).
