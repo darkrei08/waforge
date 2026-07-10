@@ -37,6 +37,10 @@ export const useCampaignsStore = defineStore('campaigns', () => {
   const activeProgress = ref<CampaignProgress | null>(null)
   let pollInterval: ReturnType<typeof setInterval> | null = null
 
+  // Selection State
+  const selected = ref(new Set<string>())
+  const hasSelection = computed(() => selected.value.size > 0)
+
   const activeCampaign = computed(() => campaigns.value.find(c => c.status === 'RUNNING'))
 
   async function fetchCampaigns() {
@@ -133,5 +137,33 @@ export const useCampaignsStore = defineStore('campaigns', () => {
     await fetchCampaigns()
   }
 
-  return { campaigns, loading, activeProgress, activeCampaign, fetchCampaigns, createCampaign, updateCampaign, deleteCampaign, startCampaign, pauseCampaign, startPolling, stopPolling }
+  async function deleteCampaigns(ids: string[]) {
+    await $fetch('/api/campaigns/bulk-delete', { method: 'POST', body: { ids } })
+    selected.value = new Set()
+    await fetchCampaigns()
+  }
+
+  function toggleSelect(id: string) {
+    const newSet = new Set(selected.value)
+    if (newSet.has(id)) newSet.delete(id)
+    else newSet.add(id)
+    selected.value = newSet
+  }
+
+  function selectAll() {
+    const newSet = new Set(selected.value)
+    campaigns.value.forEach(c => newSet.add(c.id))
+    selected.value = newSet
+  }
+
+  function clearSelection() {
+    selected.value = new Set()
+  }
+
+  return { 
+    campaigns, loading, activeProgress, activeCampaign, selected, hasSelection,
+    fetchCampaigns, createCampaign, updateCampaign, deleteCampaign, deleteCampaigns,
+    startCampaign, pauseCampaign, startPolling, stopPolling,
+    toggleSelect, selectAll, clearSelection
+  }
 })

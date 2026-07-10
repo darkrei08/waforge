@@ -2,10 +2,16 @@
   <div class="p-8 space-y-6 animate-fade-in">
     <div class="flex items-center justify-between">
       <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ t('campaigns.title') }}</h1>
-      <button @click="openWizard()"
-              class="px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:shadow-[0_0_25px_rgba(37,211,102,0.5)] transition-all flex items-center gap-2">
-        <Plus class="w-5 h-5" /> {{ t('campaigns.new') }}
-      </button>
+      <div class="flex gap-3">
+        <button v-if="store.hasSelection" @click="handleBulkDelete"
+                class="px-4 py-2.5 bg-error/20 hover:bg-error/30 text-error text-sm font-semibold rounded-lg border border-error/30 transition-all">
+          <Trash2 class="w-4 h-4 inline mr-1" /> Elimina Selezionate ({{ store.selected.size }})
+        </button>
+        <button @click="openWizard()"
+                class="px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:shadow-[0_0_25px_rgba(37,211,102,0.5)] transition-all flex items-center gap-2">
+          <Plus class="w-5 h-5" /> {{ t('campaigns.new') }}
+        </button>
+      </div>
     </div>
 
     <!-- Active Campaign Progress -->
@@ -30,6 +36,11 @@
         <table class="w-full text-left text-sm">
           <thead class="text-on-surface-variant border-b border-white/10 bg-black/20">
             <tr>
+              <th class="py-4 px-4 text-left w-12">
+                <input type="checkbox" @change="store.selected.size === store.campaigns.length ? store.clearSelection() : store.selectAll()"
+                       :checked="store.selected.size === store.campaigns.length && store.campaigns.length > 0"
+                       class="rounded border-white/20 bg-white/5" />
+              </th>
               <th class="py-4 px-6 font-medium">#</th>
               <th class="py-4 px-6 font-medium">{{ t('campaigns.name_label') }}</th>
               <th class="py-4 px-6 font-medium">Template</th>
@@ -42,15 +53,19 @@
           <tbody class="divide-y divide-white/5">
             <template v-if="store.loading">
               <tr v-for="i in 3" :key="i" class="animate-pulse">
-                <td colspan="7" class="py-6 px-6">
+                <td colspan="8" class="py-6 px-6">
                   <div class="h-4 bg-white/5 rounded w-full"></div>
                 </td>
               </tr>
             </template>
             <tr v-else-if="store.campaigns.length === 0">
-              <td colspan="7" class="py-8 text-center text-on-surface-variant">Nessuna campagna trovata.</td>
+              <td colspan="8" class="py-8 text-center text-on-surface-variant">Nessuna campagna trovata.</td>
             </tr>
             <tr v-else v-for="(campaign, idx) in store.campaigns" :key="campaign.id" class="hover:bg-white/5 transition-colors">
+              <td class="py-4 px-4 text-left">
+                <input type="checkbox" :checked="store.selected.has(campaign.id)" @change="store.toggleSelect(campaign.id)"
+                       class="rounded border-white/20 bg-white/5" />
+              </td>
               <td class="py-4 px-6 text-on-surface-variant">{{ idx + 1 }}</td>
               <td class="py-4 px-6 font-semibold text-on-surface">{{ campaign.name }}</td>
               <td class="py-4 px-6 text-on-surface-variant">{{ campaign.template?.name || '—' }}</td>
@@ -584,6 +599,17 @@ async function handleDelete(id: string) {
       addToast('Campagna eliminata', 'success')
     } catch (e: any) {
       addToast(e.data?.message || 'Errore durante l\'eliminazione', 'error')
+    }
+  }
+}
+
+async function handleBulkDelete() {
+  if (confirm(`Sei sicuro di voler eliminare ${store.selected.size} campagne selezionate?`)) {
+    try {
+      await store.deleteCampaigns(Array.from(store.selected))
+      addToast('Campagne eliminate con successo', 'success')
+    } catch (e: any) {
+      addToast(e.data?.message || 'Errore durante l\'eliminazione multipla', 'error')
     }
   }
 }
