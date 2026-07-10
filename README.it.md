@@ -27,7 +27,7 @@
   <img src="https://img.shields.io/badge/OWASP_Top_10-Compliant-4CAF50?style=flat-square" alt="OWASP" />
   <img src="https://img.shields.io/badge/NIST_CSF_2.0-Aligned-1976D2?style=flat-square" alt="NIST" />
   <img src="https://img.shields.io/badge/License-AGPLv3-red?style=flat-square" alt="License" />
-  <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/Version-2.14.0-blue?style=flat-square" alt="Version" />
 </p>
 
 ---
@@ -61,6 +61,8 @@
 - **Progresso in Tempo Reale (SSE):** Monitora lo stato di consegna delle campagne istantaneamente via Server-Sent Events (SSE) minimizzando il carico del server.
 - **Auto-Cleanup BullMQ:** Gestione automatica della coda Redis per rimuovere i job completati e mantenere leggero il database.
 - **Multi-Tenant e Anti-Ban integrati:** Isolamento dei dati tra i team e meccanismi di elusione dei blocchi Meta (Zero-width chars, Gaussian jitter, simulazione digitazione).
+- **Gestione Consensi GDPR:** Tracciamento nativo opt-in/opt-out per applicare rigorosamente le policy sulla privacy e bloccare i messaggi non richiesti.
+- **Operazioni Massive e Statistiche in Tempo Reale:** Elimina o seleziona in blocco ed esamina l'andamento della campagna (letti/consegnati) live tramite Webhook Gowa.
 
 ---
 
@@ -301,7 +303,7 @@ docker-compose up -d --build
 ```
 
 > [!TIP]
-> Le immagini sono disponibili per `linux/amd64` e `linux/arm64`. Tag disponibili: `latest`, `v1.0.0`, `sha-<commit>`.
+> Le immagini sono disponibili per `linux/amd64` e `linux/arm64`. Tag disponibili: `latest`, `v2.14.0`, `sha-<commit>`.
 
 ---
 
