@@ -17,8 +17,19 @@ export default defineEventHandler(async (event) => {
       isSuperAdmin: true,
       createdAt: true,
       memberships: {
-        include: {
-          team: true
+        select: {
+          id: true,
+          role: true,
+          team: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              tags: true,
+              brandSettings: true,
+              // llmSettings deliberately excluded — not needed for auth context
+            }
+          }
         }
       }
     }

@@ -15,10 +15,17 @@ export default defineEventHandler(async (event) => {
     model: 'gpt-4o-mini',
     useCockpit: false,
     cockpitAccount: '',
-    customBaseUrl: 'http://127.0.0.1:1234/v1'
+    cockpitAccountId: '',
+    customBaseUrl: 'http://127.0.0.1:1234/v1',
+    mcpServers: [] as string[],
+    customCatalog: [] as { name: string; icon: string; cmd: string }[],
   }
 
+  // Merge stored settings over defaults so no field is ever missing
+  const stored = (team?.llmSettings as Record<string, unknown>) || {}
+  const merged = { ...defaultSettings, ...stored }
+
   return {
-    data: team?.llmSettings || defaultSettings
+    data: merged
   }
 })

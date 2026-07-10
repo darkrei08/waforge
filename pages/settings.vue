@@ -262,19 +262,44 @@
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="text-sm text-on-surface-variant font-medium">Provider LLM</label>
-              <select v-model="store.llmSettings.provider" class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors">
-                <option value="openai">OpenAI</option>
-                <option value="anthropic">Anthropic</option>
-                <option value="gemini">Google Gemini</option>
-                <option value="cohere">Cohere</option>
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-sm text-on-surface-variant font-medium">Provider LLM</label>
+                <div class="flex items-center gap-2">
+                  <span v-if="store.catalogLoading" class="text-xs text-on-surface-variant flex items-center gap-1">
+                    <Clock class="w-3 h-3 animate-spin" /> Caricamento...
+                  </span>
+                  <span v-else-if="store.catalogSources.includes('fallback')" class="text-xs px-2 py-0.5 rounded bg-surface-variant text-on-surface-variant border border-white/5" title="Fallback locale (nessuna API key o network error)">
+                    ⚪ Catalogo Locale
+                  </span>
+                  <span v-else class="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 flex items-center gap-1" :title="`Live sources: ${store.catalogSources.join(', ')}`">
+                    🟢 Catalogo Live
+                  </span>
+                  <button @click="store.fetchModelCatalog(true)" :disabled="store.catalogLoading" class="text-xs text-secondary hover:text-primary transition-colors disabled:opacity-50" title="Forza Aggiornamento">
+                    🔄
+                  </button>
+                </div>
+              </div>
+              <select v-model="store.llmSettings.provider" class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors capitalize">
+                <option v-for="p in dynamicProviders" :key="p" :value="p">{{ p === 'openai' ? 'OpenAI' : p }}</option>
                 <option value="custom">Custom (Locale / LM Studio)</option>
               </select>
             </div>
             <div>
               <label class="text-sm text-on-surface-variant font-medium">Modello</label>
-              <input v-model="store.llmSettings.model" type="text" placeholder="es. gpt-4o-mini"
-                     class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+              <select v-model="store.llmSettings.model"
+                      class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors">
+                <optgroup v-for="group in modelGroups" :key="group.category" :label="`${group.icon} ${group.label}`">
+                  <option v-for="m in group.models" :key="m.id" :value="m.id">{{ m.name }}</option>
+                </optgroup>
+                <optgroup label="✏️ Custom">
+                  <option value="__custom__">Inserisci manualmente...</option>
+                </optgroup>
+              </select>
+              <div v-if="store.llmSettings.model === '__custom__' || isCustomModel" class="mt-2">
+                <input v-model="customModelId" type="text" :placeholder="`es. ${store.llmSettings.provider === 'openai' ? 'gpt-4o' : 'model-id'}`"
+                       @blur="applyCustomModel"
+                       class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+              </div>
             </div>
           </div>
           <div v-if="store.llmSettings.provider === 'custom'">
@@ -337,7 +362,7 @@
 
       <!-- Save -->
       <div class="flex items-center gap-4">
-        <button @click="handleSave" :disabled="store.loading"
+        <button @click="saveSettings" :disabled="store.loading"
                 class="px-6 py-3 bg-primary text-on-primary font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:shadow-[0_0_25px_rgba(37,211,102,0.5)] transition-all disabled:opacity-50">
           {{ store.loading ? t('settings.btn_saving') : t('settings.btn_save') }}
         </button>
@@ -349,10 +374,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Wifi, Clock, Shield, Palette } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useSettingsStore } from '~/stores/settings'
+import { getModelsGroupedByCategory, getProviders } from '~/lib/llm-models'
 
 const { t } = useI18n()
 const store = useSettingsStore()
@@ -360,6 +386,40 @@ const error = ref('')
 
 const showCustomCatalogForm = ref(false)
 const cockpitStatus = ref({ available: false, accounts: [] as any[] })
+const customModelId = ref('')
+
+// Reactive dynamic providers list
+const dynamicProviders = computed(() => getProviders(store.dynamicModels))
+
+// Reactive model catalog grouped by category, re-computed when provider or dynamicModels changes
+const modelGroups = computed(() => getModelsGroupedByCategory(store.llmSettings.provider, store.dynamicModels))
+const knownModelIds = computed(() => {
+  const models = store.dynamicModels.length ? store.dynamicModels : [] // fallback handled in getModelsGroupedByCategory but we can just map the groups
+  return modelGroups.value.flatMap(g => g.models).map(m => m.id)
+})
+const isCustomModel = computed(() => {
+  const currentModel = store.llmSettings.model
+  return currentModel && currentModel !== '__custom__' && !knownModelIds.value.includes(currentModel)
+})
+
+// When provider changes, auto-select the first available model, and refresh dynamic catalog if needed
+watch(() => store.llmSettings.provider, (newProvider) => {
+  // If we don't have models for this provider, try fetching
+  if (newProvider !== 'custom') {
+    store.fetchModelCatalog()
+  }
+  
+  const modelsForProv = modelGroups.value.flatMap(g => g.models)
+  if (modelsForProv.length > 0 && !knownModelIds.value.includes(store.llmSettings.model)) {
+    store.llmSettings.model = modelsForProv[0].id
+  }
+})
+
+function applyCustomModel() {
+  if (customModelId.value.trim()) {
+    store.llmSettings.model = customModelId.value.trim()
+  }
+}
 const newCustomMcp = ref({ name: '', icon: '', cmd: '' })
 
 function getModelQuota(acc: any, modelName: string) {

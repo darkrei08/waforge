@@ -10,6 +10,11 @@ export default defineNitroPlugin((nitroApp) => {
         where: { 
           status: 'SCHEDULED', 
           scheduledAt: { lte: now } 
+        },
+        select: {
+          id: true,
+          name: true,
+          teamId: true,
         }
       })
       

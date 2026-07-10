@@ -28,7 +28,19 @@ export default defineEventHandler(async (event) => {
       where: { teamId },
       take: 5,
       orderBy: { createdAt: 'desc' },
-      include: { template: { select: { name: true } } },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        totalCount: true,
+        sentCount: true,
+        failedCount: true,
+        scheduledAt: true,
+        startedAt: true,
+        completedAt: true,
+        createdAt: true,
+        template: { select: { name: true } },
+      },
     }),
   ])
 

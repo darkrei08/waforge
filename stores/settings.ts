@@ -3,6 +3,7 @@
  */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import type { LlmModelEntry } from '~/lib/llm-models'
 
 interface AppSettings {
   delayMin: number
@@ -21,14 +22,34 @@ interface BrandSettings {
   motionLevel: number
 }
 
+interface McpPreset {
+  name: string
+  icon: string
+  cmd: string
+}
+
 interface LlmSettings {
   provider: string
   apiKey: string
   model: string
   useCockpit: boolean
   cockpitAccount: string
+  cockpitAccountId: string
   customBaseUrl: string
   mcpServers: string[]
+  customCatalog: McpPreset[]
+}
+
+const LLM_DEFAULTS: LlmSettings = {
+  provider: 'openai',
+  apiKey: '',
+  model: 'gpt-4o-mini',
+  useCockpit: false,
+  cockpitAccount: '',
+  cockpitAccountId: '',
+  customBaseUrl: 'http://127.0.0.1:1234/v1',
+  mcpServers: [],
+  customCatalog: [],
 }
 
 export const useSettingsStore = defineStore('settings', () => {
@@ -49,17 +70,14 @@ export const useSettingsStore = defineStore('settings', () => {
     motionLevel: 50,
   })
 
-  const llmSettings = ref<LlmSettings>({
-    provider: 'openai',
-    apiKey: '',
-    model: 'gpt-4o-mini',
-    useCockpit: false,
-    cockpitAccount: '',
-    customBaseUrl: 'http://127.0.0.1:1234/v1',
-    mcpServers: []
-  })
+  const llmSettings = ref<LlmSettings>({ ...LLM_DEFAULTS })
   const cockpitAccounts = ref<{email: string, id: string}[]>([])
   const cockpitAvailable = ref(false)
+
+  // Dynamic model catalog (fetched from OpenRouter + HuggingFace + provider APIs)
+  const dynamicModels = ref<LlmModelEntry[]>([])
+  const catalogSources = ref<string[]>([])
+  const catalogLoading = ref(false)
 
   const loading = ref(false)
   const saved = ref(false)
@@ -78,12 +96,18 @@ export const useSettingsStore = defineStore('settings', () => {
         brandSettings.value = brandRes.data
         applyBrandSettingsToDOM(brandRes.data)
       }
-      if (llmRes.data) llmSettings.value = llmRes.data
+      // Merge server response over defaults — never lose fields
+      if (llmRes.data) {
+        llmSettings.value = { ...LLM_DEFAULTS, ...llmRes.data }
+      }
       if (cockpitRes.data) {
         cockpitAvailable.value = cockpitRes.data.available
         cockpitAccounts.value = cockpitRes.data.accounts
       }
     } finally { loading.value = false }
+
+    // Fetch dynamic model catalog in background (non-blocking)
+    fetchModelCatalog()
   }
 
   async function saveSettings() {
@@ -101,6 +125,26 @@ export const useSettingsStore = defineStore('settings', () => {
     } finally { loading.value = false }
   }
 
+  async function fetchModelCatalog(forceRefresh = false) {
+    catalogLoading.value = true
+    try {
+      const provider = llmSettings.value.provider !== 'custom' ? llmSettings.value.provider : undefined
+      const query = new URLSearchParams()
+      if (provider) query.set('provider', provider)
+      if (forceRefresh) query.set('refresh', '1')
+
+      const res = await $fetch<{ data: { models: LlmModelEntry[], sources: string[], total: number } }>(
+        `/api/settings/llm-models?${query.toString()}`
+      ).catch(() => null)
+
+      if (res?.data?.models?.length) {
+        dynamicModels.value = res.data.models
+        catalogSources.value = res.data.sources
+      }
+    } finally {
+      catalogLoading.value = false
+    }
+  }
   function hexToRgb(hex: string) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
     return result ? `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : null
@@ -129,5 +173,5 @@ export const useSettingsStore = defineStore('settings', () => {
     root.style.setProperty('--motion-duration', `${duration}ms`)
   }
 
-  return { settings, brandSettings, llmSettings, cockpitAccounts, cockpitAvailable, loading, saved, fetchSettings, saveSettings, applyBrandSettingsToDOM }
+  return { settings, brandSettings, llmSettings, cockpitAccounts, cockpitAvailable, dynamicModels, catalogSources, catalogLoading, loading, saved, fetchSettings, saveSettings, fetchModelCatalog, applyBrandSettingsToDOM }
 })

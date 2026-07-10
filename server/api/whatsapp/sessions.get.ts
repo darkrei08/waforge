@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   // Find all sessions for the team
   const sessions = await prisma.whatsAppSession.findMany({
     where: { teamId: authUser.teamId },
-    include: { team: true }
+    include: { team: { select: { name: true } } }
   })
 
   // Poll engine for live status of each session
