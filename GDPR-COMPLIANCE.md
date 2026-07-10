@@ -99,3 +99,13 @@ Legenda: ✅ Conforme | ⚠️ Parziale | ❌ Mancante | 🔧 In corso
 | G4 | Diritto di rettifica | ✅ | Via form o email + gestione admin |
 | G5 | Diritto di cancellazione (oblio) | ✅ | Endpoint /gdpr-requests/erase/:email — elimina contacts/newsletter/preferenze/WhatsApp/portal_login_events e **anonimizza** customers/leads (fatture e pagamenti collegati restano per obbligo fiscale 1
 
+
+## H. MISURE TECNICHE E ORGANIZZATIVE (Art. 32)
+
+| # | Requisito | Stato | Note (Architettura WaForge) |
+|---|-----------|-------|-----------------------------|
+| H1 | Crittografia in transito | ✅ | Tutto il traffico API, Webhook (WuzAPI) e Client è cifrato tramite HTTPS/TLS 1.2+ (gestito da proxy inverso del Cliente). |
+| H2 | Protezione del Database | ✅ | Dati residenti in PostgreSQL isolato via Docker network privata. Accesso limitato all'applicazione backend (Nuxt Nitro). |
+| H3 | Coda e Job asincroni sicuri | ✅ | Utilizzo di Redis e BullMQ. I job di invio massivo vengono smaltiti e i task elaborati (campagne) mantengono solo l'esito; i payload volatili decadono col TTL. |
+| H4 | Minimizzazione log e PII Scrubber | ✅ | Segue policy legal-scaffold: i numeri di telefono o nomi nei log applicativi vengono anonimizzati o mascherati, non persistendo in file di testo in chiaro. |
+| H5 | Gestione containerizzata | ✅ | Isolamento dei processi tramite Docker Compose, WuzAPI gira in ambiente sandbox per prevenire data leak tra l'app WaForge e il layer Meta. |

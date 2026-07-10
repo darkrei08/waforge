@@ -19,5 +19,5 @@
 | 2 | Newsletter | Invio comunicazioni periodiche | Art. 6(1)(a) — Consenso | Iscritti newsletter | Email, nome (opt.) | Resend (invio email) | USA (SCCs) | Fino a disiscrizione |
 | 3 | Analytics sito web | Analisi statistiche navigazione | Art. 6(1)(a) — Consenso | Visitatori sito | IP anonimizzato, pagine, browser, referrer | Nessuno (self-hosted) | Nessuno | 26 mesi |
 | 4 | Gestione clienti e fatturazione | Erogazione servizi e adempimenti fiscali | Art. 6(1)(b) — Contratto + Art. 6(1)(c) — Obbligo legale | Clienti | Ragione sociale, nome, email, telefono, indirizzo, dati fatturazione | Sistema di fatturazione del Cliente | Hosting Server del Cliente | 10 anni (obbligo fiscale) |
-| 5 | Area clienti (portale) | Gestione progetti e delive
+
 

@@ -33,3 +33,9 @@ Un DPA valido deve includere:
 
 
 
+### 3. Misure di Sicurezza Richieste (Art. 32)
+Il sub-responsabile deve garantire (ove applicabile all'infrastruttura scelta):
+- **Isolamento Docker**: I container (es. , , , ) devono comunicare esclusivamente tramite reti interne isolate (es. ).
+- **Storage DB e Code**: Le istanze PostgreSQL e Redis devono negare l'accesso pubblico esterno.
+- **WuzAPI e Webhook**: Eventuali instradamenti verso API esterne devono avvenire in tunnel sicuri (HTTPS).
+- **Cifratura At-Rest**: Utilizzo di dischi crittografati per lo storage persistente dei volumi Docker.
