@@ -197,3 +197,16 @@ WaForge Project Update - Fixes:
 - **Modali e UI:** Fixati comportamenti anomali del popup CSV (ora si chiude dopo successo), del wizard campagne (stato resettato correttamente) e del modale team (click outside per chiudere).
 - **Middlewares & Stores:** Sistemato il bypass della sicurezza sulle rotte `i18n` (es. `/it/campaigns`). Rimossa la cache problematica usando `$fetch` in login/register.
 - **Backend TypeScript:** Fixata la configurazione di `tsconfig.json` che era impostata erroneamente su pattern Next.js, abbattendo oltre 120 errori. Risolti disallineamenti di tipizzazione (BullMQ/Redis in `job-queue.ts`) e aggiornate le API delle campagne per richiedere correttamente 2 argomenti (`id`, `teamId`).
+
+### [2026-07-10 12:50] Fix Redirects, Safe Template Deletion & Session Memory Rule
+- **Decisioni Architetturali:**
+  - Migrato lo stato `user` in `stores/auth.ts` da `ref(null)` a `useState('auth-user', () => null)` per prevenire la race condition di idratazione (Nuxt 3 SSR -> client) che causava reindirizzamenti casuali verso la homepage `/`.
+  - Aggiunto controllo di integrità referenziale su `server/api/templates/[id].delete.ts` per bloccare l'eliminazione dei template usati nelle campagne attive, ritornando un errore 400 controllato con l'elenco delle campagne.
+  - Inserita una regola globale in `.agents/AGENTS.md` per l'auto-aggiornamento periodico del file `MEMORY.md` a fine task.
+- **File Modificati:**
+  - `stores/auth.ts`
+  - `server/api/templates/[id].delete.ts`
+  - `.agents/AGENTS.md`
+  - `package.json`
+  - `CHANGELOG.md`
+  - `MEMORY.md`

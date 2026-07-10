@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.3] - 2026-07-10
+
+### Fixed
+- **Nuxt 3 Hydration Race Condition**: Risolto il bounce casuale verso la Home Page (`/`) sostituendo `ref(null)` con `useState('auth-user', () => null)` nello store auth.
+- **Eliminazione Template**: Ora l'eliminazione di un template usato da campagne attive restituisce un errore HTTP 400 controllato con l'elenco delle campagne, invece di un errore 500 generico.
+
+### Added
+- **Regole Memoria Agente**: Aggiunta la policy in `AGENTS.md` per l'auto-aggiornamento di `MEMORY.md` al termine dello sviluppo.
+
 ## [2.1.2] - 2026-06-26
 
 ### Fixed

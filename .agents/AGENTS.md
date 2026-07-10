@@ -23,3 +23,7 @@ Qualsiasi nuovo componente visivo (Vue/Tailwind) DEVE seguire questi standard:
 
 ## Build & Docker
 - **Nuxt Sourcemaps**: Per le build Docker in produzione con Nuxt 3, disabilita sempre le sourcemap (`sourcemap: { server: false, client: false }` in `nuxt.config.ts`) per velocizzare la build e prevenire warning innocui (es. `nuxt:module-preload-polyfill`).
+
+## Memoria di Sessione (Agent Persistence)
+- **Aggiornamento MEMORY.md**: Al termine di ogni implementazione, o task complesso, l'agente DEVE sempre aggiornare il file `MEMORY.md`. 
+- **Struttura obbligatoria**: Il file deve contenere un log strutturato ([Data] Titolo Task - Decisioni Architetturali - File Modificati). Usa sempre le skill di workflow ciclico (es. `workflow-production-cycle`), session manager e brainstorming. Questa memoria funge da contesto persistente per i futuri subagents.

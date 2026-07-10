@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { navigateTo } from '#app'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<any>(null)
+  const user = useState<any>('auth-user', () => null)
   
   const isAuthenticated = computed(() => !!user.value)
   const currentTeam = computed(() => {
