@@ -130,9 +130,9 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
     Email: contact.email,
     Company: contact.company,
   })
-  if (process.env.SPINTAX_ENABLED !== 'false') {
-    body = expandSpintax(body)
-  }
+  
+  // Spintax è sempre abilitato by default
+  body = expandSpintax(body)
 
   // ── ANTI-BAN: Zero-Width Randomization ──
   // Caratteri invisibili alla fine per hash unico ogni volta
@@ -142,10 +142,9 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
     body += zwChars[Math.floor(Math.random() * zwChars.length)]
   }
 
-  // ── GDPR Disclaimer (Opt-Out) ──
+  // ── GDPR Disclaimer (Opt-Out) Separato ──
   let gdprDisclaimerSent = false
   if (campaign.includeGdprDisclaimer && !contact.gdprNotified) {
-    body += '\n\n*Ricevi questo messaggio perché hai prestato il consenso. Rispondi STOP in qualsiasi momento per disiscriverti.*'
     gdprDisclaimerSent = true
   }
 
@@ -165,6 +164,13 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
     )
   } else {
     result = await sendMessage(session.token, contact.fullPhone, body)
+  }
+
+  // Se dobbiamo inviare il disclaimer e il primo msg è andato a buon fine, mandiamolo ora
+  if (gdprDisclaimerSent && result.success) {
+    const gdprMsg = "*Informativa Privacy:* Ricevi questo messaggio perché hai prestato il consenso. Rispondi STOP in qualsiasi momento per disiscriverti."
+    await sendPresence(session.token, contact.fullPhone, gdprMsg.length)
+    await sendMessage(session.token, contact.fullPhone, gdprMsg)
   }
 
   // ── ANTI-BAN: Auto-Pause su errori 403 (ban/antifraud trigger) ──
@@ -212,12 +218,20 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
       })
     }
   }
-  await prisma.campaign.update({
+  const updatedCampaign = await prisma.campaign.update({
     where: { id: campaignId },
     data: result.success 
       ? { sentCount: { increment: 1 } }
       : { failedCount: { increment: 1 } }
   })
+
+  // Se tutti i contatti previsti sono stati processati, marca come COMPLETED
+  if (updatedCampaign.sentCount + updatedCampaign.failedCount >= updatedCampaign.totalCount) {
+    await prisma.campaign.update({
+      where: { id: campaignId },
+      data: { status: 'COMPLETED' }
+    })
+  }
 
   return { success: result.success, messageId: result.messageId }
 
@@ -260,7 +274,8 @@ export async function startCampaign(campaignId: string, teamId: string) {
       where: { 
         teamId, 
         isActive: true,
-        isOnWhatsApp: { not: false }
+        isOnWhatsApp: { not: false },
+        consentStatus: { not: 'DENIED' }
       } 
     })
   } else {
@@ -278,6 +293,7 @@ export async function startCampaign(campaignId: string, teamId: string) {
           teamId, 
           isActive: true,
           isOnWhatsApp: { not: false },
+          consentStatus: { not: 'DENIED' },
           OR: conditions
         }
       })

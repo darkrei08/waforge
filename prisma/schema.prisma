@@ -112,6 +112,7 @@ model Contact {
   optInMarketing     Boolean @default(true)
   optInTransactional Boolean @default(true)
   gdprNotified       Boolean @default(false)
+  consentStatus      String  @default("PENDING") // PENDING, GRANTED, DENIED
 
   // WhatsApp verification (null = not checked, true/false = verified)
   isOnWhatsApp Boolean?

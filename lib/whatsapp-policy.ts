@@ -35,7 +35,7 @@ export async function handleOptOutKeywords(fullPhone: string, text: string, team
   if (normalizedText === 'STOP MARKETING') {
     await prisma.contact.updateMany({
       where: { fullPhone, teamId },
-      data: { optInMarketing: false }
+      data: { optInMarketing: false, consentStatus: 'DENIED' }
     });
     return true; // Indicates policy was changed
   }
@@ -43,15 +43,23 @@ export async function handleOptOutKeywords(fullPhone: string, text: string, team
   if (normalizedText === 'STOP' || normalizedText === 'STOP ALL') {
     await prisma.contact.updateMany({
       where: { fullPhone, teamId },
-      data: { optInMarketing: false, optInTransactional: false }
+      data: { optInMarketing: false, optInTransactional: false, consentStatus: 'DENIED' }
     });
     return true;
   }
 
-  if (normalizedText === 'START') {
+  if (normalizedText === 'START' || normalizedText === 'SI') {
     await prisma.contact.updateMany({
       where: { fullPhone, teamId },
-      data: { optInMarketing: true, optInTransactional: true }
+      data: { optInMarketing: true, optInTransactional: true, consentStatus: 'GRANTED' }
+    });
+    return true;
+  }
+
+  if (normalizedText === 'NO') {
+    await prisma.contact.updateMany({
+      where: { fullPhone, teamId },
+      data: { consentStatus: 'DENIED' }
     });
     return true;
   }

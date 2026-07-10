@@ -47,6 +47,7 @@ export const CreateContactSchema = z.object({
   notes:   safeString(500).optional(),
   customFields: z.record(safeString(200)).optional(),
   groupIds: z.array(z.string().cuid()).optional(),
+  consentStatus: z.enum(['PENDING', 'GRANTED', 'DENIED']).optional(),
 })
 
 export const UpdateContactSchema = CreateContactSchema.partial()

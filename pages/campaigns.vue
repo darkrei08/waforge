@@ -158,7 +158,10 @@
                 <button @click="handleAiGenerate('improve', true)" :disabled="isGeneratingAi || !newTemplateData.body" class="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-on-surface-variant text-xs font-medium rounded-lg transition-colors border border-white/5">✨ Migliora</button>
                 <button @click="handleAiGenerate('antiban', true)" :disabled="isGeneratingAi || !newTemplateData.body" class="flex-1 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium rounded-lg transition-colors border border-primary/20">🛡️ Anti-Ban</button>
               </div>
-              <div v-if="isGeneratingAi" class="flex items-center gap-2 text-xs text-primary mt-1"><Loader2 class="w-3 h-3 animate-spin"/> Elaborazione AI in corso...</div>
+              <div class="flex items-center gap-2 mt-2" v-if="isGeneratingAi">
+                <Loader2 class="w-4 h-4 animate-spin text-primary" />
+                <span class="text-xs text-primary animate-pulse">{{ aiStatusMsg }}</span>
+              </div>
 
               <div class="flex justify-end gap-2 mt-2">
                 <button @click="formData.templateId = ''" class="px-3 py-1.5 text-xs text-on-surface-variant hover:text-on-surface transition-colors">Annulla</button>
@@ -206,7 +209,10 @@
                   <button @click="handleAiGenerate('improve', false)" :disabled="isGeneratingAi || !editingTemplateBody" class="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-on-surface-variant text-xs font-medium rounded-lg transition-colors border border-white/5">✨ Migliora</button>
                   <button @click="handleAiGenerate('antiban', false)" :disabled="isGeneratingAi || !editingTemplateBody" class="flex-1 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium rounded-lg transition-colors border border-primary/20">🛡️ Anti-Ban</button>
                 </div>
-                <div v-if="isGeneratingAi" class="flex items-center gap-2 text-xs text-primary mt-1"><Loader2 class="w-3 h-3 animate-spin"/> Elaborazione AI in corso...</div>
+                <div class="flex items-center gap-2 mt-2" v-if="isGeneratingAi">
+                  <Loader2 class="w-4 h-4 animate-spin text-primary" />
+                  <span class="text-xs text-primary animate-pulse">{{ aiStatusMsg }}</span>
+                </div>
 
                 <div class="flex justify-end mt-2">
                   <button @click="saveEditedTemplate" :disabled="!editingTemplateBody || isSavingTemplate" class="px-3 py-1.5 bg-primary text-on-primary font-semibold text-xs rounded-lg transition-all disabled:opacity-50 flex items-center gap-1">
@@ -445,7 +451,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, inject } from 'vue'
 import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
-import { Plus, Play, Pause, Eye, X, Clock, Edit2, Trash2, Calendar, CheckCircle2, AlertCircle, Loader2, Info } from 'lucide-vue-next'
+import { Plus, Play, Pause, Eye, X, Clock, Edit2, Trash2, Calendar, CheckCircle2, AlertCircle, Loader2, Info, Sparkles, ShieldAlert } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useCampaignsStore } from '~/stores/campaigns'
 import { useContactGroupsStore } from '~/stores/contactGroups'
@@ -481,6 +487,7 @@ const editingTemplateBody = ref('')
 const isEditingTemplate = ref(false)
 const isSavingTemplate = ref(false)
 const isGeneratingAi = ref(false)
+const aiStatusMsg = ref('')
 
 const showRescheduleModal = ref(false)
 const rescheduleForm = ref({ id: '', scheduledAt: '' })
@@ -526,26 +533,6 @@ function openWizard(campaign?: any) {
     isEditing.value = false
     targetMode.value = 'ALL'
     formData.value = { ...initialForm, scheduledAt: getLocalFutureDate(3) }
-  }
-  showWizard.value = true
-  isEditingTemplate.value = false
-}
-
-const editCampaign = (campaign: any) => {
-  isEditing.value = true
-  let parsedContacts = campaign.contactIds || 'ALL'
-  try { if (typeof parsedContacts === 'string' && parsedContacts !== 'ALL') parsedContacts = JSON.parse(parsedContacts) } catch(e){}
-  targetMode.value = parsedContacts === 'ALL' ? 'ALL' : 'GROUPS'
-  
-  formData.value = {
-    id: campaign.id,
-    name: campaign.name,
-    templateId: campaign.templateId,
-    delayMin: campaign.delayMin,
-    delayMax: campaign.delayMax,
-    includeGdprDisclaimer: campaign.includeGdprDisclaimer || false,
-    contactIds: parsedContacts,
-    scheduledAt: campaign.scheduledAt ? parseUTCDateToLocal(campaign.scheduledAt) : getLocalFutureDate(3)
   }
   showWizard.value = true
   isEditingTemplate.value = false
@@ -653,6 +640,7 @@ async function saveEditedTemplate() {
 
 async function handleAiGenerate(action: 'improve'|'antiban', isNew: boolean) {
   isGeneratingAi.value = true
+  aiStatusMsg.value = 'Inizializzazione AI...'
   const originalMessage = isNew ? newTemplateData.value.body : editingTemplateBody.value
   try {
     const res = await fetch('/api/llm/generate', {
@@ -680,6 +668,8 @@ async function handleAiGenerate(action: 'improve'|'antiban', isNew: boolean) {
               finalContent = data.result
             } else if (data.type === 'error') {
               throw new Error(data.error)
+            } else if (data.type === 'progress') {
+              aiStatusMsg.value = data.msg
             }
           } catch(e){}
         }
@@ -693,6 +683,7 @@ async function handleAiGenerate(action: 'improve'|'antiban', isNew: boolean) {
   } catch (err: any) {
     addToast('Errore AI: ' + err.message, 'error')
   } finally {
+    aiStatusMsg.value = ''
     isGeneratingAi.value = false
   }
 }

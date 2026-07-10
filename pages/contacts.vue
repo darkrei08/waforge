@@ -106,6 +106,7 @@
             <th class="p-4 text-left text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{{ t('contacts.th_email') }}</th>
             <th class="p-4 text-left text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{{ t('contacts.th_company') }}</th>
             <th class="p-4 text-left text-xs font-semibold text-on-surface-variant uppercase tracking-wider">WhatsApp</th>
+            <th class="p-4 text-left text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Consenso</th>
             <th class="p-4 text-left text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{{ t('contacts.th_status') }}</th>
           </tr>
         </thead>
@@ -130,6 +131,18 @@
               <span v-if="contact.isOnWhatsApp === true" class="px-2 py-1 text-xs font-bold rounded-full bg-primary/20 text-primary">Sì</span>
               <span v-else-if="contact.isOnWhatsApp === false" class="px-2 py-1 text-xs font-bold rounded-full bg-error/20 text-error">No</span>
               <span v-else class="px-2 py-1 text-xs font-bold rounded-full bg-white/10 text-on-surface-variant">?</span>
+            </td>
+            <td class="p-4">
+              <select v-model="contact.consentStatus" @change="updateConsent(contact)" class="bg-transparent text-xs font-bold rounded-full px-2 py-1 outline-none border-none cursor-pointer"
+                      :class="{
+                        'bg-primary/20 text-primary': contact.consentStatus === 'GRANTED',
+                        'bg-error/20 text-error': contact.consentStatus === 'DENIED',
+                        'bg-white/10 text-on-surface-variant': contact.consentStatus === 'PENDING'
+                      }">
+                <option value="PENDING" class="bg-surface-container text-on-surface">IN ATTESA</option>
+                <option value="GRANTED" class="bg-surface-container text-on-surface">CONSENTE</option>
+                <option value="DENIED" class="bg-surface-container text-on-surface">NEGATO</option>
+              </select>
             </td>
             <td class="p-4">
               <span class="px-2 py-1 text-xs font-bold rounded-full"
@@ -429,6 +442,18 @@ async function handleVerify() {
     addToast(err.data?.message || err.message || 'Errore durante l\'avvio della verifica', 'error')
   } finally {
     isVerifying.value = false
+  }
+}
+
+async function updateConsent(contact: any) {
+  try {
+    await $fetch(`/api/contacts/${contact.id}`, {
+      method: 'PUT',
+      body: { consentStatus: contact.consentStatus }
+    })
+    addToast('Stato consenso aggiornato', 'success')
+  } catch(e: any) {
+    addToast('Errore aggiornamento consenso', 'error')
   }
 }
 
