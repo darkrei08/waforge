@@ -120,6 +120,7 @@
                       <li><code>{{Company}}</code> - Nome azienda (se presente)</li>
                     </ul>
                     <div class="mt-3 text-[11px] text-on-surface-variant leading-relaxed">
+                      <strong class="text-on-surface">Spintax supportato:</strong> <code>{Ciao|Salve}</code> verrà scelto a caso ad ogni invio.<br/><br/>
                       <strong class="text-on-surface">Formattazione testo WhatsApp supportata:</strong><br/>
                       • <code>*grassetto*</code>, <code>_corsivo_</code>, <code>~barrato~</code><br/>
                       • <code>```monospaziato```</code>, <code>`codice inline`</code><br/>

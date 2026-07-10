@@ -94,7 +94,8 @@ Il tuo obiettivo è riscrivere il messaggio fornito seguendo scrupolosamente le 
 5. Usa formattazione leggibile (*grassetto*, _corsivo_).
 Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
   } else if (action === 'improve') {
-    systemPrompt = `Sei un copywriter esperto. Il tuo compito è migliorare il lessico, la sintassi e la leggibilità (con markdown di WhatsApp) del testo fornito.`
+    systemPrompt = `Sei un copywriter esperto. Il tuo compito è migliorare il lessico, la sintassi e la leggibilità del testo fornito.
+DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo_) per evidenziare le parole chiave, e USARE la sintassi Spintax (es. {Ciao|Salve|Ehi}) dove possibile per creare varianti del messaggio e renderlo dinamico.`
   }
 
   let messages = []
@@ -110,7 +111,8 @@ Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
     ]
   }
 
-  const mcpServers = settings.mcpServers || []
+  // Disable MCP initialization for simple text tasks to prevent timeouts/hangs
+  const mcpServers = (action === 'improve' || action === 'antiban') ? [] : (settings.mcpServers || [])
   let availableTools: any[] = []
   const mcpClients: { client: Client, transport: StdioClientTransport, serverName: string }[] = []
 

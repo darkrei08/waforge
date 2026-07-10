@@ -7,6 +7,11 @@ services:
     ports:
       - "3100:8080"
     command: ["-admintoken", "${WUZAPI_TOKEN:-secret-token}", "-logtype", "console"]
+    env_file:
+      - .env
+    environment:
+      - WUZAPI_GLOBAL_ENCRYPTION_KEY=${WUZAPI_GLOBAL_ENCRYPTION_KEY}
+      - WUZAPI_GLOBAL_HMAC_KEY=${WUZAPI_GLOBAL_HMAC_KEY}
     volumes:
       - wuzapi_data:/app/dbdata
     networks:

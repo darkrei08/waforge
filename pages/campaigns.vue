@@ -166,6 +166,24 @@
                   <Loader2 v-if="isSavingTemplate" class="w-3 h-3 animate-spin"/> Salva Template
                 </button>
               </div>
+
+              <!-- Formattazione Legenda -->
+              <div class="mt-4 p-3 bg-white/5 border border-white/10 rounded-lg flex items-start gap-2">
+                <Info class="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <span class="block font-medium text-sm text-on-surface mb-1">Legenda Formattazione e Variabili</span>
+                  <ul class="space-y-1 text-xs text-on-surface-variant" v-pre>
+                    <li><code>{{Name}}</code>, <code>{{Phone}}</code>, <code>{{Email}}</code>, <code>{{Company}}</code></li>
+                  </ul>
+                  <div class="mt-3 text-[11px] text-on-surface-variant leading-relaxed">
+                    <strong class="text-on-surface">Spintax supportato:</strong> <code>{Ciao|Salve}</code> verrà scelto a caso ad ogni invio.<br/><br/>
+                    <strong class="text-on-surface">Formattazione WhatsApp:</strong><br/>
+                    • <code>*grassetto*</code>, <code>_corsivo_</code>, <code>~barrato~</code><br/>
+                    • <code>```monospaziato```</code>, <code>`codice inline`</code><br/>
+                    • Elenchi: <code>* item</code> o <code>- item</code>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Existing Template Preview & Edit -->
@@ -194,6 +212,23 @@
                   <button @click="saveEditedTemplate" :disabled="!editingTemplateBody || isSavingTemplate" class="px-3 py-1.5 bg-primary text-on-primary font-semibold text-xs rounded-lg transition-all disabled:opacity-50 flex items-center gap-1">
                     <Loader2 v-if="isSavingTemplate" class="w-3 h-3 animate-spin"/> Aggiorna Template
                   </button>
+                </div>
+
+                <!-- Formattazione Legenda -->
+                <div class="mt-4 p-3 bg-white/5 border border-white/10 rounded-lg flex items-start gap-2">
+                  <Info class="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <span class="block font-medium text-sm text-on-surface mb-1">Legenda Formattazione e Variabili</span>
+                    <ul class="space-y-1 text-xs text-on-surface-variant" v-pre>
+                      <li><code>{{Name}}</code>, <code>{{Phone}}</code>, <code>{{Email}}</code>, <code>{{Company}}</code></li>
+                    </ul>
+                    <div class="mt-3 text-[11px] text-on-surface-variant leading-relaxed">
+                      <strong class="text-on-surface">Spintax supportato:</strong> <code>{Ciao|Salve}</code> verrà scelto a caso ad ogni invio.<br/><br/>
+                      <strong class="text-on-surface">Formattazione WhatsApp:</strong><br/>
+                      • <code>*grassetto*</code>, <code>_corsivo_</code>, <code>~barrato~</code><br/>
+                      • <code>```monospaziato```</code>, <code>`codice inline`</code>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -410,7 +445,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, inject } from 'vue'
 import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
-import { Plus, Play, Pause, Eye, X, Clock, Edit2, Trash2, Calendar, CheckCircle2, AlertCircle, Loader2 } from 'lucide-vue-next'
+import { Plus, Play, Pause, Eye, X, Clock, Edit2, Trash2, Calendar, CheckCircle2, AlertCircle, Loader2, Info } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useCampaignsStore } from '~/stores/campaigns'
 import { useContactGroupsStore } from '~/stores/contactGroups'
