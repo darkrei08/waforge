@@ -249,3 +249,15 @@ WaForge Project Update - Fixes:
   - `server/api/llm/generate.post.ts`
   - `MEMORY.md`
 
+### [2026-07-10 17:02] Feature: Inline Template Editing & Smart Scheduling in Campaigns
+- **Decisioni Architetturali:**
+  - L'utente voleva applicare le funzioni AI Anti-Ban e modificare il template direttamente dallo step 2 della creazione di una Campagna, e riscontrava scomodità nell'impostare l'orario di schedulazione partendo da zero (data UTC o form vuoto).
+  - Ho implementato una funzione `getLocalFutureDate(3)` che calcola l'orario locale (compensando la `TimezoneOffset` del browser) e lo inietta automaticamente come default nel campo `datetime-local` impostato a +3 minuti dal momento attuale, migliorando notevolmente la UX.
+  - Ho esteso lo Step 2 della Campagna permettendo:
+    1. La selezione di un "+ Crea Nuovo Template" direttamente dal dropdown, mostrando un editor compatto con input nome e textarea.
+    2. Il salvataggio del nuovo template o l'aggiornamento di un template esistente, comunicando direttamente con le API `/api/templates`.
+    3. L'integrazione inline dell'Assistente AI (pulsanti "Migliora" e "Anti-Ban") sulla textarea, così da poter raffinare il copy senza dover navigare prima in `templates.vue`.
+- **File Modificati:**
+  - `pages/campaigns.vue`
+  - `MEMORY.md`
+
