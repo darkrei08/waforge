@@ -240,3 +240,12 @@ WaForge Project Update - Fixes:
   - `server/utils/llm-catalog.ts`
   - `MEMORY.md`
 
+### [2026-07-10 16:56] Bugfix: LLM stuck on Inizializzazione (WaForge)
+- **Decisioni Architetturali:**
+  - L'assistente AI nella sezione Templates si bloccava su "Inizializzazione..." perché l'utente aveva incollato erroneamente la configurazione JSON intera (stile Claude Desktop) nel campo dei server MCP in Impostazioni, anziché un comando CLI (`npx`).
+  - Questo causava un crash invisibile (o un freeze eterno) di `StdioClientTransport`, che cercava di lanciare `{` come eseguibile di sistema, bloccando lo stream SSE verso il frontend senza restituire errori leggibili.
+  - Fix implementato: Aggiunto un `Promise.race` con timeout (10s) sull'avvio dell'MCP Client, e uno skip automatico nel ciclo se il comando inizia con `{` (per intercettare JSON errati in input). Inoltre, l'invio dell'evento "Inizializzazione server MCP..." è stato spostato *prima* del blocco iterativo, in modo da mostrare visivamente al frontend cosa sta succedendo o bloccandosi.
+- **File Modificati:**
+  - `server/api/llm/generate.post.ts`
+  - `MEMORY.md`
+

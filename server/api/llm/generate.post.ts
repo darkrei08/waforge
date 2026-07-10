@@ -115,11 +115,15 @@ Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
   const mcpClients: { client: Client, transport: StdioClientTransport, serverName: string }[] = []
 
   try {
+    sendEvent('progress', { msg: 'Inizializzazione server MCP...' })
+
     // 1. Initialize MCP Clients if servers are defined
     for (const cmd of mcpServers) {
-      if (!cmd.trim()) continue
+      if (!cmd.trim() || cmd.trim().startsWith('{')) continue // Skip obvious JSON pasting mistakes
       const args = cmd.split(' ')
       const command = args.shift()!
+      
+      sendEvent('progress', { msg: `Avvio MCP: ${command}...` })
       
       const transport = new StdioClientTransport({
         command,
@@ -169,26 +173,33 @@ Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
         }
       })
 
-      await client.connect(transport)
-      
-      const toolsRes = await client.listTools()
-      
-      for (const t of toolsRes.tools) {
-        availableTools.push({
-          type: 'function',
-          function: {
-            name: `${command}_${t.name}`.replace(/[^a-zA-Z0-9_-]/g, '_'),
-            description: t.description,
-            parameters: t.inputSchema
-          },
-          _mcpClient: client,
-          _originalName: t.name
-        })
+      try {
+        // Add a timeout to prevent hanging forever on invalid MCP servers
+        await Promise.race([
+          client.connect(transport),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout connessione MCP')), 10000))
+        ])
+        
+        const toolsRes = await client.listTools()
+        
+        for (const t of toolsRes.tools) {
+          availableTools.push({
+            type: 'function',
+            function: {
+              name: `${command}_${t.name}`.replace(/[^a-zA-Z0-9_-]/g, '_'),
+              description: t.description,
+              parameters: t.inputSchema
+            },
+            _mcpClient: client,
+            _originalName: t.name
+          })
+        }
+        mcpClients.push({ client, transport, serverName: command })
+      } catch (err: any) {
+        console.error(`Error connecting to MCP ${cmd}:`, err)
+        sendEvent('progress', { msg: `Errore caricamento MCP ${command}: ${err.message}` })
       }
-      mcpClients.push({ client, transport, serverName: command })
     }
-
-    sendEvent('progress', { msg: 'Inizializzazione server MCP...' })
 
     // 2. Agent Chat Loop
     let maxIterations = 5
