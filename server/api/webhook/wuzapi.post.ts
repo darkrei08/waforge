@@ -53,16 +53,36 @@ export default defineEventHandler(async (event) => {
       console.log(`[GDPR] Opt-out registrato per ${phone}`)
     }
 
+    // Find or create Conversation
+    let conversation = await prisma.whatsAppConversation.findUnique({
+      where: { teamId_contactId: { teamId, contactId: contact.id } }
+    })
+    if (!conversation) {
+      conversation = await prisma.whatsAppConversation.create({
+        data: { teamId, contactId: contact.id }
+      })
+    }
+
     // Salva il messaggio in ChatMessage (Inbound)
     const chatMsg = await prisma.chatMessage.create({
       data: {
         teamId,
         contactId: contact.id,
+        conversationId: conversation.id,
         direction: 'INBOUND',
         content: textContent,
         wuzapiMsgId: msgData.Info?.Id
       },
       include: { contact: true }
+    })
+
+    // Update conversation stats
+    await prisma.whatsAppConversation.update({
+      where: { id: conversation.id },
+      data: {
+        unreadCount: { increment: 1 },
+        lastMessageAt: new Date()
+      }
     })
 
     // 🚀 BROADCAST IN REAL TIME AGLI AGENTI DEL TEAM TRAMITE WEBSOCKET!

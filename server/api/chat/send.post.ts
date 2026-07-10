@@ -33,11 +33,22 @@ export default defineEventHandler(async (event) => {
   // Call WhatsApp Engine
   const result = await sendMessage(session.token, contact.fullPhone, text)
 
+  // Find or create Conversation
+  let conversation = await prisma.whatsAppConversation.findUnique({
+    where: { teamId_contactId: { teamId, contactId: contact.id } }
+  })
+  if (!conversation) {
+    conversation = await prisma.whatsAppConversation.create({
+      data: { teamId, contactId: contact.id }
+    })
+  }
+
   // Save OUTBOUND message
   const chatMsg = await prisma.chatMessage.create({
     data: {
       teamId,
       contactId: contact.id,
+      conversationId: conversation.id,
       direction: 'OUTBOUND',
       content: text,
       wuzapiMsgId: result.messageId || null,
@@ -45,6 +56,15 @@ export default defineEventHandler(async (event) => {
       senderId: userId,
     },
     include: { sender: { select: { name: true } } }
+  })
+
+  // Update conversation (reset unread since agent replied)
+  await prisma.whatsAppConversation.update({
+    where: { id: conversation.id },
+    data: {
+      unreadCount: 0,
+      lastMessageAt: new Date()
+    }
   })
 
   // Broadcast to other connected team members

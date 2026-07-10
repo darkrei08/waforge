@@ -21,6 +21,7 @@ export interface WASession {
 export const useWhatsappStore = defineStore('whatsapp', () => {
   const sessions = ref<WASession[]>([])
   const loading = ref(false)
+  const fetched = ref(false)
 
   // Derived from the first connected session (or first session overall)
   const connected = computed(() => sessions.value.some(s => s.connected))
@@ -34,7 +35,10 @@ export const useWhatsappStore = defineStore('whatsapp', () => {
       const res = await $fetch<{ data: WASession[] }>('/api/whatsapp/sessions')
       sessions.value = res.data || []
     } catch { /* silent */ }
-    finally { loading.value = false }
+    finally { 
+      loading.value = false
+      fetched.value = true
+    }
   }
 
   /** Alias for fetchSessions — used by api-status page */
@@ -58,5 +62,5 @@ export const useWhatsappStore = defineStore('whatsapp', () => {
     await fetchSessions()
   }
 
-  return { sessions, connected, loading, engine, phone, statusLabel, fetchSessions, fetchStatus, disconnect, updateSession }
+  return { sessions, connected, loading, fetched, engine, phone, statusLabel, fetchSessions, fetchStatus, disconnect, updateSession }
 })

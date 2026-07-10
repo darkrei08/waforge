@@ -1,4 +1,5 @@
 import { prisma } from '../server/utils/prisma'
+import { broadcastToTeam } from '../server/routes/ws'
 
 export interface ContactPolicy {
   optInMarketing: boolean;
@@ -37,6 +38,7 @@ export async function handleOptOutKeywords(fullPhone: string, text: string, team
       where: { fullPhone, teamId },
       data: { optInMarketing: false, consentStatus: 'DENIED' }
     });
+    await trackCampaignOptOut(fullPhone, teamId);
     return true; // Indicates policy was changed
   }
   
@@ -45,6 +47,7 @@ export async function handleOptOutKeywords(fullPhone: string, text: string, team
       where: { fullPhone, teamId },
       data: { optInMarketing: false, optInTransactional: false, consentStatus: 'DENIED' }
     });
+    await trackCampaignOptOut(fullPhone, teamId);
     return true;
   }
 
@@ -61,8 +64,42 @@ export async function handleOptOutKeywords(fullPhone: string, text: string, team
       where: { fullPhone, teamId },
       data: { consentStatus: 'DENIED' }
     });
+    await trackCampaignOptOut(fullPhone, teamId);
     return true;
   }
 
   return false;
+}
+
+/**
+ * Identify if the opt-out was triggered by a recent campaign message and track it.
+ */
+async function trackCampaignOptOut(fullPhone: string, teamId: string) {
+  // Find the contact first
+  const contact = await prisma.contact.findUnique({
+    where: { teamId_fullPhone: { teamId, fullPhone } }
+  });
+  if (!contact) return;
+
+  // Find the most recent message sent to this contact from a campaign (within 72 hours)
+  const seventyTwoHoursAgo = new Date(Date.now() - 72 * 60 * 60 * 1000);
+  const recentMessage = await prisma.message.findFirst({
+    where: {
+      contactId: contact.id,
+      campaignId: { not: null },
+      createdAt: { gte: seventyTwoHoursAgo }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  if (recentMessage && recentMessage.campaignId) {
+    // Increment the optOutCount for the campaign
+    const updatedCampaign = await prisma.campaign.update({
+      where: { id: recentMessage.campaignId },
+      data: { optOutCount: { increment: 1 } }
+    });
+    
+    // Broadcast real-time update
+    broadcastToTeam(teamId, 'campaign_updated', updatedCampaign);
+  }
 }

@@ -37,17 +37,34 @@ export default defineTask({
           result = await client.sendMedia(msg.contact.fullPhone, msg.type as any, { id: metadata?.mediaId }, msg.content)
         }
 
+        // Find or create Conversation
+        let conversation = await prisma.whatsAppConversation.findUnique({
+          where: { teamId_contactId: { teamId: msg.teamId, contactId: msg.contactId } }
+        })
+        if (!conversation) {
+          conversation = await prisma.whatsAppConversation.create({
+            data: { teamId: msg.teamId, contactId: msg.contactId }
+          })
+        }
+
         // Save to ChatMessage history
         await prisma.chatMessage.create({
           data: {
             teamId: msg.teamId,
             contactId: msg.contactId,
+            conversationId: conversation.id,
             direction: 'OUTBOUND',
             type: msg.type,
             content: msg.content,
             wamid: result.messages?.[0]?.id,
             status: 'SENT'
           }
+        })
+
+        // Update conversation lastMessageAt
+        await prisma.whatsAppConversation.update({
+          where: { id: conversation.id },
+          data: { lastMessageAt: new Date() }
         })
 
         // Mark as sent

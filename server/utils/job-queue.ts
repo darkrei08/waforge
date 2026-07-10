@@ -3,7 +3,7 @@ import IORedis from 'ioredis'
 import { prisma } from './prisma'
 import { sendMessage, sendMedia, renderTemplate, checkPhone, sendPresence } from '~/lib/whatsapp-engine'
 import { expandSpintax } from '~/lib/spintax'
-
+import { broadcastToTeam } from '../routes/ws'
 // ── ANTI-BAN: Costanti e configurazione ──────────────────────────────────────
 
 /** Max messaggi giornalieri per singolo team (oltre questo, la campagna va in pausa automatica) */
@@ -96,10 +96,11 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
   const dailyCount = await getDailySendCount(teamId)
   if (dailyCount >= DAILY_SEND_CAP) {
     // Metti in pausa automatica la campagna
-    await prisma.campaign.update({
+    const updated = await prisma.campaign.update({
       where: { id: campaignId },
       data: { status: 'PAUSED' }
     })
+    broadcastToTeam(teamId, 'campaign_updated', updated)
     console.warn(`[ANTI-BAN] Team ${teamId} hit daily cap (${DAILY_SEND_CAP}). Campaign ${campaignId} auto-paused.`)
     return { skipped: true, reason: 'Daily send cap reached, campaign auto-paused' }
   }
@@ -226,12 +227,20 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
   })
 
   // Se tutti i contatti previsti sono stati processati, marca come COMPLETED
+  let isCompleted = false
   if (updatedCampaign.sentCount + updatedCampaign.failedCount >= updatedCampaign.totalCount) {
     await prisma.campaign.update({
       where: { id: campaignId },
       data: { status: 'COMPLETED' }
     })
+    isCompleted = true
   }
+
+  // Notifica in tempo reale l'aggiornamento
+  broadcastToTeam(teamId, 'campaign_updated', {
+    ...updatedCampaign,
+    status: isCompleted ? 'COMPLETED' : updatedCampaign.status
+  })
 
   return { success: result.success, messageId: result.messageId }
 
@@ -312,14 +321,15 @@ export async function startCampaign(campaignId: string, teamId: string) {
 
   if (remainingContacts.length === 0) {
     // Già finita
-    await prisma.campaign.update({
+    const updated = await prisma.campaign.update({
       where: { id: campaignId },
       data: { status: 'COMPLETED', completedAt: new Date() }
     })
+    broadcastToTeam(teamId, 'campaign_updated', updated)
     return
   }
 
-  await prisma.campaign.update({
+  const updated = await prisma.campaign.update({
     where: { id: campaignId },
     data: {
       status: 'RUNNING',
@@ -327,6 +337,7 @@ export async function startCampaign(campaignId: string, teamId: string) {
       startedAt: campaign.startedAt || new Date()
     }
   })
+  broadcastToTeam(teamId, 'campaign_updated', updated)
 
   // ── ANTI-BAN: Gaussian Jitter Scheduling ──
   // Forziamo ritardi sicuri (almeno 10s) e usiamo distribuzione gaussiana
@@ -352,10 +363,11 @@ export async function startCampaign(campaignId: string, teamId: string) {
 }
 
 export async function pauseCampaign(campaignId: string, teamId: string) {
-  await prisma.campaign.update({
+  const updated = await prisma.campaign.update({
     where: { id: campaignId, teamId },
     data: { status: 'PAUSED' }
   })
+  broadcastToTeam(teamId, 'campaign_updated', updated)
   // I job pendenti in BullMQ per questa campagna torneranno skipped (Campaign not running).
   // Quando verrà richiamato startCampaign(), ricalcoleremo quelli mancanti e li rimetteremo in coda.
   return true

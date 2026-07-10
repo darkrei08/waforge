@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { prisma } from '~/server/utils/prisma'
+import { broadcastToTeam } from '~/server/routes/ws'
 
 const updateCampaignSchema = z.object({
   name: z.string().optional(),
@@ -39,14 +40,31 @@ export default defineEventHandler(async (event) => {
   }
 
   let newStatus = existing.status
+  let dataToUpdate: any = { ...parsed }
+  
   if (parsed.scheduledAt) {
     newStatus = 'SCHEDULED'
+    dataToUpdate.status = newStatus
+    
+    if (existing.status !== 'DRAFT') {
+      // If we are rescheduling a non-draft campaign, we reset its state
+      // so it can send messages again from scratch.
+      await prisma.message.deleteMany({
+        where: { campaignId: id }
+      })
+      dataToUpdate.sentCount = 0
+      dataToUpdate.failedCount = 0
+      dataToUpdate.startedAt = null
+      dataToUpdate.completedAt = null
+    }
   }
 
   const updated = await prisma.campaign.update({
     where: { id, teamId: user.teamId },
-    data: { ...parsed, status: newStatus }
+    data: dataToUpdate
   })
+
+  broadcastToTeam(user.teamId, 'campaign_updated', updated)
 
   return { success: true, data: updated }
 })

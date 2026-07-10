@@ -60,12 +60,22 @@
                 </span>
               </td>
               <td class="py-4 px-6">
-                <div class="flex items-center gap-3">
-                  <div class="w-24 bg-white/10 rounded-full h-1.5 overflow-hidden">
+                <div class="flex flex-col gap-1 w-32">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-on-surface-variant font-mono">{{ campaign.sentCount + campaign.failedCount }} / {{ campaign.totalCount }}</span>
+                    <span class="font-bold text-primary">{{ campaign.totalCount > 0 ? Math.round(((campaign.sentCount + campaign.failedCount) / campaign.totalCount) * 100) : 0 }}%</span>
+                  </div>
+                  <div class="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
                     <div class="h-full bg-primary rounded-full transition-all"
                          :style="{ width: campaign.totalCount > 0 ? ((campaign.sentCount + campaign.failedCount) / campaign.totalCount * 100) + '%' : '0%' }"></div>
                   </div>
-                  <span class="text-xs text-on-surface-variant">{{ campaign.sentCount + campaign.failedCount }} / {{ campaign.totalCount }}</span>
+                  <div class="flex items-center gap-3 mt-1 text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">
+                    <span class="text-green-400" title="Inviati">{{ campaign.sentCount }} <CheckCircle2 class="w-3 h-3 inline"/></span>
+                    <span class="text-error" title="Falliti">{{ campaign.failedCount }} <AlertCircle class="w-3 h-3 inline"/></span>
+                    <span class="text-yellow-500" title="Opt-Out">
+                      {{ (campaign as any).optOutCount || 0 }} <ShieldAlert class="w-3 h-3 inline"/>
+                    </span>
+                  </div>
                 </div>
               </td>
               <td class="py-4 px-6 text-on-surface-variant text-xs">
@@ -434,10 +444,15 @@
                     {{ log.status }}
                   </span>
                 </div>
-                <div class="col-span-4 text-xs text-gray-400 break-words">
+                <div class="col-span-4 text-xs text-gray-400 break-words flex flex-col gap-1">
                   <div v-if="log.errorReason" class="text-error/90 whitespace-pre-wrap">{{ log.errorReason }}</div>
                   <div v-else-if="log.status === 'SENT'" class="text-primary/70">Messaggio inviato correttamente. ID: {{ log.wuzapiMsgId }}</div>
                   <div v-else>In attesa di elaborazione...</div>
+                  
+                  <!-- Opt-out notice -->
+                  <div v-if="log.contact?.consentStatus === 'DENIED'" class="flex items-center gap-1 mt-1 text-yellow-500 font-medium bg-yellow-500/10 px-2 py-1 rounded w-fit">
+                    <ShieldAlert class="w-3.5 h-3.5" /> L'utente si è disiscritto
+                  </div>
                 </div>
               </div>
             </div>
@@ -447,9 +462,8 @@
     </Teleport>
   </div>
 </template>
-
 <script setup lang="ts">
-import { ref, onMounted, computed, inject } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, inject } from 'vue'
 import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
 import { Plus, Play, Pause, Eye, X, Clock, Edit2, Trash2, Calendar, CheckCircle2, AlertCircle, Loader2, Info, Sparkles, ShieldAlert } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
@@ -723,6 +737,8 @@ async function handleSave() {
   }
 }
 
+let ws: WebSocket | null = null
+
 onMounted(async () => {
   store.fetchCampaigns()
   groupsStore.fetchGroups()
@@ -730,5 +746,29 @@ onMounted(async () => {
     const res = await $fetch<{ data: any[] }>('/api/templates')
     templates.value = res.data
   } catch { /* silent */ }
+
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  ws = new WebSocket(`${protocol}//${window.location.host}/api/ws`)
+  ws.onmessage = (event) => {
+    try {
+      const payload = JSON.parse(event.data)
+      if (payload.type === 'campaign_updated' && payload.data) {
+        const updated = payload.data
+        const idx = store.campaigns.findIndex(c => c.id === updated.id)
+        if (idx !== -1) {
+          store.campaigns[idx] = { ...store.campaigns[idx], ...updated }
+        }
+      }
+    } catch (e) {
+      console.error('WS parse error', e)
+    }
+  }
+})
+
+onBeforeUnmount(() => {
+  if (ws) {
+    ws.close()
+    ws = null
+  }
 })
 </script>

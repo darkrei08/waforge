@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
     where: { campaignId },
     include: {
       contact: {
-        select: { name: true, fullPhone: true }
+        select: { name: true, fullPhone: true, consentStatus: true }
       }
     },
     orderBy: { createdAt: 'desc' }
