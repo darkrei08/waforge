@@ -231,3 +231,33 @@ WaForge Project Update - Fixes:
   - `~/.ai-skills` (nuxt-mcp-agent-starter: modified chat.post.ts)
   - `~/.ai-skills` (waforge: modified generate.post.ts)
   - `MEMORY.md`
+
+### [2026-07-10 16:51] Bugfix: Modelli LLM Mancanti nella Selezione (WaForge)
+- **Decisioni Architetturali:**
+  - Il catalogo dinamico dei modelli (fetch via OpenRouter o API Dirette) sovrascriveva in maniera eccessiva i fallback hardcodati. Se OpenRouter andava in timeout o falliva, e si aveva un provider diretto configurato (es. solo Gemini API Key), venivano mostrati esclusivamente i modelli Gemini in UI, nascondendo gli altri provider validi hardcodati nel sistema come Anthropic, Meta, Deepseek, ecc.
+  - Fix implementato: `server/utils/llm-catalog.ts` è stato modificato in modo tale da precaricare sempre e forzatamente la costante `FALLBACK_MODELS` nell'array dei modelli (`allModels.push(...FALLBACK_MODELS)`). Questo garantisce che la lista predefinita (che include le versioni stabili scelte) sia costantemente presente e sovrascrivibile successivamente da versioni "live" se le API sono online.
+- **File Modificati:**
+  - `server/utils/llm-catalog.ts`
+  - `MEMORY.md`
+
+### [2026-07-10 16:56] Bugfix: LLM stuck on Inizializzazione (WaForge)
+- **Decisioni Architetturali:**
+  - L'assistente AI nella sezione Templates si bloccava su "Inizializzazione..." perché l'utente aveva incollato erroneamente la configurazione JSON intera (stile Claude Desktop) nel campo dei server MCP in Impostazioni, anziché un comando CLI (`npx`).
+  - Questo causava un crash invisibile (o un freeze eterno) di `StdioClientTransport`, che cercava di lanciare `{` come eseguibile di sistema, bloccando lo stream SSE verso il frontend senza restituire errori leggibili.
+  - Fix implementato: Aggiunto un `Promise.race` con timeout (10s) sull'avvio dell'MCP Client, e uno skip automatico nel ciclo se il comando inizia con `{` (per intercettare JSON errati in input). Inoltre, l'invio dell'evento "Inizializzazione server MCP..." è stato spostato *prima* del blocco iterativo, in modo da mostrare visivamente al frontend cosa sta succedendo o bloccandosi.
+- **File Modificati:**
+  - `server/api/llm/generate.post.ts`
+  - `MEMORY.md`
+
+### [2026-07-10 17:02] Feature: Inline Template Editing & Smart Scheduling in Campaigns
+- **Decisioni Architetturali:**
+  - L'utente voleva applicare le funzioni AI Anti-Ban e modificare il template direttamente dallo step 2 della creazione di una Campagna, e riscontrava scomodità nell'impostare l'orario di schedulazione partendo da zero (data UTC o form vuoto).
+  - Ho implementato una funzione `getLocalFutureDate(3)` che calcola l'orario locale (compensando la `TimezoneOffset` del browser) e lo inietta automaticamente come default nel campo `datetime-local` impostato a +3 minuti dal momento attuale, migliorando notevolmente la UX.
+  - Ho esteso lo Step 2 della Campagna permettendo:
+    1. La selezione di un "+ Crea Nuovo Template" direttamente dal dropdown, mostrando un editor compatto con input nome e textarea.
+    2. Il salvataggio del nuovo template o l'aggiornamento di un template esistente, comunicando direttamente con le API `/api/templates`.
+    3. L'integrazione inline dell'Assistente AI (pulsanti "Migliora" e "Anti-Ban") sulla textarea, così da poter raffinare il copy senza dover navigare prima in `templates.vue`.
+- **File Modificati:**
+  - `pages/campaigns.vue`
+  - `MEMORY.md`
+

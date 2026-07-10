@@ -300,21 +300,25 @@ export async function fetchModelCatalog(opts: {
   const sources: string[] = []
   const allModels: LlmModelEntry[] = []
 
-  // 1. Fetch from OpenRouter (all frontier models, no auth)
+  // 1. Initialize with fallback models so the hardcoded list is ALWAYS available
+  allModels.push(...FALLBACK_MODELS)
+  sources.push('fallback')
+
+  // 2. Fetch from OpenRouter (all frontier models, no auth)
   const openRouterModels = await fetchOpenRouter()
   if (openRouterModels.length > 0) {
     sources.push('openrouter')
     allModels.push(...openRouterModels)
   }
 
-  // 2. Fetch trending from HuggingFace
+  // 3. Fetch trending from HuggingFace
   const hfModels = await fetchHuggingFace()
   if (hfModels.length > 0) {
     sources.push('huggingface')
     allModels.push(...hfModels)
   }
 
-  // 3. Fetch from provider direct APIs if keys are provided
+  // 4. Fetch from provider direct APIs if keys are provided
   const apiKeys = opts.apiKeys || {}
   const directFetches = Object.entries(apiKeys)
     .filter(([, key]) => !!key)
@@ -327,27 +331,18 @@ export async function fetchModelCatalog(opts: {
     })
   await Promise.all(directFetches)
 
-  // 4. Deduplicate: prefer direct > openrouter > huggingface
+  // 5. Deduplicate: prefer direct > huggingface > openrouter > fallback
+  // By inserting in order, later entries overwrite earlier ones
   const seen = new Map<string, LlmModelEntry>()
   for (const m of allModels) {
     const key = `${m.provider}:${m.id}`
-    // Later entries (direct API) overwrite earlier ones (openrouter)
     seen.set(key, m)
   }
   let merged = Array.from(seen.values())
 
-  // 5. Filter by provider if requested
+  // 6. Filter by provider if requested
   if (opts.providerFilter && opts.providerFilter !== 'custom') {
     merged = merged.filter(m => m.provider === opts.providerFilter)
-  }
-
-  // 6. Fallback to hardcoded if nothing came back
-  if (merged.length === 0) {
-    sources.push('fallback')
-    const fallback = opts.providerFilter
-      ? FALLBACK_MODELS.filter(m => m.provider === opts.providerFilter)
-      : [...FALLBACK_MODELS]
-    return { models: fallback, sources, cached: false }
   }
 
   // 7. Sort: by provider, then by category priority, then by name

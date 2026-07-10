@@ -139,20 +139,63 @@
           <!-- Step 2: Template -->
           <div v-if="wizardStep === 2" class="space-y-4">
             <label class="block text-sm font-medium text-on-surface-variant">{{ t('campaigns.template_label') }}</label>
-            <select v-model="formData.templateId"
-                    class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none">
-              <option value="" disabled>{{ t('campaigns.template_select') }}</option>
-              <option v-for="tmpl in templates" :key="tmpl.id" :value="tmpl.id">{{ tmpl.name }}</option>
-            </select>
+            <div class="flex gap-2">
+              <select v-model="formData.templateId" @change="onTemplateChange"
+                      class="flex-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none">
+                <option value="" disabled>{{ t('campaigns.template_select') }}</option>
+                <option v-for="tmpl in templates" :key="tmpl.id" :value="tmpl.id">{{ tmpl.name }}</option>
+                <option value="new" class="font-bold text-primary">+ Crea Nuovo Template</option>
+              </select>
+            </div>
             
-            <div v-if="selectedTemplatePreview" class="mt-4 p-4 bg-black/20 border border-white/5 rounded-xl">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">{{ t('campaigns.preview_label') }}</span>
-                <button @click="regenerateSpintax" class="text-xs text-primary flex items-center gap-1 hover:text-primary-fixed-dim transition-colors" title="Genera un'altra variante Spintax">
-                  Genera variante
+            <!-- New Template Form -->
+            <div v-if="formData.templateId === 'new'" class="p-4 bg-black/20 border border-primary/20 rounded-xl space-y-3">
+              <h4 class="text-sm font-bold text-primary">Nuovo Template</h4>
+              <input v-model="newTemplateData.name" type="text" placeholder="Nome del Template" class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-sm text-on-surface focus:border-primary outline-none" />
+              <textarea v-model="newTemplateData.body" rows="4" placeholder="Messaggio del template..." class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-sm text-on-surface focus:border-primary outline-none whitespace-pre-wrap"></textarea>
+              
+              <div class="flex gap-2">
+                <button @click="handleAiGenerate('improve', true)" :disabled="isGeneratingAi || !newTemplateData.body" class="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-on-surface-variant text-xs font-medium rounded-lg transition-colors border border-white/5">✨ Migliora</button>
+                <button @click="handleAiGenerate('antiban', true)" :disabled="isGeneratingAi || !newTemplateData.body" class="flex-1 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium rounded-lg transition-colors border border-primary/20">🛡️ Anti-Ban</button>
+              </div>
+              <div v-if="isGeneratingAi" class="flex items-center gap-2 text-xs text-primary mt-1"><Loader2 class="w-3 h-3 animate-spin"/> Elaborazione AI in corso...</div>
+
+              <div class="flex justify-end gap-2 mt-2">
+                <button @click="formData.templateId = ''" class="px-3 py-1.5 text-xs text-on-surface-variant hover:text-on-surface transition-colors">Annulla</button>
+                <button @click="saveNewTemplate" :disabled="!newTemplateData.name || !newTemplateData.body || isSavingTemplate" class="px-3 py-1.5 bg-primary text-on-primary font-semibold text-xs rounded-lg transition-all disabled:opacity-50 flex items-center gap-1">
+                  <Loader2 v-if="isSavingTemplate" class="w-3 h-3 animate-spin"/> Salva Template
                 </button>
               </div>
-              <div class="text-sm text-on-surface whitespace-pre-wrap leading-relaxed" v-html="selectedTemplatePreview"></div>
+            </div>
+
+            <!-- Existing Template Preview & Edit -->
+            <div v-else-if="selectedTemplatePreview" class="mt-4 p-4 bg-black/20 border border-white/5 rounded-xl">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">{{ t('campaigns.preview_label') }}</span>
+                <div class="flex items-center gap-3 text-xs">
+                  <button @click="regenerateSpintax" v-if="!isEditingTemplate" class="text-primary hover:text-primary-fixed-dim transition-colors" title="Genera un'altra variante Spintax">Variante Spintax</button>
+                  <button @click="toggleEditTemplate" class="text-primary hover:text-primary-fixed-dim flex items-center gap-1 transition-colors">
+                    <Edit2 class="w-3 h-3"/> {{ isEditingTemplate ? 'Chiudi Modifica' : 'Modifica Template' }}
+                  </button>
+                </div>
+              </div>
+              
+              <div v-if="!isEditingTemplate" class="text-sm text-on-surface whitespace-pre-wrap leading-relaxed" v-html="selectedTemplatePreview"></div>
+              
+              <div v-else class="space-y-3">
+                <textarea v-model="editingTemplateBody" rows="5" class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-sm text-on-surface focus:border-primary outline-none whitespace-pre-wrap"></textarea>
+                <div class="flex gap-2">
+                  <button @click="handleAiGenerate('improve', false)" :disabled="isGeneratingAi || !editingTemplateBody" class="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-on-surface-variant text-xs font-medium rounded-lg transition-colors border border-white/5">✨ Migliora</button>
+                  <button @click="handleAiGenerate('antiban', false)" :disabled="isGeneratingAi || !editingTemplateBody" class="flex-1 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium rounded-lg transition-colors border border-primary/20">🛡️ Anti-Ban</button>
+                </div>
+                <div v-if="isGeneratingAi" class="flex items-center gap-2 text-xs text-primary mt-1"><Loader2 class="w-3 h-3 animate-spin"/> Elaborazione AI in corso...</div>
+
+                <div class="flex justify-end mt-2">
+                  <button @click="saveEditedTemplate" :disabled="!editingTemplateBody || isSavingTemplate" class="px-3 py-1.5 bg-primary text-on-primary font-semibold text-xs rounded-lg transition-all disabled:opacity-50 flex items-center gap-1">
+                    <Loader2 v-if="isSavingTemplate" class="w-3 h-3 animate-spin"/> Aggiorna Template
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- GDPR Disclaimer Toggle -->
@@ -248,7 +291,7 @@
               <label class="block text-sm font-medium text-on-surface-variant">Programmazione (Opzionale)</label>
               <p class="text-xs text-on-surface-variant mb-2">Seleziona data e ora se vuoi che la campagna parta in automatico in futuro.</p>
               <input v-model="formData.scheduledAt" type="datetime-local"
-                     class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none" />
+                     class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none custom-datetime" />
             </div>
           </div>
 
@@ -261,7 +304,7 @@
                 {{ wizardStep > 1 ? t('campaigns.btn_back') : t('campaigns.btn_cancel') }}
               </button>
               <button v-if="wizardStep < 4" @click="wizardStep++"
-                      :disabled="(wizardStep === 1 && !formData.name) || (wizardStep === 2 && !formData.templateId) || (wizardStep === 3 && formData.delayMin >= formData.delayMax)"
+                      :disabled="(wizardStep === 1 && !formData.name) || (wizardStep === 2 && (!formData.templateId || formData.templateId === 'new')) || (wizardStep === 3 && formData.delayMin >= formData.delayMax)"
                       class="px-5 py-2 bg-primary text-on-primary font-semibold rounded-lg transition-all disabled:opacity-30">
                 {{ t('campaigns.btn_next') }}
               </button>
@@ -367,7 +410,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, inject } from 'vue'
 import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
-import { Plus, Play, Pause, Eye, X, Clock, Edit2, Trash2, Calendar, CheckCircle2, AlertCircle } from 'lucide-vue-next'
+import { Plus, Play, Pause, Eye, X, Clock, Edit2, Trash2, Calendar, CheckCircle2, AlertCircle, Loader2 } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useCampaignsStore } from '~/stores/campaigns'
 import { useContactGroupsStore } from '~/stores/contactGroups'
@@ -381,9 +424,28 @@ const isEditing = ref(false)
 const wizardStep = ref(1)
 const templates = ref<any[]>([])
 
-const initialForm = { id: '', name: '', templateId: '', delayMin: 15, delayMax: 45, scheduledAt: '', contactIds: 'ALL' as any, includeGdprDisclaimer: false }
+function getLocalFutureDate(minutesToAdd = 3) {
+  const d = new Date(Date.now() + minutesToAdd * 60000)
+  const tzoffset = d.getTimezoneOffset() * 60000
+  return (new Date(d.getTime() - tzoffset)).toISOString().slice(0, 16)
+}
+
+function parseUTCDateToLocal(utcDateString: string) {
+  const d = new Date(utcDateString)
+  const tzoffset = d.getTimezoneOffset() * 60000
+  return (new Date(d.getTime() - tzoffset)).toISOString().slice(0, 16)
+}
+
+const initialForm = { id: '', name: '', templateId: '', delayMin: 15, delayMax: 45, scheduledAt: getLocalFutureDate(3), contactIds: 'ALL' as any, includeGdprDisclaimer: false }
 const formData = ref({ ...initialForm })
 const targetMode = ref<'ALL'|'GROUPS'>('ALL')
+
+// Template Inline Editing
+const newTemplateData = ref({ name: '', body: '' })
+const editingTemplateBody = ref('')
+const isEditingTemplate = ref(false)
+const isSavingTemplate = ref(false)
+const isGeneratingAi = ref(false)
 
 const showRescheduleModal = ref(false)
 const rescheduleForm = ref({ id: '', scheduledAt: '' })
@@ -423,14 +485,15 @@ function openWizard(campaign?: any) {
       delayMax: campaign.delayMax,
       includeGdprDisclaimer: campaign.includeGdprDisclaimer || false,
       contactIds: parsedContacts,
-      scheduledAt: campaign.scheduledAt ? new Date(campaign.scheduledAt).toISOString().slice(0, 16) : ''
+      scheduledAt: campaign.scheduledAt ? parseUTCDateToLocal(campaign.scheduledAt) : getLocalFutureDate(3)
     }
   } else {
     isEditing.value = false
     targetMode.value = 'ALL'
-    formData.value = { ...initialForm }
+    formData.value = { ...initialForm, scheduledAt: getLocalFutureDate(3) }
   }
   showWizard.value = true
+  isEditingTemplate.value = false
 }
 
 const editCampaign = (campaign: any) => {
@@ -447,15 +510,16 @@ const editCampaign = (campaign: any) => {
     delayMax: campaign.delayMax,
     includeGdprDisclaimer: campaign.includeGdprDisclaimer || false,
     contactIds: parsedContacts,
-    scheduledAt: campaign.scheduledAt ? new Date(campaign.scheduledAt).toISOString().slice(0, 16) : ''
+    scheduledAt: campaign.scheduledAt ? parseUTCDateToLocal(campaign.scheduledAt) : getLocalFutureDate(3)
   }
   showWizard.value = true
+  isEditingTemplate.value = false
 }
 
 function openReschedule(campaign: any) {
   rescheduleForm.value = {
     id: campaign.id,
-    scheduledAt: campaign.scheduledAt ? new Date(campaign.scheduledAt).toISOString().slice(0, 16) : ''
+    scheduledAt: campaign.scheduledAt ? parseUTCDateToLocal(campaign.scheduledAt) : getLocalFutureDate(3)
   }
   showRescheduleModal.value = true
 }
@@ -499,6 +563,103 @@ const selectedTemplatePreview = computed(() => {
 
 function regenerateSpintax() {
   spintaxTrigger.value++
+}
+
+function onTemplateChange() {
+  isEditingTemplate.value = false
+  if (formData.value.templateId === 'new') {
+    newTemplateData.value = { name: '', body: '' }
+  }
+}
+
+function toggleEditTemplate() {
+  const tmpl = templates.value.find(t => t.id === formData.value.templateId)
+  if (tmpl) {
+    editingTemplateBody.value = tmpl.body
+    isEditingTemplate.value = !isEditingTemplate.value
+  }
+}
+
+async function saveNewTemplate() {
+  isSavingTemplate.value = true
+  try {
+    const res = await $fetch<{ data: any }>('/api/templates', {
+      method: 'POST',
+      body: { name: newTemplateData.value.name, body: newTemplateData.value.body, mediaType: 'text' }
+    })
+    const resList = await $fetch<{ data: any[] }>('/api/templates')
+    templates.value = resList.data
+    formData.value.templateId = res.data.id
+    addToast('Nuovo template creato', 'success')
+  } catch (err: any) {
+    addToast(err.data?.message || 'Errore creazione template', 'error')
+  } finally {
+    isSavingTemplate.value = false
+  }
+}
+
+async function saveEditedTemplate() {
+  isSavingTemplate.value = true
+  try {
+    await $fetch(`/api/templates/${formData.value.templateId}`, {
+      method: 'PUT',
+      body: { body: editingTemplateBody.value }
+    })
+    const resList = await $fetch<{ data: any[] }>('/api/templates')
+    templates.value = resList.data
+    isEditingTemplate.value = false
+    addToast('Template aggiornato', 'success')
+  } catch (err: any) {
+    addToast(err.data?.message || 'Errore aggiornamento template', 'error')
+  } finally {
+    isSavingTemplate.value = false
+  }
+}
+
+async function handleAiGenerate(action: 'improve'|'antiban', isNew: boolean) {
+  isGeneratingAi.value = true
+  const originalMessage = isNew ? newTemplateData.value.body : editingTemplateBody.value
+  try {
+    const res = await fetch('/api/llm/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ originalMessage, action })
+    })
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+    const reader = res.body?.getReader()
+    if (!reader) throw new Error('No response stream')
+    const decoder = new TextDecoder()
+    let finalContent = ''
+    let buffer = ''
+    while (true) {
+      const { value, done } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n\n')
+      buffer = lines.pop() || ''
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6))
+            if (data.type === 'complete') {
+              finalContent = data.result
+            } else if (data.type === 'error') {
+              throw new Error(data.error)
+            }
+          } catch(e){}
+        }
+      }
+    }
+    if (finalContent) {
+      if (isNew) newTemplateData.value.body = finalContent
+      else editingTemplateBody.value = finalContent
+      addToast('Miglioramento AI applicato', 'success')
+    }
+  } catch (err: any) {
+    addToast('Errore AI: ' + err.message, 'error')
+  } finally {
+    isGeneratingAi.value = false
+  }
 }
 
 function statusClass(status: string) {
