@@ -231,3 +231,12 @@ WaForge Project Update - Fixes:
   - `~/.ai-skills` (nuxt-mcp-agent-starter: modified chat.post.ts)
   - `~/.ai-skills` (waforge: modified generate.post.ts)
   - `MEMORY.md`
+
+### [2026-07-10 16:51] Bugfix: Modelli LLM Mancanti nella Selezione (WaForge)
+- **Decisioni Architetturali:**
+  - Il catalogo dinamico dei modelli (fetch via OpenRouter o API Dirette) sovrascriveva in maniera eccessiva i fallback hardcodati. Se OpenRouter andava in timeout o falliva, e si aveva un provider diretto configurato (es. solo Gemini API Key), venivano mostrati esclusivamente i modelli Gemini in UI, nascondendo gli altri provider validi hardcodati nel sistema come Anthropic, Meta, Deepseek, ecc.
+  - Fix implementato: `server/utils/llm-catalog.ts` è stato modificato in modo tale da precaricare sempre e forzatamente la costante `FALLBACK_MODELS` nell'array dei modelli (`allModels.push(...FALLBACK_MODELS)`). Questo garantisce che la lista predefinita (che include le versioni stabili scelte) sia costantemente presente e sovrascrivibile successivamente da versioni "live" se le API sono online.
+- **File Modificati:**
+  - `server/utils/llm-catalog.ts`
+  - `MEMORY.md`
+
