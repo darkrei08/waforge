@@ -2,6 +2,9 @@ import { defineEventHandler, readBody, createError } from 'h3'
 import { prisma } from '~/server/utils/prisma'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
+import fs from 'fs'
+import path from 'path'
+import os from 'os'
 
 export default defineEventHandler(async (event) => {
   const teamId = event.context.user.teamId
@@ -25,7 +28,34 @@ export default defineEventHandler(async (event) => {
     baseURL = 'https://api.anthropic.com/v1'
   }
 
-  const apiKey = settings.useCockpit ? (settings.cockpitAccount || 'dummy-key') : (settings.apiKey || 'dummy-key')
+  let apiKey = settings.apiKey || 'dummy-key'
+
+  if (settings.useCockpit) {
+    if (settings.cockpitAccountId) {
+      try {
+        const homeDir = os.homedir()
+        let cockpitDir = path.join(homeDir, '.antigravity_cockpit')
+        const dockerCockpitDir = '/home/nuxtjs/.antigravity_cockpit'
+        
+        if (!fs.existsSync(cockpitDir) && fs.existsSync(dockerCockpitDir)) {
+          cockpitDir = dockerCockpitDir
+        }
+        
+        const accFilePath = path.join(cockpitDir, 'accounts', `${settings.cockpitAccountId}.json`)
+        if (fs.existsSync(accFilePath)) {
+          const accData = JSON.parse(fs.readFileSync(accFilePath, 'utf-8'))
+          if (accData.token && accData.token.access_token) {
+            apiKey = accData.token.access_token
+          }
+        }
+      } catch (e) {
+        console.error('Error reading cockpit token in generate.post.ts:', e)
+      }
+    } else {
+      apiKey = settings.cockpitAccount || 'dummy-key'
+    }
+  }
+
   const model = settings.model || 'gpt-4o-mini'
 
   if (!apiKey && !settings.useCockpit && settings.provider !== 'custom') {

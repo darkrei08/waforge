@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
   const updatedTeam = await prisma.team.update({
     where: { id: teamId },
     data: {
-      llmSettings: parsed.data
+      llmSettings: parsed.data as any
     },
     select: { llmSettings: true }
   })

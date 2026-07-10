@@ -210,3 +210,13 @@ WaForge Project Update - Fixes:
   - `package.json`
   - `CHANGELOG.md`
   - `MEMORY.md`
+
+### [2026-07-10 13:00] Fix LLM generation error with Cockpit and TypeScript stability
+- **Decisioni Architetturali:**
+  - Aggiornato `server/api/llm/generate.post.ts` per recuperare dinamicamente a runtime l'access token di Cockpit dal file JSON locale in `~/.antigravity_cockpit/accounts/<id>.json` se `useCockpit` è abilitato.
+  - Aggiunto fallback per preservare l'API Key del provider inserita nella UI se `useCockpit` è disabilitato, rispondendo alla richiesta dell'utente di supportare chiavi API dirette.
+  - Risolto errore di tipizzazione TypeScript in `server/api/settings/llm.put.ts` applicando un cast `as any` su `parsed.data` nel `prisma.team.update`.
+- **File Modificati:**
+  - `server/api/llm/generate.post.ts`
+  - `server/api/settings/llm.put.ts`
+  - `MEMORY.md`
