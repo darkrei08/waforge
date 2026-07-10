@@ -220,3 +220,14 @@ WaForge Project Update - Fixes:
   - `server/api/llm/generate.post.ts`
   - `server/api/settings/llm.put.ts`
   - `MEMORY.md`
+
+### [2026-07-10 14:15] Audit Fixes: LLM Routing & MCP Build
+- **Decisioni Architetturali:**
+  - Rimosso `models.get.ts` e `llm-catalog.ts` orfani in `nuxt-mcp-agent-starter` che richiedevano Prisma e rompevano la build Docker.
+  - Aggiornato `generate.post.ts` in `waforge` e `chat.post.ts` in `nuxt-mcp-agent-starter` per mappare nativamente le direct API di `deepseek`, `mistral`, `groq`, `cohere`.
+  - Instradati a `openrouter` sia `meta` (che non ha API propria standard) sia le chiamate dirette ad `anthropic` (per aggirare l'incompatibilità con `/v1/chat/completions`).
+- **File Modificati:**
+  - `~/.ai-skills` (nuxt-mcp-agent-starter: deleted models.get.ts, llm-catalog.ts)
+  - `~/.ai-skills` (nuxt-mcp-agent-starter: modified chat.post.ts)
+  - `~/.ai-skills` (waforge: modified generate.post.ts)
+  - `MEMORY.md`

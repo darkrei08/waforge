@@ -31,8 +31,16 @@ export default defineEventHandler(async (event) => {
     baseURL = (process.env.COCKPIT_HOST_URL || 'http://127.0.0.1:19528') + '/v1'
   } else if (settings.provider === 'custom' && settings.customBaseUrl) {
     baseURL = settings.customBaseUrl
-  } else if (settings.provider === 'openrouter' || settings.provider === 'deepseek' || settings.provider === 'meta' || settings.provider === 'mistral') {
+  } else if (settings.provider === 'openrouter' || settings.provider === 'meta') {
     baseURL = 'https://openrouter.ai/api/v1'
+  } else if (settings.provider === 'deepseek') {
+    baseURL = 'https://api.deepseek.com' // deepseek is openai compatible
+  } else if (settings.provider === 'mistral') {
+    baseURL = 'https://api.mistral.ai/v1' // mistral is openai compatible
+  } else if (settings.provider === 'groq') {
+    baseURL = 'https://api.groq.com/openai/v1' // groq is openai compatible
+  } else if (settings.provider === 'cohere') {
+    baseURL = 'https://api.cohere.com/v1' // cohere recently added openai compatibility
   } else if (settings.provider === 'gemini') {
     baseURL = 'https://generativelanguage.googleapis.com/v1beta/openai'
   } else if (settings.provider === 'anthropic') {
