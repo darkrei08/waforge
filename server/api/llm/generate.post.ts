@@ -99,15 +99,23 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
   }
 
   let messages = []
-  if (chatHistory && Array.isArray(chatHistory)) {
+  let defaultReq = action === 'antiban' ? "Applica regole anti-ban al seguente testo." : "Migliora la formattazione e la sintassi del seguente testo."
+
+  if (chatHistory && Array.isArray(chatHistory) && chatHistory.length > 0) {
     messages = [
       { role: 'system', content: systemPrompt },
       ...chatHistory
     ]
+    if (action === 'improve' || action === 'antiban') {
+      messages.push({
+        role: 'user',
+        content: `Testo attuale:\n\n${originalMessage}\n\nRichiesta: ${defaultReq}`
+      })
+    }
   } else {
     messages = [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: prompt || (originalMessage ? `Testo attuale:\n\n${originalMessage}\n\nRichiesta: Miglioralo.` : "Ciao!") }
+      { role: 'user', content: prompt || (originalMessage ? `Testo attuale:\n\n${originalMessage}\n\nRichiesta: ${defaultReq}` : "Ciao!") }
     ]
   }
 

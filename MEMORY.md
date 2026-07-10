@@ -261,3 +261,18 @@ WaForge Project Update - Fixes:
   - `pages/campaigns.vue`
   - `MEMORY.md`
 
+
+## [Session State Snapshot] - 2026-07-10 18:00:48
+Integrate linee guida privacy da legal-scaffold in waforge. Dettagliato lo stack tech (Nuxt, Postgres, Redis, WuzAPI) in ambito GDPR, rimossi dati sensibili e aggiornata la knowledge base con Graphify.
+
+
+### [2026-07-10 18:07] Bugfix: LLM Gemini Hardcoded Prompts & Missing Models
+- **Decisioni Architetturali:**
+  - L'utente riportava che la "generazione testo con i prompt hardcoded non funziona" selezionando `Gemini 3.1`.
+  - Fix 1 (Modelli fittizi): Nel file di fallback `lib/llm-models.ts` erano presenti modelli inesistenti (`gemini-3.1-pro`, `gemini-3.5-pro`). Inviandoli alla Google API, quest'ultima restituiva errore (Model Not Found). Sostituiti con modelli reali: `gemini-1.5-pro`, `gemini-1.5-flash`, `gemini-2.0-flash`.
+  - Fix 2 (Prompt Hardcoded vuoti): Nelle azioni `improve` e `antiban` (eseguite dalla UI del chat assistant), l'array `chatHistory` veniva inviato vuoto (`[]`). Il backend (`generate.post.ts`) vedeva che era un array e tentava di usarlo senza un messaggio dell'utente, inviando solo il ruolo `system`. Le API Gemini, a differenza di altre, richiedono obbligatoriamente un messaggio `user`. Ho modificato il parsing per verificare `chatHistory.length > 0` e ho iniettato dinamicamente il prompt dell'utente nel fallback, o in coda alla history, quando si attiva un prompt hardcoded.
+- **File Modificati:**
+  - `lib/llm-models.ts`
+  - `server/api/llm/generate.post.ts`
+  - `MEMORY.md`
+
