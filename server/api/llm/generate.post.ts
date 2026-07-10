@@ -31,10 +31,13 @@ export default defineEventHandler(async (event) => {
     baseURL = (process.env.COCKPIT_HOST_URL || 'http://127.0.0.1:19528') + '/v1'
   } else if (settings.provider === 'custom' && settings.customBaseUrl) {
     baseURL = settings.customBaseUrl
+  } else if (settings.provider === 'openrouter' || settings.provider === 'deepseek' || settings.provider === 'meta' || settings.provider === 'mistral') {
+    baseURL = 'https://openrouter.ai/api/v1'
   } else if (settings.provider === 'gemini') {
     baseURL = 'https://generativelanguage.googleapis.com/v1beta/openai'
   } else if (settings.provider === 'anthropic') {
-    baseURL = 'https://api.anthropic.com/v1'
+    // Anthropic non ha compatibilità nativa con /chat/completions; forziamo via OpenRouter se non ci sono proxy terzi
+    baseURL = 'https://openrouter.ai/api/v1'
   }
 
   let apiKey = settings.apiKey || 'dummy-key'
