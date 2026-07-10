@@ -128,9 +128,7 @@ export const useSettingsStore = defineStore('settings', () => {
   async function fetchModelCatalog(forceRefresh = false) {
     catalogLoading.value = true
     try {
-      const provider = llmSettings.value.provider !== 'custom' ? llmSettings.value.provider : undefined
       const query = new URLSearchParams()
-      if (provider) query.set('provider', provider)
       if (forceRefresh) query.set('refresh', '1')
 
       const res = await $fetch<{ data: { models: LlmModelEntry[], sources: string[], total: number } }>(
