@@ -1,4 +1,4 @@
-import { defineEventHandler, readBody, createError } from 'h3'
+import { defineEventHandler, readBody, createError, setResponseHeader } from 'h3'
 import { prisma } from '~/server/utils/prisma'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
@@ -9,6 +9,15 @@ import os from 'os'
 export default defineEventHandler(async (event) => {
   const teamId = event.context.user.teamId
   const { prompt, originalMessage, action, chatHistory } = await readBody(event)
+
+  // Setup SSE Headers
+  setResponseHeader(event, 'Content-Type', 'text/event-stream')
+  setResponseHeader(event, 'Cache-Control', 'no-cache')
+  setResponseHeader(event, 'Connection', 'keep-alive')
+  const resNode = event.node.res
+  const sendEvent = (type: string, data: any) => {
+    resNode.write(`data: ${JSON.stringify({ type, ...data })}\n\n`)
+  }
 
   const team = await prisma.team.findUnique({
     where: { id: teamId },
@@ -107,7 +116,48 @@ Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
         env: process.env
       })
       
-      const client = new Client({ name: 'waforge-client', version: '1.0.0' }, { capabilities: {} })
+      const client = new Client({ name: 'waforge-client', version: '1.0.0' }, { 
+        capabilities: {
+          roots: { listChanged: false },
+          sampling: {}
+        } 
+      })
+
+      // Roots capability
+      client.setRequestHandler({ method: 'roots/list' } as any, async () => {
+        return {
+          roots: [
+            {
+              uri: `file://${process.cwd()}`,
+              name: 'Workspace corrente'
+            }
+          ]
+        }
+      })
+
+      // Sampling capability
+      client.setRequestHandler({ method: 'sampling/createMessage' } as any, async (req: any) => {
+        sendEvent('progress', { msg: `Il server MCP richiede un sampling (LLM Inception)...` })
+        const samplingRes = await fetch(`${baseURL}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: req.params.modelPreferences?.hints?.[0]?.name || model,
+            messages: req.params.messages,
+            max_tokens: req.params.maxTokens || 1000
+          })
+        })
+        const samplingData = await samplingRes.json()
+        return {
+          role: samplingData.choices[0].message.role,
+          content: { type: 'text', text: samplingData.choices[0].message.content },
+          model: samplingData.model
+        }
+      })
+
       await client.connect(transport)
       
       const toolsRes = await client.listTools()
@@ -127,10 +177,14 @@ Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
       mcpClients.push({ client, transport, serverName: command })
     }
 
+    sendEvent('progress', { msg: 'Inizializzazione server MCP...' })
+
     // 2. Agent Chat Loop
     let maxIterations = 5
     let currentIteration = 0
     let finalContent = ''
+
+    sendEvent('progress', { msg: 'Elaborazione della risposta (LLM)...' })
 
     while (currentIteration < maxIterations) {
       currentIteration++
@@ -171,6 +225,8 @@ Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
           const fnName = call.function.name
           const args = JSON.parse(call.function.arguments || '{}')
           
+          sendEvent('progress', { msg: `Esecuzione tool: ${fnName}...` })
+
           const toolConfig = availableTools.find(t => t.function.name === fnName)
           if (toolConfig) {
             try {
@@ -198,6 +254,7 @@ Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
             })
           }
         }
+        sendEvent('progress', { msg: 'Analisi dei risultati del tool...' })
         continue // Continue the while loop with tool outputs
       } else {
         finalContent = message.content
@@ -205,9 +262,9 @@ Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
       }
     }
 
-    return { data: { result: finalContent } }
+    sendEvent('complete', { result: finalContent })
   } catch (err: any) {
-    throw createError({ statusCode: 500, statusMessage: 'Errore durante la generazione LLM', data: err.message })
+    sendEvent('error', { error: err.message || 'Errore Server' })
   } finally {
     // Cleanup MCP processes to avoid memory leaks
     for (const c of mcpClients) {
@@ -215,5 +272,6 @@ Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
         await c.client.close()
       } catch (e) {}
     }
+    resNode.end()
   }
 })

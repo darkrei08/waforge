@@ -243,25 +243,67 @@ async function handleAiGenerate(action: 'custom' | 'antiban' | 'improve' | 'chat
   }
   isGeneratingAi.value = true
   try {
-    const res = await $fetch<{ data: { result: string } }>('/api/llm/generate', {
+    const response = await fetch('/api/llm/generate', {
       method: 'POST',
-      body: {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
         prompt: action === 'chat' ? aiPrompt.value : undefined,
         originalMessage: formData.value.body,
         action,
         chatHistory: chatHistory.value
-      }
+      })
     })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    if (!response.body) throw new Error('No response body')
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
     
-    if (action === 'chat') {
-      chatHistory.value.push({ role: 'assistant', content: res.data.result })
-      aiPrompt.value = ''
-    } else {
+    // Aggiungi subito il placeholder per la risposta
+    if (action !== 'chat') {
       chatHistory.value.push({ role: 'user', content: action === 'antiban' ? 'Applica Anti-Ban al testo attuale.' : 'Migliora la formattazione del testo attuale.' })
-      chatHistory.value.push({ role: 'assistant', content: res.data.result })
+    }
+    chatHistory.value.push({ role: 'assistant', content: 'Inizializzazione...' })
+    const assistantMsgIdx = chatHistory.value.length - 1
+
+    while (true) {
+      const { value, done } = await reader.read()
+      if (done) break
+      
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6))
+            if (data.type === 'progress') {
+              chatHistory.value[assistantMsgIdx].content = `⏳ ${data.msg}`
+            } else if (data.type === 'complete') {
+              chatHistory.value[assistantMsgIdx].content = data.result
+              if (action === 'chat') {
+                aiPrompt.value = ''
+              }
+            } else if (data.type === 'error') {
+              throw new Error(data.error)
+            }
+          } catch (e) {
+            console.error('Error parsing SSE:', e)
+          }
+        }
+      }
     }
   } catch (err: any) {
-    alert(t('common.error') + ': ' + (err.data?.message || err.message))
+    alert(t('common.error') + ': ' + (err.message || 'Errore Stream'))
+    // Rimuovi il messaggio di errore/vuoto se fallisce
+    chatHistory.value.pop()
   } finally {
     isGeneratingAi.value = false
   }
