@@ -238,7 +238,7 @@ docker run -d \
   -e WUZAPI_TOKEN=your-token \
   -e APP_SECRET=your-secret \
   -e DATABASE_URL=file:/app/data/waforge.db \
-  -v wa-sender-data:/app/data \
+  -v waforge-data:/app/data \
   ghcr.io/darkrei08/waforge:latest
 ```
 

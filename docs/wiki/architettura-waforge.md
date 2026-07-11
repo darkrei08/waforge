@@ -4,7 +4,7 @@ sources:
   - session-v1.0.0
 tags: [architecture, nitro, nuxt, prisma]
 ---
-# Architettura WA Sender Pro
+# Architettura WaForge
 
 Il progetto è basato sullo stack **Nuxt 3** con server engine **Nitro (H3)**. 
 Questa architettura permette un'esecuzione ottimizzata, adatta sia per ambienti Node classici sia per runtime moderni come **Bun**.

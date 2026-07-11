@@ -70,4 +70,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - No browser dependency: native WhatsApp Web protocol via whatsmeow
 - Persistent session storage via Docker volumes
 
-[0.1.0]: https://github.com/darkrei08/wa-sender-pro/releases/tag/v0.1.0
+[0.1.0]: https://github.com/darkrei08/waforge/releases/tag/v0.1.0

@@ -31,7 +31,7 @@ interface SecurityEvent {
 function emit(event: SecurityEvent) {
   const line = JSON.stringify({
     ...event,
-    service: 'wa-sender-pro',
+    service: 'waforge',
     env: process.env.NODE_ENV,
   })
 
