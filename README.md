@@ -11,9 +11,10 @@
 </p>
 
 <p align="center">
-  <a href="README.it.md">🇮🇹 Leggi in Italiano</a>
+  <a href="README.it.md">🇮🇹 Leggi in Italiano</a> | <a href="README.md">🇬🇧 English</a>
 </p>
 
+**WaForge** is the ultimate open-source solution for WhatsApp marketing automation, bulk messaging, and CRM integration. Built on Nuxt 3 and Prisma, it offers enterprise-grade features like dynamic spintax generation, AI-powered anti-ban strategies, and zero-width character obfuscation to ensure your WhatsApp outreach is scalable, secure, and compliant.
 <p align="center">
   <img src="https://img.shields.io/badge/Nuxt_3-00DC82?style=for-the-badge&logo=nuxt.js&logoColor=white" alt="Nuxt 3" />
   <img src="https://img.shields.io/badge/Vue_3-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white" alt="Vue 3" />
