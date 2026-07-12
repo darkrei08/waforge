@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **OpenWA Engine Integration (`OPENWA-01`)**: Integrato il terzo framework di gestione WhatsApp, [OpenWA](https://github.com/rmyndharis/OpenWA) (basato su Node.js e Baileys `docker.io/rmyndharis/openwa:latest` / `ghcr.io/rmyndharis/openwa:latest`), esposto in `docker-compose.yml` sulla porta `2785`.
 - **Hybrid Multi-Engine Load Balancer & Failover (`HYBRID-01`)**: Riprogettato il core in `lib/whatsapp-engine.ts` introducendo la modalità `hybrid`. Quando `WHATSAPP_ENGINE=hybrid`, il sistema individua automaticamente i motori attivi (`WuzAPI`, `GoWA`, `OpenWA`) ed esegue bilanciamento del carico Round-Robin sui messaggi in uscita e failover automatico (ritentando sui successivi motori se un invio fallisce o il motore principale è disconnesso). Ottimale per evitare blocchi e spalmare il traffico di campagne intensive su più sessioni e device.
 - **Docker & Compose Modernization**: Aggiunto re-indirizzamento dinamico con `expose` sui servizi Docker ed eliminata la verbosità nelle etichette Traefik usando il formato `key: "value"` con spazi puliti (`labels:` syntax). Explicit debug widget enablement per client (`NUXT_PUBLIC_ENABLE_DEBUG_WIDGET=true`).
+- **Admin Password Recovery Tool (`bin/reset-admin-password.ts`)**: Creata l'utility CLI per ripristino sicuro delle password amministrative e verifica utenti nel database (`bun run admin:reset-password --email <email> --password <pass>`).
+- **Always-on Debug Widget UI**: Garantita la visibilità costante del `DebugWidget` (`app.vue`), con aggiunta di pulsante flottante di richiamo rapido (`🐞 Debugger`) in basso a destra.
+- **Smart Cockpit Proxy Failover & Resilience**: Auto-routing e failover intelligente su API provider in `generate.post.ts` per chiamate LLM in caso di momentanea indisponibilità del proxy HTTP locale di Cockpit (`:19528`).
 
 ## [2.14.1] - 2026-07-12
 

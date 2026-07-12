@@ -18,7 +18,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "admin:reset-password": "bun run bin/reset-admin-password.ts"
   },
   "dependencies": {
     "@aejkatappaja/phantom-ui": "latest",

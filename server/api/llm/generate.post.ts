@@ -86,6 +86,21 @@ export default defineEventHandler(async (event) => {
       } else {
         apiKey = settings.cockpitAccount || 'dummy-key'
       }
+
+      // Smart Cockpit Proxy & Fallback Routing
+      if (baseURL.includes(':19528')) {
+        // 19528 is Cockpit Daemon WebSocket port. If HTTP proxy is not on another port, fallback to direct provider API using Cockpit token
+        const checkModel = (settings.model || '').toLowerCase()
+        if (checkModel.includes('gemini')) {
+          baseURL = 'https://generativelanguage.googleapis.com/v1beta/openai'
+        } else if (checkModel.includes('claude')) {
+          baseURL = 'https://openrouter.ai/api/v1'
+        } else if (checkModel.includes('gpt')) {
+          baseURL = 'https://api.openai.com/v1'
+        } else {
+          baseURL = 'https://openrouter.ai/api/v1'
+        }
+      }
     } catch (e) {
       console.error('Error reading cockpit token in generate.post.ts:', e)
     }
@@ -177,18 +192,43 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
       // Sampling capability
       client.setRequestHandler({ method: 'sampling/createMessage' } as any, async (req: any) => {
         sendEvent('progress', { msg: `Il server MCP richiede un sampling (LLM Inception)...` })
-        const samplingRes = await fetch(`${baseURL}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            model: req.params.modelPreferences?.hints?.[0]?.name || model,
-            messages: req.params.messages,
-            max_tokens: req.params.maxTokens || 1000
+        let samplingRes: any
+        try {
+          samplingRes = await fetch(`${baseURL}/chat/completions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+              model: req.params.modelPreferences?.hints?.[0]?.name || model,
+              messages: req.params.messages,
+              max_tokens: req.params.maxTokens || 1000
+            })
           })
-        })
+        } catch (sampErr: any) {
+          if (settings.useCockpit && (sampErr.message?.includes('failed') || sampErr.message?.includes('ECONNREFUSED') || sampErr.message?.includes('Empty reply'))) {
+            const checkModel = (req.params.modelPreferences?.hints?.[0]?.name || model || '').toLowerCase()
+            let fallbackUrl = 'https://openrouter.ai/api/v1'
+            if (checkModel.includes('gemini')) fallbackUrl = 'https://generativelanguage.googleapis.com/v1beta/openai'
+            else if (checkModel.includes('gpt')) fallbackUrl = 'https://api.openai.com/v1'
+            
+            samplingRes = await fetch(`${fallbackUrl}/chat/completions`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+              },
+              body: JSON.stringify({
+                model: req.params.modelPreferences?.hints?.[0]?.name || model,
+                messages: req.params.messages,
+                max_tokens: req.params.maxTokens || 1000
+              })
+            })
+          } else {
+            throw sampErr
+          }
+        }
         const samplingData = await samplingRes.json()
         return {
           role: samplingData.choices[0].message.role,
@@ -247,14 +287,36 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
         payload.tools = availableTools.map(t => ({ type: 'function', function: t.function }))
       }
 
-      const res = await fetch(`${baseURL}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(payload)
-      })
+      let res: any
+      try {
+        res = await fetch(`${baseURL}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify(payload)
+        })
+      } catch (proxyErr: any) {
+        if (settings.useCockpit && (proxyErr.message?.includes('failed') || proxyErr.message?.includes('ECONNREFUSED') || proxyErr.message?.includes('Empty reply'))) {
+          const checkModel = (payload.model || '').toLowerCase()
+          let fallbackUrl = 'https://openrouter.ai/api/v1'
+          if (checkModel.includes('gemini')) fallbackUrl = 'https://generativelanguage.googleapis.com/v1beta/openai'
+          else if (checkModel.includes('gpt')) fallbackUrl = 'https://api.openai.com/v1'
+          
+          sendEvent('progress', { msg: `Proxy Cockpit HTTP non raggiungibile (${proxyErr.message}). Fallback su API diretta (${fallbackUrl})...` })
+          res = await fetch(`${fallbackUrl}/chat/completions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify(payload)
+          })
+        } else {
+          throw proxyErr
+        }
+      }
 
       if (!res.ok) {
         const errText = await res.text()

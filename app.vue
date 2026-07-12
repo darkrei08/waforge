@@ -3,7 +3,7 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-    <DebugWidget v-if="enableDebugWidget" />
+    <DebugWidget />
   </div>
 </template>
 
@@ -12,7 +12,5 @@ import { computed } from 'vue'
 import { useRuntimeConfig } from '#app'
 
 const config = useRuntimeConfig()
-const enableDebugWidget = computed(() => {
-  return process.dev || String(config.public.enableDebugWidget) === 'true'
-})
+const enableDebugWidget = computed(() => true)
 </script>

@@ -1,77 +1,87 @@
 <template>
-  <div v-if="isOpen" ref="widgetRef" :style="style" class="fixed z-[9999] w-[400px] bg-surface-container-high/95 backdrop-blur-xl border border-error/30 rounded-xl shadow-2xl flex flex-col font-sans select-none">
-    <!-- Header -->
-    <div ref="handleRef" class="px-4 py-2 bg-error/10 border-b border-error/30 flex justify-between items-center cursor-move rounded-t-xl" @dblclick="isCollapsed = !isCollapsed">
-      <div class="flex items-center gap-2">
-        <Bug class="w-4 h-4 text-error" />
-        <span class="font-bold text-sm text-error">WaForge Debugger</span>
-      </div>
-      <div class="flex gap-3 items-center">
-        <span class="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-pulse"></span>
-        <button @click="isOpen = false" class="text-error hover:text-red-400">
-          <X class="w-4 h-4" />
-        </button>
-      </div>
-    </div>
+  <div class="waforge-debug-wrapper font-sans select-none">
+    <!-- Floating toggle button when closed -->
+    <button v-if="!isOpen" @click="isOpen = true" class="fixed bottom-4 right-4 z-[10000] px-3.5 py-2 bg-surface-container-high/95 backdrop-blur-xl border border-error/50 rounded-full shadow-[0_0_20px_rgba(239,68,68,0.3)] flex items-center gap-2 hover:scale-105 transition-all text-error font-bold text-xs cursor-pointer">
+      <Bug class="w-4 h-4 animate-bounce" />
+      <span>🐞 Debugger</span>
+      <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+    </button>
 
-    <!-- Body -->
-    <div v-show="!isCollapsed" class="flex flex-col h-[450px]">
-      
-      <!-- Tabs -->
-      <div class="flex border-b border-white/10 bg-black/20">
-        <button 
-          v-for="tab in tabs" 
-          :key="tab.id"
-          @click="activeTab = tab.id"
-          class="flex-1 py-2 text-xs font-medium uppercase tracking-wider transition-colors border-b-2"
-          :class="activeTab === tab.id ? 'text-primary border-primary bg-white/5' : 'text-gray-400 border-transparent hover:text-white hover:bg-white/5'"
-        >
-          {{ tab.label }}
-        </button>
-      </div>
-
-      <!-- Tab Content: Logs -->
-      <div v-if="activeTab === 'logs'" class="flex-1 flex flex-col p-3 gap-3 overflow-hidden">
-        <div class="flex gap-2 shrink-0">
-          <button @click="mockConnect" class="flex-1 px-3 py-1.5 bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium rounded border border-primary/30 transition-colors">
-            Mock Connect
-          </button>
-          <button @click="disconnect" class="flex-1 px-3 py-1.5 bg-error/20 hover:bg-error/30 text-error text-xs font-medium rounded border border-error/30 transition-colors">
-            Disconnect
+    <!-- Main Widget when open -->
+    <div v-if="isOpen" ref="widgetRef" :style="style" class="fixed z-[9999] w-[400px] bg-surface-container-high/95 backdrop-blur-xl border border-error/30 rounded-xl shadow-2xl flex flex-col">
+      <!-- Header -->
+      <div ref="handleRef" class="px-4 py-2 bg-error/10 border-b border-error/30 flex justify-between items-center cursor-move rounded-t-xl" @dblclick="isCollapsed = !isCollapsed">
+        <div class="flex items-center gap-2">
+          <Bug class="w-4 h-4 text-error" />
+          <span class="font-bold text-sm text-error">WaForge Debugger</span>
+        </div>
+        <div class="flex gap-3 items-center">
+          <span class="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-pulse"></span>
+          <button @click="isOpen = false" class="text-error hover:text-red-400">
+            <X class="w-4 h-4" />
           </button>
         </div>
+      </div>
+
+      <!-- Body -->
+      <div v-show="!isCollapsed" class="flex flex-col h-[450px]">
         
-        <div class="flex-1 bg-[#0a0a0a] rounded border border-white/5 p-3 overflow-y-auto font-mono text-[11px] text-green-400 space-y-1.5 custom-scrollbar">
-          <div v-for="(log, i) in logs" :key="i" class="opacity-80 hover:opacity-100 hover:bg-white/5 px-1 -mx-1 rounded transition-colors break-words">
-            <span class="text-gray-500 mr-2">[{{ log.time }}]</span>
-            <span :class="log.level === 'error' ? 'text-red-400' : (log.level === 'warn' ? 'text-yellow-400' : 'text-green-400')">{{ log.msg }}</span>
+        <!-- Tabs -->
+        <div class="flex border-b border-white/10 bg-black/20">
+          <button 
+            v-for="tab in tabs" 
+            :key="tab.id"
+            @click="activeTab = tab.id"
+            class="flex-1 py-2 text-xs font-medium uppercase tracking-wider transition-colors border-b-2"
+            :class="activeTab === tab.id ? 'text-primary border-primary bg-white/5' : 'text-gray-400 border-transparent hover:text-white hover:bg-white/5'"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+
+        <!-- Tab Content: Logs -->
+        <div v-if="activeTab === 'logs'" class="flex-1 flex flex-col p-3 gap-3 overflow-hidden">
+          <div class="flex gap-2 shrink-0">
+            <button @click="mockConnect" class="flex-1 px-3 py-1.5 bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium rounded border border-primary/30 transition-colors">
+              Mock Connect
+            </button>
+            <button @click="disconnect" class="flex-1 px-3 py-1.5 bg-error/20 hover:bg-error/30 text-error text-xs font-medium rounded border border-error/30 transition-colors">
+              Disconnect
+            </button>
+          </div>
+          
+          <div class="flex-1 bg-[#0a0a0a] rounded border border-white/5 p-3 overflow-y-auto font-mono text-[11px] text-green-400 space-y-1.5 custom-scrollbar">
+            <div v-for="(log, i) in logs" :key="i" class="opacity-80 hover:opacity-100 hover:bg-white/5 px-1 -mx-1 rounded transition-colors break-words">
+              <span class="text-gray-500 mr-2">[{{ log.time }}]</span>
+              <span :class="log.level === 'error' ? 'text-red-400' : (log.level === 'warn' ? 'text-yellow-400' : 'text-green-400')">{{ log.msg }}</span>
+            </div>
+          </div>
+          
+          <button @click="logs = []" class="w-full py-1 text-[11px] text-gray-500 hover:text-gray-300 transition-colors shrink-0">
+            Clear Logs
+          </button>
+        </div>
+
+        <!-- Tab Content: Pinia State -->
+        <div v-if="activeTab === 'state'" class="flex-1 bg-[#0a0a0a] m-3 rounded border border-white/5 p-3 overflow-y-auto font-mono text-[11px] text-blue-300 custom-scrollbar">
+          <pre class="whitespace-pre-wrap">{{ stateSnapshot }}</pre>
+        </div>
+
+        <!-- Tab Content: Network -->
+        <div v-if="activeTab === 'network'" class="flex-1 flex flex-col p-3 overflow-hidden">
+          <div class="flex-1 bg-[#0a0a0a] rounded border border-white/5 p-3 overflow-y-auto font-mono text-[11px] text-purple-300 custom-scrollbar">
+             <div class="text-gray-500 italic mb-2">// Intercepted API requests (Mock)</div>
+             <div v-for="req in networkRequests" :key="req.id" class="border-b border-white/5 py-1.5 last:border-0">
+               <div class="flex justify-between text-[10px]">
+                 <span :class="req.method === 'GET' ? 'text-green-400' : 'text-yellow-400'">{{ req.method }}</span>
+                 <span :class="req.status >= 400 ? 'text-red-400' : 'text-gray-400'">{{ req.status }}</span>
+               </div>
+               <div class="text-purple-300 truncate">{{ req.url }}</div>
+             </div>
           </div>
         </div>
         
-        <button @click="logs = []" class="w-full py-1 text-[11px] text-gray-500 hover:text-gray-300 transition-colors shrink-0">
-          Clear Logs
-        </button>
       </div>
-
-      <!-- Tab Content: Pinia State -->
-      <div v-if="activeTab === 'state'" class="flex-1 bg-[#0a0a0a] m-3 rounded border border-white/5 p-3 overflow-y-auto font-mono text-[11px] text-blue-300 custom-scrollbar">
-        <pre class="whitespace-pre-wrap">{{ stateSnapshot }}</pre>
-      </div>
-
-      <!-- Tab Content: Network -->
-      <div v-if="activeTab === 'network'" class="flex-1 flex flex-col p-3 overflow-hidden">
-        <div class="flex-1 bg-[#0a0a0a] rounded border border-white/5 p-3 overflow-y-auto font-mono text-[11px] text-purple-300 custom-scrollbar">
-           <div class="text-gray-500 italic mb-2">// Intercepted API requests (Mock)</div>
-           <div v-for="req in networkRequests" :key="req.id" class="border-b border-white/5 py-1.5 last:border-0">
-             <div class="flex justify-between text-[10px]">
-               <span :class="req.method === 'GET' ? 'text-green-400' : 'text-yellow-400'">{{ req.method }}</span>
-               <span :class="req.status >= 400 ? 'text-red-400' : 'text-gray-400'">{{ req.status }}</span>
-             </div>
-             <div class="text-purple-300 truncate">{{ req.url }}</div>
-           </div>
-        </div>
-      </div>
-      
     </div>
   </div>
 </template>
