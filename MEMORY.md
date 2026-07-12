@@ -40,6 +40,10 @@
    - Eseguiti i test di compilazione per produzione (`bun run build` / `nuxt build`) su tutti e tre i repository, verificando l'assenza di errori di sintassi o tipi (`spec-kit` / TypeScript Strict Base Kit).
    - Eseguiti i commit e il push sui branch `main` dei 3 repository (`waforge`, `nuxt-mcp-agent-starter`, `nuxt-cockpit-agent-starter`), chiudendo il ciclo Loop 5 e pulendo le directory temporanee (`.nuxt`, `.output`).
 
+4. **Integrazione Master Optimizer & Context Pruning (`caveman`, `ponytail`, `sqz`, `ktx` / `lean-ctx`, `headroom`, `handoff`) nei Loop**:
+   - Aggiornate ufficialmente le regole di `wizard-ai-hub/SKILL.md`, `workflow-agentic-brain/SKILL.md`, `loop-4-refactor/SKILL.md` e `loop-5-release/SKILL.md`.
+   - L'intero stack di compressione (`caveman` -75% output, `ponytail` anti-overengineering, `sqz` compattazione log, `lean-ctx` / `ktx` potatura del contesto visibile 60-90%, `headroom` proxying e `mp-handoff` chiusura di sessione) è ora reso un gate obbligatorio nei cicli di ottimizzazione e di handoff per azzerare memory bloat e debito tecnico.
+
 ## [Session State Snapshot] - 2026-07-13 00:50:00
 ### Session Summary - Docker Production Bun Bundle & v2.15.1 Release
 
