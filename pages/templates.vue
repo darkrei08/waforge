@@ -244,6 +244,11 @@ async function handleAiGenerate(action: 'custom' | 'antiban' | 'improve' | 'chat
   }
   isGeneratingAi.value = true
   try {
+    const historyToSend = [...chatHistory.value]
+    if (action !== 'chat') {
+      historyToSend.push({ role: 'user', content: action === 'antiban' ? 'Applica Anti-Ban al testo attuale.' : 'Migliora la formattazione del testo attuale.' })
+    }
+
     const response = await fetch('/api/llm/generate', {
       method: 'POST',
       headers: {
@@ -253,7 +258,7 @@ async function handleAiGenerate(action: 'custom' | 'antiban' | 'improve' | 'chat
         prompt: action === 'chat' ? aiPrompt.value : undefined,
         originalMessage: formData.value.body,
         action,
-        chatHistory: chatHistory.value
+        chatHistory: historyToSend
       })
     })
 

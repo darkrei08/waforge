@@ -25,6 +25,38 @@
 - **Data Leakage:** Nessuna query backend deve omettere la clausola `where: { teamId: user.teamId }`.
 - **Workflow:** Pianificare (Plan), Eseguire, Verificare prima di confermare.
 
+## [Session State Snapshot] - 2026-07-12 11:15:00
+### Session Summary - OpenWA & Hybrid Multi-Engine Router Integration
+
+1. **OpenWA Framework (`OPENWA-01`)**:
+   - **`docker-compose.yml` & `.env`**: Aggiunto il terzo framework di gestione WhatsApp, [OpenWA](https://github.com/rmyndharis/OpenWA) (`ghcr.io/rmyndharis/openwa:latest`), esposto sulla porta `2785` (`expose: - "2785"`). Allineata la configurazione di `WuzAPI` e `GoWA` usando le direttive `expose` per evitare leakage di porte sull'host mantenendo piena comunicazione nella rete `wa-net`.
+
+2. **Hybrid Multi-Engine Load Balancer (`HYBRID-01`)**:
+   - **`lib/whatsapp-engine.ts`**: Riprogettato l'engine controller impostando `WHATSAPP_ENGINE=hybrid` come impostazione di punta. In questa modalità il sistema interroga in parallelo tutti e tre gli engine (`wuzapi`, `gowa`, `openwa`), li bilancia in Round-Robin all'invio dei messaggi e attiva il failover automatico su errore/disconnessione di un'istanza.
+   - Implementati gli endpoint REST di `OpenWA` (`/api/sessions/:id/send-message`, `/api/sessions/:id/send-file`, ecc.) per uniformare il payload in uscita con gli altri engine.
+
+3. **Allineamento API e UI (`stores/settings.ts`, `stores/whatsapp.ts`, `validation.ts`)**:
+   - Aggiunto supporto a `'openwa'` e `'hybrid'` nello schema di validazione Zod e negli store Pinia. Il widget di debug (`NUXT_PUBLIC_ENABLE_DEBUG_WIDGET=true`) e la formattazione di `docker-compose.yml` (`labels:` in formato standard `key: "value"`) sono stati ottimizzati.
+
+## [Session State Snapshot] - 2026-07-12 08:57:00
+### Session Summary - Targeted Optimizations & Bugfixing (Caveman/Ponytail Mode)
+
+1. **SSE 400 & Chat History Corruption (Fixed)**:
+   - **`pages/templates.vue`**: Il frontend iniettava un placeholder temporaneo `role: 'assistant', content: 'Inizializzazione...'` nell'array `chatHistory` inviato all'API. Separata la variabile di stato per il rendering UI (`loadingMsg`) dall'array inviato all'API (`historyToSend`). Lo storico ora termina sempre con l'ultimo turno dell'utente, risolvendo l'errore `400 Bad Request` su provider LLM restrittivi.
+
+2. **MCP Lifecycle, Timeout & Child Processes (Fixed)**:
+   - **`server/api/llm/generate.post.ts`**: Rimosso il blocco forzato `mcpServers = []` che impediva l'esecuzione dei tool per chiamate anti-ban o di formattazione.
+   - Aggiunto il listener `resNode.on('close')` e il check `if (clientAborted) break` nel loop LLM con chiusura automatica dei client (`client.close()`) nel blocco `finally` per azzerare memory leak in Nitro/Docker.
+
+3. **Cockpit Token & Multi-Tier Fallback (Fixed)**:
+   - **`server/api/llm/generate.post.ts`**: Ottimizzato il caricamento del token Cockpit (`access_token`, `oauth_token`, `api_key`) dai file individuali `~/.antigravity_cockpit/accounts/<id>.json` con fallback automatico su `accounts.json`.
+
+4. **Dual Spintax Engine (`{a|b}` & `[a|b]`) (Fixed)**:
+   - **`lib/spintax.ts` & `composables/useWhatsAppFormat.ts`**: Aggiornato il regex di espansione e conteggio (`/(\{([^{}]+)\}|\[([^\[\]]+\|[^\[\]]+)\])/g`) per supportare sia parentesi graffe che quadre provviste di pipe, e allineato il system prompt di generazione AI.
+
+5. **Zod & Prisma Compatibility (Verified)**:
+   - **`server/api/settings/llm.put.ts` & `stores/settings.ts`**: Allineamento completo dello schema Zod e cast `parsed.data as any` per garantire perfetta serializzazione JSON in Prisma.
+
 ## [Session State Snapshot] - 2026-06-25 00:07:49
 ### Session Summary - Debug & Bugfixing (Prisma, Redis, Docker)
 

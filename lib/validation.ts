@@ -118,7 +118,7 @@ export const UpdateSettingsSchema = z.object({
   delayMax:           z.number().int().min(10).max(600).optional(),
   maxMessagesPerHour: z.number().int().min(1).max(1000).optional(),
   spintaxEnabled:     z.boolean().optional(),
-  whatsappEngine:     z.enum(['wuzapi', 'gowa']).optional(),
+  whatsappEngine:     z.enum(['wuzapi', 'gowa', 'openwa', 'hybrid']).optional(),
 })
 
 // ── Response helpers (H3/Nitro native) ────────────────────────────────────────

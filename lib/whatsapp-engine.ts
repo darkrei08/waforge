@@ -1,15 +1,17 @@
 /**
  * WhatsApp Engine Abstraction Layer
  *
- * Supports two backends:
- *   - PRIMARY:  WuzAPI  (asternic/wuzapi)      → http://wuzapi:3100
+ * Supports four modes:
+ *   - PRIMARY:  WuzAPI  (asternic/wuzapi)      → http://wuzapi:8080
  *   - FALLBACK: go-whatsapp-web-multidevice    → http://gowa:3000
+ *   - COMPANION: OpenWA (rmyndharis/OpenWA)    → http://openwa:2785/api
+ *   - HYBRID:   Multi-Engine Load Balancer & Real-time Failover across all connected engines
  *
- * Both expose compatible REST endpoints (whatsmeow under the hood).
- * Switch via env var: WHATSAPP_ENGINE=wuzapi | gowa
+ * Switch via env var: WHATSAPP_ENGINE=wuzapi | gowa | openwa | hybrid
  */
 
-export const ENGINE = (process.env.WHATSAPP_ENGINE || 'gowa') as 'wuzapi' | 'gowa'
+export type SupportedEngine = 'wuzapi' | 'gowa' | 'openwa' | 'hybrid'
+export const ENGINE = (process.env.WHATSAPP_ENGINE || 'hybrid') as SupportedEngine
 
 const ENDPOINTS = {
   wuzapi: {
@@ -26,9 +28,14 @@ const ENDPOINTS = {
     qr: '/app/login',
     logout: '/app/logout',
   },
+  openwa: {
+    base: process.env.OPENWA_URL || 'http://openwa:2785/api',
+    sendText: '/messages/send-text',
+    status: '/status',
+    qr: '/qr',
+    logout: '/stop',
+  },
 }
-
-const cfg = ENDPOINTS[ENGINE]
 
 interface SendResult {
   success: boolean
@@ -43,35 +50,53 @@ interface EngineStatus {
   engine: string
 }
 
-async function apiCall(path: string, token: string, method = 'GET', body?: unknown, retry = true): Promise<any> {
+const ACTIVE_ENGINES: ('wuzapi' | 'gowa' | 'openwa')[] = ['wuzapi', 'gowa', 'openwa']
+let roundRobinIndex = 0
+
+async function apiCall(
+  path: string,
+  token: string,
+  method = 'GET',
+  body?: unknown,
+  retry = true,
+  targetEngine: 'wuzapi' | 'gowa' | 'openwa' = ENGINE === 'hybrid' ? 'wuzapi' : (ENGINE as any)
+): Promise<any> {
+  const cfg = ENDPOINTS[targetEngine] || ENDPOINTS.wuzapi
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    token,
   }
 
-  // gowa uses Basic Auth (admin:secret) and requires X-Device-Id
-  if (ENGINE === 'gowa') {
+  let finalPath = path
+  if (targetEngine === 'wuzapi' || targetEngine === 'gowa') {
+    headers['token'] = token
+  }
+
+  if (targetEngine === 'gowa') {
     const gowaToken = process.env.GOWA_TOKEN || 'secret-token'
     headers['Authorization'] = `Basic ${Buffer.from(`admin:${gowaToken}`).toString('base64')}`
     headers['X-Device-Id'] = token
+  } else if (targetEngine === 'openwa') {
+    headers['X-API-Key'] = process.env.OPENWA_API_KEY || 'owa_k1_secret'
+    if (!finalPath.startsWith('/sessions/')) {
+      finalPath = `/sessions/${token}${finalPath}`
+    }
   }
 
   try {
-    const res = await $fetch(`${cfg.base}${path}`, {
+    const res = await $fetch(`${cfg.base}${finalPath}`, {
       method: method as any,
       headers,
       body: body ? body : undefined,
     })
 
-    // Auto-provision gowa device for fresh setups (if returns 200 with code DEVICE_NOT_FOUND)
-    if (ENGINE === 'gowa' && res && res.code === 'DEVICE_NOT_FOUND' && retry) {
+    if (targetEngine === 'gowa' && res && res.code === 'DEVICE_NOT_FOUND' && retry) {
       try {
         await $fetch(`${cfg.base}/devices`, {
           method: 'POST',
           headers,
           body: { device_id: token }
         })
-        return apiCall(path, token, method, body, false)
+        return apiCall(path, token, method, body, false, targetEngine)
       } catch (e) {
         // Ignore and fall through
       }
@@ -82,7 +107,7 @@ async function apiCall(path: string, token: string, method = 'GET', body?: unkno
       const status = err.response.status
       const data = err.response._data || {}
 
-      if (status === 401 && ENGINE === 'wuzapi' && retry) {
+      if (status === 401 && targetEngine === 'wuzapi' && retry) {
         try {
           await $fetch(`${cfg.base}/admin/users`, {
             method: 'POST',
@@ -92,27 +117,42 @@ async function apiCall(path: string, token: string, method = 'GET', body?: unkno
             },
             body: { name: 'WaForge Team User', token }
           })
-          return apiCall(path, token, method, body, false)
+          return apiCall(path, token, method, body, false, targetEngine)
         } catch (e) {
-          // Ignore and fall through to throw original error
+          // Ignore and fall through
+        }
+      }
+
+      if ((status === 404 || status === 400) && targetEngine === 'openwa' && retry) {
+        try {
+          await $fetch(`${cfg.base}/sessions/${token}/start`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-API-Key': process.env.OPENWA_API_KEY || 'owa_k1_secret'
+            },
+            body: { sessionId: token }
+          })
+          return apiCall(path, token, method, body, false, targetEngine)
+        } catch (e) {
+          // Ignore and fall through
         }
       }
 
       if (data && data.code !== 'DEVICE_NOT_FOUND') {
-        throw new Error(`[${ENGINE}] ${status}: ${JSON.stringify(data)}`)
+        throw new Error(`[${targetEngine}] ${status}: ${JSON.stringify(data)}`)
       }
 
-      // Auto-provision gowa device for fresh setups (if returns error with code DEVICE_NOT_FOUND)
-      if (ENGINE === 'gowa' && data.code === 'DEVICE_NOT_FOUND' && retry) {
+      if (targetEngine === 'gowa' && data.code === 'DEVICE_NOT_FOUND' && retry) {
         try {
           await $fetch(`${cfg.base}/devices`, {
             method: 'POST',
             headers,
             body: { device_id: token }
           })
-          return apiCall(path, token, method, body, false)
+          return apiCall(path, token, method, body, false, targetEngine)
         } catch (e) {
-          // Ignore and fall through
+          // Ignore
         }
       }
 
@@ -122,51 +162,56 @@ async function apiCall(path: string, token: string, method = 'GET', body?: unkno
   }
 }
 
-// ── Public API ────────────────────────────────────────────────────────────────
+// ── Single Engine Helpers ─────────────────────────────────────────────────────
 
-export async function getEngineStatus(token: string): Promise<EngineStatus> {
+async function getEngineStatusSingle(token: string, target: 'wuzapi' | 'gowa' | 'openwa'): Promise<EngineStatus> {
   try {
-    const data = await apiCall(cfg.status, token)
+    const cfg = ENDPOINTS[target]
+    const data = await apiCall(cfg.status, token, 'GET', undefined, true, target)
 
-    if (ENGINE === 'wuzapi') {
+    if (target === 'wuzapi') {
       return {
         connected: data.data?.Connected ?? false,
         loggedIn: data.data?.LoggedIn ?? false,
         phone: data.data?.Jid?.split('@')[0],
         engine: 'WuzAPI',
       }
-    } else {
+    } else if (target === 'gowa') {
       return {
         connected: data.results?.is_connected ?? data.Connected ?? false,
         loggedIn: data.results?.is_logged_in ?? data.LoggedIn ?? false,
         phone: data.results?.jid?.split('@')[0] ?? data.Jid?.split('@')[0],
         engine: 'go-whatsapp-web-multidevice',
       }
+    } else {
+      const isConnected = data.status === 'CONNECTED' || data.status === 'AUTHENTICATED' || data.connected === true
+      const isLoggedIn = data.status === 'CONNECTED' || data.status === 'AUTHENTICATED' || data.loggedIn === true
+      return {
+        connected: isConnected,
+        loggedIn: isLoggedIn,
+        phone: data.phone?.split('@')[0] ?? data.id?.split('@')[0] ?? null,
+        engine: 'OpenWA',
+      }
     }
   } catch {
-    return { connected: false, loggedIn: false, engine: ENGINE }
+    return { connected: false, loggedIn: false, engine: target }
   }
 }
 
-export async function getQRCode(token: string): Promise<string | null> {
+async function getQRCodeSingle(token: string, target: 'wuzapi' | 'gowa' | 'openwa'): Promise<string | null> {
   try {
-    // WuzAPI uses GET /app/qrcode; GoWA uses GET /app/login to initiate QR
-    const method = 'GET'
-    const data = await apiCall(cfg.qr, token, method)
-    
-    if (ENGINE === 'wuzapi') {
+    const cfg = ENDPOINTS[target]
+    const data = await apiCall(cfg.qr, token, 'GET', undefined, true, target)
+
+    if (target === 'wuzapi') {
       const qr = data.data?.QRCode ?? data.QRCode ?? null
       if (qr && !qr.startsWith('data:image')) {
         return `data:image/png;base64,${qr}`
       }
       return qr
-    } else {
-      // GoWA v8 returns a URL to the PNG in data.results.qr_link
+    } else if (target === 'gowa') {
       const qrLink = data.results?.qr_link ?? data.data?.qr_link ?? data.qr_link
       if (qrLink) {
-        // Fetch the image from the engine and return it as base64 data URI
-        // so the frontend doesn't need to directly access the engine's port
-        // Also replace localhost with gowa container name if needed
         const fetchUrl = qrLink
           .replace('localhost:3000', 'gowa:3000')
           .replace('localhost:3200', 'gowa:3000')
@@ -179,14 +224,127 @@ export async function getQRCode(token: string): Promise<string | null> {
         })
         if (!imgRes.ok) return null
         const arrayBuffer = await imgRes.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
-        return `data:image/png;base64,${buffer.toString('base64')}`
+        return `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`
       }
       return null
+    } else {
+      const qr = data.qr ?? data.qrCode ?? data.data?.qr ?? null
+      if (qr && !qr.startsWith('data:image')) {
+        return `data:image/png;base64,${qr}`
+      }
+      return qr
     }
   } catch {
     return null
   }
+}
+
+async function sendPresenceSingle(token: string, phone: string, messageLength: number, target: 'wuzapi' | 'gowa' | 'openwa'): Promise<void> {
+  try {
+    let cleanPhone = phone.replace(/[\+\s\-]/g, '')
+    if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2)
+    if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
+      cleanPhone = `39${cleanPhone}`
+    }
+
+    if (target === 'wuzapi') {
+      await apiCall('/chat/presence', token, 'POST', {
+        Phone: `${cleanPhone}@s.whatsapp.net`,
+        State: 'composing',
+      }, true, target)
+    } else if (target === 'gowa') {
+      await apiCall('/send/presence', token, 'POST', {
+        phone: cleanPhone,
+        state: 'composing',
+      }, true, target)
+    } else {
+      await apiCall('/presence', token, 'POST', {
+        chatId: `${cleanPhone}@c.us`,
+        presence: 'composing',
+      }, true, target)
+    }
+
+    const typingMs = Math.min(6000, Math.max(1500, messageLength * 30))
+    const noise = typingMs * (0.8 + Math.random() * 0.4)
+    await new Promise(r => setTimeout(r, Math.floor(noise)))
+  } catch {
+    // Non-blocking best-effort
+  }
+}
+
+async function checkPhoneSingle(token: string, phone: string, target: 'wuzapi' | 'gowa' | 'openwa'): Promise<boolean> {
+  try {
+    let cleanPhone = phone.replace(/[\+\s\-]/g, '')
+    if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2)
+    if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
+      cleanPhone = `39${cleanPhone}`
+    }
+
+    if (target === 'wuzapi') {
+      const data = await apiCall('/chat/check/phone', token, 'POST', {
+        Phone: `${cleanPhone}@s.whatsapp.net`
+      }, true, target)
+      return data.data?.OnWhatsApp ?? true
+    } else if (target === 'gowa') {
+      try {
+        const data = await apiCall('/user/info', token, 'GET', { phone: cleanPhone }, true, target)
+        if (data && data.results) return true
+      } catch {
+        // Fallback
+      }
+      return true
+    } else {
+      const data = await apiCall('/check-number', token, 'POST', {
+        phone: cleanPhone
+      }, true, target)
+      return data.exists ?? data.onWhatsApp ?? true
+    }
+  } catch {
+    return true
+  }
+}
+
+// ── Public API (Multi-Engine & Hybrid Router) ─────────────────────────────────
+
+export async function getEngineStatus(token: string): Promise<EngineStatus> {
+  if (ENGINE === 'hybrid') {
+    const results = await Promise.allSettled([
+      getEngineStatusSingle(token, 'wuzapi'),
+      getEngineStatusSingle(token, 'gowa'),
+      getEngineStatusSingle(token, 'openwa'),
+    ])
+    const statuses = results
+      .filter((r): r is PromiseFulfilledResult<EngineStatus> => r.status === 'fulfilled')
+      .map(r => r.value)
+
+    const anyConnected = statuses.some(s => s.connected)
+    const anyLoggedIn = statuses.some(s => s.loggedIn)
+    const activeEngines = statuses.filter(s => s.connected).map(s => s.engine)
+    const phone = statuses.find(s => s.connected && s.phone)?.phone || statuses.find(s => s.phone)?.phone || undefined
+
+    return {
+      connected: anyConnected,
+      loggedIn: anyLoggedIn,
+      phone,
+      engine: activeEngines.length > 0
+        ? `Hybrid (${activeEngines.join(' + ')})`
+        : 'Hybrid Multi-Engine (WuzAPI + GoWA + OpenWA)',
+    }
+  }
+
+  return getEngineStatusSingle(token, ENGINE as any)
+}
+
+export async function getQRCode(token: string): Promise<string | null> {
+  if (ENGINE === 'hybrid') {
+    for (const target of ACTIVE_ENGINES) {
+      const qr = await getQRCodeSingle(token, target)
+      if (qr) return qr
+    }
+    return null
+  }
+
+  return getQRCodeSingle(token, ENGINE as any)
 }
 
 export async function sendMessage(
@@ -194,32 +352,62 @@ export async function sendMessage(
   phone: string,
   message: string
 ): Promise<SendResult> {
+  let cleanPhone = phone.replace(/[\+\s\-]/g, '')
+  if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2)
+  if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
+    cleanPhone = `39${cleanPhone}`
+  }
+
+  if (ENGINE === 'hybrid') {
+    const startIdx = roundRobinIndex++ % ACTIVE_ENGINES.length
+    const errors: string[] = []
+
+    for (let i = 0; i < ACTIVE_ENGINES.length; i++) {
+      const target = ACTIVE_ENGINES[(startIdx + i) % ACTIVE_ENGINES.length]
+      try {
+        await sendPresenceSingle(token, cleanPhone, message.length, target)
+        let body: Record<string, unknown>
+        let endpoint = ''
+
+        if (target === 'wuzapi') {
+          endpoint = ENDPOINTS.wuzapi.sendText
+          body = { Phone: `${cleanPhone}@s.whatsapp.net`, Body: message }
+        } else if (target === 'gowa') {
+          endpoint = ENDPOINTS.gowa.sendText
+          body = { phone: cleanPhone, message: message }
+        } else {
+          endpoint = ENDPOINTS.openwa.sendText
+          body = { chatId: `${cleanPhone}@c.us`, text: message }
+        }
+
+        const data = await apiCall(endpoint, token, 'POST', body, true, target)
+        const msgId = data.data?.Id ?? data.MessageId ?? data.messageId ?? data.id ?? 'ok'
+        return { success: true, messageId: `${msgId} [via ${target}]` }
+      } catch (err: any) {
+        errors.push(`[${target}]: ${err.message || err}`)
+      }
+    }
+    return { success: false, error: `[Hybrid Router All Engines Failed]: ${errors.join(' | ')}` }
+  }
+
+  const target = ENGINE as any
   try {
     let body: Record<string, unknown>
-    
-    // Clean phone number: remove +, spaces, dashes
-    let cleanPhone = phone.replace(/[\+\s\-]/g, '')
-    if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2)
-    // Se inizia con 3 ed è lungo 10 cifre, probabile numero italiano senza prefisso (assunzione per comodità)
-    if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
-      cleanPhone = `39${cleanPhone}`
-    }
+    let endpoint = ''
 
-    if (ENGINE === 'wuzapi') {
-      body = {
-        Phone: `${cleanPhone}@s.whatsapp.net`,
-        Body: message,
-      }
+    if (target === 'wuzapi') {
+      endpoint = ENDPOINTS.wuzapi.sendText
+      body = { Phone: `${cleanPhone}@s.whatsapp.net`, Body: message }
+    } else if (target === 'gowa') {
+      endpoint = ENDPOINTS.gowa.sendText
+      body = { phone: cleanPhone, message: message }
     } else {
-      // gowa format
-      body = {
-        phone: cleanPhone,
-        message: message,
-      }
+      endpoint = ENDPOINTS.openwa.sendText
+      body = { chatId: `${cleanPhone}@c.us`, text: message }
     }
 
-    const data = await apiCall(cfg.sendText, token, 'POST', body)
-    const msgId = data.data?.Id ?? data.MessageId ?? 'ok'
+    const data = await apiCall(endpoint, token, 'POST', body, true, target)
+    const msgId = data.data?.Id ?? data.MessageId ?? data.messageId ?? data.id ?? 'ok'
     return { success: true, messageId: msgId }
   } catch (err) {
     return { success: false, error: String(err) }
@@ -233,35 +421,62 @@ export async function sendMedia(
   fileUrl: string,
   caption?: string
 ): Promise<SendResult> {
-  try {
-    let cleanPhone = phone.replace(/[\+\s\-]/g, '')
-    if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2)
-    if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
-      cleanPhone = `39${cleanPhone}`
-    }
+  let cleanPhone = phone.replace(/[\+\s\-]/g, '')
+  if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2)
+  if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
+    cleanPhone = `39${cleanPhone}`
+  }
 
+  if (ENGINE === 'hybrid') {
+    const startIdx = roundRobinIndex++ % ACTIVE_ENGINES.length
+    const errors: string[] = []
+
+    for (let i = 0; i < ACTIVE_ENGINES.length; i++) {
+      const target = ACTIVE_ENGINES[(startIdx + i) % ACTIVE_ENGINES.length]
+      try {
+        await sendPresenceSingle(token, cleanPhone, 30, target)
+        let endpoint = ''
+        let body: Record<string, unknown> = {}
+
+        if (target === 'wuzapi') {
+          endpoint = `/chat/send/${mediaType}`
+          body = { Phone: `${cleanPhone}@s.whatsapp.net`, Url: fileUrl, Caption: caption || '' }
+        } else if (target === 'gowa') {
+          endpoint = `/send/${mediaType}`
+          body = { phone: cleanPhone, [mediaType]: fileUrl, caption: caption || '' }
+        } else {
+          endpoint = `/messages/send-${mediaType === 'document' ? 'file' : mediaType}`
+          body = { chatId: `${cleanPhone}@c.us`, url: fileUrl, caption: caption || '' }
+        }
+
+        const data = await apiCall(endpoint, token, 'POST', body, true, target)
+        const msgId = data.data?.Id ?? data.MessageId ?? data.results?.message_id ?? data.id ?? 'ok'
+        return { success: true, messageId: `${msgId} [via ${target}]` }
+      } catch (err: any) {
+        errors.push(`[${target}]: ${err.message || err}`)
+      }
+    }
+    return { success: false, error: `[Hybrid Media All Engines Failed]: ${errors.join(' | ')}` }
+  }
+
+  const target = ENGINE as any
+  try {
     let endpoint = ''
     let body: Record<string, unknown> = {}
 
-    if (ENGINE === 'wuzapi') {
+    if (target === 'wuzapi') {
       endpoint = `/chat/send/${mediaType}`
-      body = {
-        Phone: `${cleanPhone}@s.whatsapp.net`,
-        Url: fileUrl,
-        Caption: caption || ''
-      }
-    } else {
-      // GOWA format
+      body = { Phone: `${cleanPhone}@s.whatsapp.net`, Url: fileUrl, Caption: caption || '' }
+    } else if (target === 'gowa') {
       endpoint = `/send/${mediaType}`
-      body = {
-        phone: cleanPhone,
-        [mediaType]: fileUrl, // expects e.g. "image": "http://..."
-        caption: caption || ''
-      }
+      body = { phone: cleanPhone, [mediaType]: fileUrl, caption: caption || '' }
+    } else {
+      endpoint = `/messages/send-${mediaType === 'document' ? 'file' : mediaType}`
+      body = { chatId: `${cleanPhone}@c.us`, url: fileUrl, caption: caption || '' }
     }
 
-    const data = await apiCall(endpoint, token, 'POST', body)
-    const msgId = data.data?.Id ?? data.MessageId ?? data.results?.message_id ?? 'ok'
+    const data = await apiCall(endpoint, token, 'POST', body, true, target)
+    const msgId = data.data?.Id ?? data.MessageId ?? data.results?.message_id ?? data.id ?? 'ok'
     return { success: true, messageId: msgId }
   } catch (err) {
     return { success: false, error: String(err) }
@@ -269,78 +484,45 @@ export async function sendMedia(
 }
 
 export async function disconnectEngine(token: string): Promise<void> {
+  if (ENGINE === 'hybrid') {
+    await Promise.allSettled(
+      ACTIVE_ENGINES.map(async target => {
+        if (target === 'gowa') {
+          await apiCall(`/devices/${token}`, token, 'DELETE', undefined, true, target)
+        } else {
+          await apiCall(ENDPOINTS[target].logout, token, 'POST', undefined, true, target)
+        }
+      })
+    )
+    return
+  }
+
   if (ENGINE === 'gowa') {
     await apiCall(`/devices/${token}`, token, 'DELETE')
   } else {
-    await apiCall(cfg.logout, token, 'POST')
+    await apiCall(ENDPOINTS[ENGINE as any].logout, token, 'POST')
   }
 }
 
-/**
- * ANTI-BAN: Simulate "typing..." presence before sending a message.
- * Meta flags accounts that send messages without ever showing a composing indicator.
- * We send 'composing' and wait a realistic delay proportional to message length.
- */
 export async function sendPresence(token: string, phone: string, messageLength: number): Promise<void> {
-  try {
-    let cleanPhone = phone.replace(/[\+\s\-]/g, '')
-    if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2)
-    if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
-      cleanPhone = `39${cleanPhone}`
-    }
-
-    if (ENGINE === 'wuzapi') {
-      await apiCall('/chat/presence', token, 'POST', {
-        Phone: `${cleanPhone}@s.whatsapp.net`,
-        State: 'composing',
-      })
-    } else {
-      // GoWA: try the common presence endpoint
-      await apiCall('/send/presence', token, 'POST', {
-        phone: cleanPhone,
-        state: 'composing',
-      })
-    }
-
-    // Wait a "typing time" proportional to message length: ~30ms per char, min 1.5s, max 6s
-    const typingMs = Math.min(6000, Math.max(1500, messageLength * 30))
-    // Add ±20% gaussian-ish noise
-    const noise = typingMs * (0.8 + Math.random() * 0.4)
-    await new Promise(r => setTimeout(r, Math.floor(noise)))
-  } catch {
-    // Presence endpoint may not exist on all engines — non-blocking, best-effort
+  if (ENGINE === 'hybrid') {
+    const target = ACTIVE_ENGINES[roundRobinIndex % ACTIVE_ENGINES.length]
+    return sendPresenceSingle(token, phone, messageLength, target)
   }
+  return sendPresenceSingle(token, phone, messageLength, ENGINE as any)
 }
+
 export async function checkPhone(token: string, phone: string): Promise<boolean> {
-  try {
-    let cleanPhone = phone.replace(/[\+\s\-]/g, '')
-    if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2)
-    if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
-      cleanPhone = `39${cleanPhone}`
+  if (ENGINE === 'hybrid') {
+    for (const target of ACTIVE_ENGINES) {
+      const ok = await checkPhoneSingle(token, phone, target)
+      if (ok) return true
     }
-
-    if (ENGINE === 'wuzapi') {
-      const data = await apiCall('/chat/check/phone', token, 'POST', {
-        Phone: `${cleanPhone}@s.whatsapp.net`
-      })
-      return data.data?.OnWhatsApp ?? true // Fallback true se l'API non risponde correttamente
-    } else {
-      // GoWA v8 exposes /app/contacts/check or similar, but we fallback to assuming true if we don't know the exact endpoint
-      // A common WhatsMeow wrapper endpoint for checking is /user/info or /app/contacts/check
-      try {
-        const data = await apiCall('/user/info', token, 'GET', { phone: cleanPhone })
-        if (data && data.results) return true
-      } catch (e) {
-        // Fallback
-      }
-      return true // Lazy default per GoWA se non supportato per evitare di bloccare l'invio
-    }
-  } catch (err) {
-    return true // Se l'API fallisce (es. offline), non blocchiamo la campagna preventivamente
+    return true
   }
+  return checkPhoneSingle(token, phone, ENGINE as any)
 }
 
-/** Render template: replace {{Variable}} with contact field values */
 export function renderTemplate(
   template: string,
   fields: Record<string, string | null | undefined>
@@ -349,5 +531,3 @@ export function renderTemplate(
     return String(fields[key] ?? fields[key.toLowerCase()] ?? `{{${key}}}`)
   })
 }
-
-// ENGINE is already exported at declaration

@@ -25,7 +25,7 @@ export const useWhatsappStore = defineStore('whatsapp', () => {
 
   // Derived from the first connected session (or first session overall)
   const connected = computed(() => sessions.value.some(s => s.connected))
-  const engine = computed(() => sessions.value[0]?.engine ?? 'WuzAPI')
+  const engine = computed(() => sessions.value[0]?.engine ?? 'Hybrid (WuzAPI + GoWA + OpenWA)')
   const phone = computed(() => sessions.value.find(s => s.connected)?.phone ?? null)
   const statusLabel = computed(() => connected.value ? 'Connesso' : 'Disconnesso')
 

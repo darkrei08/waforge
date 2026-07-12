@@ -10,7 +10,7 @@ interface AppSettings {
   delayMax: number
   maxMessagesPerHour: number
   spintaxEnabled: boolean
-  whatsappEngine: 'wuzapi' | 'gowa'
+  whatsappEngine: 'wuzapi' | 'gowa' | 'openwa' | 'hybrid'
   supportedEngines: string[]
 }
 
@@ -58,8 +58,8 @@ export const useSettingsStore = defineStore('settings', () => {
     delayMax: 45,
     maxMessagesPerHour: 100,
     spintaxEnabled: true,
-    whatsappEngine: 'wuzapi',
-    supportedEngines: ['wuzapi', 'gowa'],
+    whatsappEngine: 'hybrid',
+    supportedEngines: ['wuzapi', 'gowa', 'openwa', 'hybrid'],
   })
   
   const brandSettings = ref<BrandSettings>({

@@ -15,8 +15,14 @@ export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'Cache-Control', 'no-cache')
   setResponseHeader(event, 'Connection', 'keep-alive')
   const resNode = event.node.res
+  let clientAborted = false
+  resNode.on('close', () => {
+    clientAborted = true
+  })
   const sendEvent = (type: string, data: any) => {
-    resNode.write(`data: ${JSON.stringify({ type, ...data })}\n\n`)
+    if (!clientAborted) {
+      resNode.write(`data: ${JSON.stringify({ type, ...data })}\n\n`)
+    }
   }
 
   const team = await prisma.team.findUnique({
@@ -51,28 +57,37 @@ export default defineEventHandler(async (event) => {
   let apiKey = settings.apiKey || 'dummy-key'
 
   if (settings.useCockpit) {
-    if (settings.cockpitAccountId) {
-      try {
-        const homeDir = os.homedir()
-        let cockpitDir = path.join(homeDir, '.antigravity_cockpit')
-        const dockerCockpitDir = '/home/nuxtjs/.antigravity_cockpit'
-        
-        if (!fs.existsSync(cockpitDir) && fs.existsSync(dockerCockpitDir)) {
-          cockpitDir = dockerCockpitDir
-        }
-        
-        const accFilePath = path.join(cockpitDir, 'accounts', `${settings.cockpitAccountId}.json`)
-        if (fs.existsSync(accFilePath)) {
-          const accData = JSON.parse(fs.readFileSync(accFilePath, 'utf-8'))
-          if (accData.token && accData.token.access_token) {
-            apiKey = accData.token.access_token
+    let targetAccountId = settings.cockpitAccountId
+    try {
+      const homeDir = os.homedir()
+      let cockpitDir = path.join(homeDir, '.antigravity_cockpit')
+      const dockerCockpitDir = '/home/nuxtjs/.antigravity_cockpit'
+      
+      if (!fs.existsSync(cockpitDir) && fs.existsSync(dockerCockpitDir)) {
+        cockpitDir = dockerCockpitDir
+      }
+      
+      if (!targetAccountId) {
+        const accountsFile = path.join(cockpitDir, 'accounts.json')
+        if (fs.existsSync(accountsFile)) {
+          const accList = JSON.parse(fs.readFileSync(accountsFile, 'utf-8'))
+          if (accList?.accounts?.[0]?.id) {
+            targetAccountId = accList.accounts[0].id
           }
         }
-      } catch (e) {
-        console.error('Error reading cockpit token in generate.post.ts:', e)
       }
-    } else {
-      apiKey = settings.cockpitAccount || 'dummy-key'
+
+      if (targetAccountId) {
+        const accFilePath = path.join(cockpitDir, 'accounts', `${targetAccountId}.json`)
+        if (fs.existsSync(accFilePath)) {
+          const accData = JSON.parse(fs.readFileSync(accFilePath, 'utf-8'))
+          apiKey = accData?.token?.access_token || accData?.oauth_token || accData?.api_key || settings.cockpitAccount || 'dummy-key'
+        }
+      } else {
+        apiKey = settings.cockpitAccount || 'dummy-key'
+      }
+    } catch (e) {
+      console.error('Error reading cockpit token in generate.post.ts:', e)
     }
   }
 
@@ -87,7 +102,7 @@ export default defineEventHandler(async (event) => {
   if (action === 'antiban') {
     systemPrompt = `Sei un esperto di WhatsApp Marketing e Anti-Ban. 
 Il tuo obiettivo è riscrivere il messaggio fornito seguendo scrupolosamente le linee guida anti-ban per il 2026:
-1. Usa sintassi Spintax (es. {Ciao|Buongiorno|Ehi}) per creare variazioni e impedire che i messaggi siano identici.
+1. Usa sintassi Spintax (es. {Ciao|Buongiorno|Ehi} oppure [Ciao|Buongiorno|Ehi]) per creare variazioni e impedire che i messaggi siano identici.
 2. Inserisci sempre una chiara via di uscita (es. "Rispondi STOP per disiscriverti").
 3. Evita linguaggio spam (TUTTO MAIUSCOLO, link eccessivi, keyword promozionali aggressive).
 4. Usa variabili di personalizzazione come {{Name}} se opportuno.
@@ -95,7 +110,7 @@ Il tuo obiettivo è riscrivere il messaggio fornito seguendo scrupolosamente le 
 Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
   } else if (action === 'improve') {
     systemPrompt = `Sei un copywriter esperto. Il tuo compito è migliorare il lessico, la sintassi e la leggibilità del testo fornito.
-DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo_) per evidenziare le parole chiave, e USARE la sintassi Spintax (es. {Ciao|Salve|Ehi}) dove possibile per creare varianti del messaggio e renderlo dinamico.`
+DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo_) per evidenziare le parole chiave, e USARE la sintassi Spintax (es. {Ciao|Salve|Ehi} o [Ciao|Salve|Ehi]) dove possibile per creare varianti del messaggio e renderlo dinamico.`
   }
 
   let messages = []
@@ -119,8 +134,7 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
     ]
   }
 
-  // Disable MCP initialization for simple text tasks to prevent timeouts/hangs
-  const mcpServers = (action === 'improve' || action === 'antiban') ? [] : (settings.mcpServers || [])
+  const mcpServers = Array.isArray(settings.mcpServers) ? settings.mcpServers : []
   let availableTools: any[] = []
   const mcpClients: { client: Client, transport: StdioClientTransport, serverName: string }[] = []
 
@@ -219,6 +233,7 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
     sendEvent('progress', { msg: 'Elaborazione della risposta (LLM)...' })
 
     while (currentIteration < maxIterations) {
+      if (clientAborted) break
       currentIteration++
       
       const payload: any = {

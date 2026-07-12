@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.0] - 2026-07-12
+
+### Added
+- **OpenWA Engine Integration (`OPENWA-01`)**: Integrato il terzo framework di gestione WhatsApp, [OpenWA](https://github.com/rmyndharis/OpenWA) (basato su Node.js e Baileys `docker.io/rmyndharis/openwa:latest` / `ghcr.io/rmyndharis/openwa:latest`), esposto in `docker-compose.yml` sulla porta `2785`.
+- **Hybrid Multi-Engine Load Balancer & Failover (`HYBRID-01`)**: Riprogettato il core in `lib/whatsapp-engine.ts` introducendo la modalità `hybrid`. Quando `WHATSAPP_ENGINE=hybrid`, il sistema individua automaticamente i motori attivi (`WuzAPI`, `GoWA`, `OpenWA`) ed esegue bilanciamento del carico Round-Robin sui messaggi in uscita e failover automatico (ritentando sui successivi motori se un invio fallisce o il motore principale è disconnesso). Ottimale per evitare blocchi e spalmare il traffico di campagne intensive su più sessioni e device.
+- **Docker & Compose Modernization**: Aggiunto re-indirizzamento dinamico con `expose` sui servizi Docker ed eliminata la verbosità nelle etichette Traefik usando il formato `key: "value"` con spazi puliti (`labels:` syntax). Explicit debug widget enablement per client (`NUXT_PUBLIC_ENABLE_DEBUG_WIDGET=true`).
+
+## [2.14.1] - 2026-07-12
+
+### Fixed
+- **SSE 400 Bad Request & Chat History Corruption (`CRIT-01`)**: Risolto in `pages/templates.vue` l'invio di `chatHistory` all'API che includeva messaggi temporanei terminanti con `role: 'assistant'`. Ora la UI di caricamento ("Inizializzazione...") è disaccoppiata dall'array inviato al server, e lo storico termina sempre coerentemente con l'ultimo turno dell'utente.
+- **MCP Lifecycle & Timeout Handling (`CRIT-02 & HIGH-01`)**: Rimosso in `server/api/llm/generate.post.ts` il blocco `mcpServers = []` che impediva l'uso dei tool MCP per `improve` e `antiban`. Aggiunto il listener `resNode.on('close')` e interruzione istantanea del ciclo LLM con chiusura esplicita (`client.close()`) per evitare memory leak sui processi figli in Nitro.
+- **Cockpit Token & Multi-Tier Fallback (`CRIT-03`)**: Risolto in `server/api/llm/generate.post.ts` e `server/api/settings/cockpit.get.ts` il parsing dei token Cockpit (`access_token`, `oauth_token`, `api_key`) e aggiunto il fallback su `accounts.json` qualora l'ID account non sia specificato o il token si trovi nella root del file di sessione.
+- **Dual Spintax Engine (`CRIT-04`)**: Unificata e potenziata la sintassi Spintax in `lib/spintax.ts` e `composables/useWhatsAppFormat.ts` per supportare nativamente sia `{a|b|c}` sia `[a|b|c]`, allineando il system prompt AI per generare variazioni anti-ban coerenti.
+
 ## [2.8.4] - 2026-07-10
 
 ### Fixed

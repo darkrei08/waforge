@@ -19,16 +19,15 @@
  * @returns Text with one random option chosen for each pattern
  */
 export function expandSpintax(text: string): string {
-  // Regex matches innermost {a|b|c} groups (no nested braces inside)
-  const pattern = /\{([^{}]+)\}/g
+  const pattern = /(\{([^{}]+)\}|\[([^\[\]]+\|[^\[\]]+)\])/g
 
   let result = text
   let iterations = 0
   const maxIterations = 50 // safety limit for deeply nested spintax
 
-  // Keep expanding until no more patterns found (handles nesting)
   while (pattern.test(result) && iterations < maxIterations) {
-    result = result.replace(/\{([^{}]+)\}/g, (_match, group: string) => {
+    result = result.replace(/(\{([^{}]+)\}|\[([^\[\]]+\|[^\[\]]+)\])/g, (_match, _full, braceGroup, bracketGroup) => {
+      const group = braceGroup || bracketGroup
       const options = group.split('|')
       const randomIndex = Math.floor(Math.random() * options.length)
       return options[randomIndex].trim()
@@ -44,7 +43,7 @@ export function expandSpintax(text: string): string {
  * Useful for showing the user how many unique messages can be generated.
  */
 export function countVariations(text: string): number {
-  const matches = text.match(/\{([^{}]+)\}/g)
+  const matches = text.match(/(\{([^{}]+)\}|\[([^\[\]]+\|[^\[\]]+)\])/g)
   if (!matches) return 1
 
   return matches.reduce((total, match) => {
@@ -71,8 +70,7 @@ export function validateSpintax(text: string): { valid: boolean; error?: string 
     return { valid: false, error: 'Unclosed brace "{"' }
   }
 
-  // Check that each group has at least 2 options (otherwise no point in spintax)
-  const groups = text.match(/\{([^{}]+)\}/g)
+  const groups = text.match(/(\{([^{}]+)\}|\[([^\[\]]+\|[^\[\]]+)\])/g)
   if (groups) {
     for (const group of groups) {
       const inner = group.slice(1, -1)

@@ -1,15 +1,14 @@
 export function useWhatsAppFormat() {
   function renderSpintax(text: string): string {
     if (!text) return ''
-    const spintaxRegex = /\{([^{}]+)\}/g
+    const spintaxRegex = /(\{([^{}]+)\}|\[([^\[\]]+\|[^\[\]]+)\])/g
     
     let processed = text
     let match = spintaxRegex.exec(processed)
     
-    // Iterative replacement to handle nested spintax if needed, 
-    // though simple one-level regex replacement usually suffices.
     while (match !== null) {
-      const options = match[1].split('|')
+      const group = match[2] || match[3]
+      const options = group.split('|')
       const randomOption = options[Math.floor(Math.random() * options.length)]
       processed = processed.substring(0, match.index) + randomOption + processed.substring(match.index + match[0].length)
       

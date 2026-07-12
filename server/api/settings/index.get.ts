@@ -13,7 +13,7 @@ export default defineEventHandler(async () => {
       maxMessagesPerHour: parseInt(process.env.MAX_MESSAGES_PER_HOUR || '100', 10),
       spintaxEnabled: process.env.SPINTAX_ENABLED !== 'false',
       whatsappEngine: ENGINE,
-      supportedEngines: ['wuzapi', 'gowa'],
+      supportedEngines: ['wuzapi', 'gowa', 'openwa', 'hybrid'],
     },
   }
 })
