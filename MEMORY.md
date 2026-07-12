@@ -25,6 +25,20 @@
 - **Data Leakage:** Nessuna query backend deve omettere la clausola `where: { teamId: user.teamId }`.
 - **Workflow:** Pianificare (Plan), Eseguire, Verificare prima di confermare.
 
+## [Session State Snapshot] - 2026-07-12 11:45:00
+### Session Summary - Admin Recovery, Cockpit Resilience & Always-on Debug Widget
+
+1. **Admin Password Recovery Tool (`bin/reset-admin-password.ts`)**:
+   - Creata l'utility CLI ufficiale di ripristino password per amministratori (`bun run admin:reset-password --email <email> --password <pass>`).
+   - Se eseguita senza parametri, elenca tutti gli utenti/amministratori (`isSuperAdmin: true`) presenti nel database, fornendo ad operatori e devops il comando esatto per sbloccare l'accesso in sicurezza negli ambienti on-premise/Docker.
+
+2. **Always-on Debug Widget Toggle (`app.vue`, `components/DebugWidget.vue`)**:
+   - Reso incondizionato l'avvio del `DebugWidget` come richiesto dalle direttive. Aggiunto un pulsante flottante ad alta visibilità (`🐞 Debugger`) in basso a destra (`fixed bottom-4 right-4 z-[10000]`) per consentire la riapertura istantanea dell'interfaccia di analisi log, stato Pinia e richieste network.
+
+3. **Cockpit Daemon Proxy Failover (`server/api/llm/generate.post.ts`)**:
+   - Risolto il blocco "Cockpit Daemon rilevato correttamente ma non funzionante" causato dalla porta `19528` (che espone solo il servizio WebSocket).
+   - Implementata la verifica di rotta: se il `COCKPIT_HOST_URL` o il proxy locale rifiutano le connessioni HTTP (`fetch failed`, `ECONNREFUSED`, `Empty reply`), il sistema intercetta l'eccezione, estrae il token Cockpit (`access_token` da `~/.antigravity_cockpit/accounts/<id>.json`) ed esegue il failover automatico alle API dirette del provider (`OpenRouter`, `Gemini REST`, `OpenAI`).
+
 ## [Session State Snapshot] - 2026-07-12 11:15:00
 ### Session Summary - OpenWA & Hybrid Multi-Engine Router Integration
 
