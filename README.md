@@ -317,7 +317,7 @@ To list which users have administrative privileges in your PostgreSQL database:
 bun run admin:reset-password
 
 # Inside Docker (Production):
-docker exec -it waforge bun run admin:reset-password
+docker exec -it waforge-app bun run admin:reset-password
 ```
 
 ### Instant Password Reset
@@ -327,8 +327,11 @@ To securely reset the password using cryptographic `bcrypt` hashing (10 rounds):
 bun run admin:reset-password --email admin@example.com --password NewPassword123!
 
 # Inside Docker (Production):
-docker exec -it waforge bun run admin:reset-password --email admin@example.com --password NewPassword123!
+docker exec -it waforge-app bun run admin:reset-password --email admin@example.com --password NewPassword123!
 ```
+
+> [!TIP]
+> **Docker Note**: From `v2.15.1+`, the `bun` runtime and CLI utilities are embedded directly in the `waforge-app` production container. If you encounter an `executable file not found` error on older containers, rebuild or pull the latest image (`docker compose pull && docker compose up -d --build`).
 
 ### 🐞 Debug Widget & LLM Diagnostics
 - The **Debug Widget** is unconditionally enabled at runtime to inspect application logs, network requests, and Pinia stores. If closed, click the floating **`🐞 Debugger`** button in the bottom right corner.

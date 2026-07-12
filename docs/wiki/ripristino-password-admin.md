@@ -23,6 +23,10 @@ bun run admin:reset-password
 docker exec -it waforge-app bun run admin:reset-password
 ```
 
+> [!TIP]
+> **Nota Docker**: A partire dalla versione `v2.15.1` (o con l'ultima build da `Dockerfile`), il runtime `bun` e gli strumenti CLI sono inclusi nativamente nell'immagine di produzione `waforge-app`. Se riscontri l'errore `exec: "bun": executable file not found`, ricrea il container con:
+> `docker compose pull && docker compose up -d --build`
+
 **Output di esempio:**
 ```
 🔐 === WaForge Administrator Password Reset Utility ===

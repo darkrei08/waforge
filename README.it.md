@@ -320,7 +320,7 @@ Per scoprire quali utenti hanno privilegi amministrativi nel database:
 bun run admin:reset-password
 
 # All'interno di Docker (Produzione):
-docker exec -it waforge bun run admin:reset-password
+docker exec -it waforge-app bun run admin:reset-password
 ```
 
 ### Reimpostazione Immediata della Password
@@ -330,8 +330,11 @@ Per reimpostare la password in modo crittografato (`bcrypt` a 10 round):
 bun run admin:reset-password --email admin@example.com --password NuovaPassword123!
 
 # All'interno di Docker (Produzione):
-docker exec -it waforge bun run admin:reset-password --email admin@example.com --password NuovaPassword123!
+docker exec -it waforge-app bun run admin:reset-password --email admin@example.com --password NuovaPassword123!
 ```
+
+> [!TIP]
+> **Nota Docker**: A partire dalla versione `v2.15.1+`, il runtime `bun` e gli script CLI sono inclusi direttamente nel container di produzione `waforge-app`. Se su container precedenti riscontri l'errore `executable file not found`, aggiorna e ricrea l'immagine (`docker compose pull && docker compose up -d --build`).
 
 ### 🐞 Debug Widget & Diagnostica LLM
 - Il **Debug Widget** è sempre accessibile a runtime per ispezionare log, chiamate di rete e stato di Pinia. Se chiuso, clicca sul pulsante flottante **`🐞 Debugger`** in basso a destra.

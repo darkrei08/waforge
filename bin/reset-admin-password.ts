@@ -47,8 +47,9 @@ async function main() {
       }
     } catch (dbErr: any) {
       console.error('  Errore di connessione al database:', dbErr.message)
+      process.exit(1)
     }
-    process.exit(1)
+    process.exit(0)
   }
 
   try {
