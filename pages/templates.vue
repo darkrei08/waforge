@@ -288,8 +288,13 @@ async function handleAiGenerate(action: 'custom' | 'antiban' | 'improve' | 'chat
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
+          let data: any = null
           try {
-            const data = JSON.parse(line.slice(6))
+            data = JSON.parse(line.slice(6))
+          } catch (e) {
+            console.error('Error parsing SSE:', e)
+          }
+          if (data) {
             if (data.type === 'progress') {
               chatHistory.value[assistantMsgIdx].content = `⏳ ${data.msg}`
             } else if (data.type === 'complete') {
@@ -298,18 +303,22 @@ async function handleAiGenerate(action: 'custom' | 'antiban' | 'improve' | 'chat
                 aiPrompt.value = ''
               }
             } else if (data.type === 'error') {
+              chatHistory.value[assistantMsgIdx].content = `❌ Errore AI: ${data.error}`
               throw new Error(data.error)
             }
-          } catch (e) {
-            console.error('Error parsing SSE:', e)
           }
         }
       }
     }
   } catch (err: any) {
-    alert(t('common.error') + ': ' + (err.message || 'Errore Stream'))
-    // Rimuovi il messaggio di errore/vuoto se fallisce
-    chatHistory.value.pop()
+    if (chatHistory.value.length > 0 && chatHistory.value[chatHistory.value.length - 1].role === 'assistant') {
+      const lastMsg = chatHistory.value[chatHistory.value.length - 1].content
+      if (lastMsg.startsWith('⏳') || lastMsg === 'Inizializzazione...') {
+        chatHistory.value[chatHistory.value.length - 1].content = `❌ Errore: ${err.message || 'Errore Stream'}`
+      }
+    } else {
+      alert(t('common.error') + ': ' + (err.message || 'Errore Stream'))
+    }
   } finally {
     isGeneratingAi.value = false
   }

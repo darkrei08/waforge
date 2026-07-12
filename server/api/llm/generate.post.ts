@@ -2,6 +2,7 @@ import { defineEventHandler, readBody, createError, setResponseHeader } from 'h3
 import { prisma } from '~/server/utils/prisma'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
+import { ListRootsRequestSchema, CreateMessageRequestSchema } from '@modelcontextprotocol/sdk/types.js'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
@@ -153,6 +154,8 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
   let availableTools: any[] = []
   const mcpClients: { client: Client, transport: StdioClientTransport, serverName: string }[] = []
 
+  console.log(`[waforge-llm] Avvio richiesta LLM | Action: ${action || 'default'} | Model: ${model} | Provider: ${settings.provider} | UseCockpit: ${settings.useCockpit || false}`)
+
   try {
     sendEvent('progress', { msg: 'Inizializzazione server MCP...' })
 
@@ -161,59 +164,45 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
       if (!cmd.trim() || cmd.trim().startsWith('{')) continue // Skip obvious JSON pasting mistakes
       const args = cmd.split(' ')
       const command = args.shift()!
+      const friendlyName = args.find(a => a.includes('@modelcontextprotocol/server-'))?.replace('@modelcontextprotocol/server-', '') || args[0] || command
       
-      sendEvent('progress', { msg: `Avvio MCP: ${command}...` })
+      sendEvent('progress', { msg: `Avvio MCP: ${friendlyName}...` })
+      console.log(`[waforge-mcp-agent] Tentativo avvio server MCP [${friendlyName}] con comando: ${command} ${args.join(' ')}`)
       
-      const transport = new StdioClientTransport({
-        command,
-        args,
-        env: process.env
-      })
-      
-      const client = new Client({ name: 'waforge-client', version: '1.0.0' }, { 
-        capabilities: {
-          roots: { listChanged: false },
-          sampling: {}
-        } 
-      })
+      try {
+        const transport = new StdioClientTransport({
+          command,
+          args,
+          env: process.env
+        })
+        
+        const client = new Client({ name: 'waforge-client', version: '1.0.0' }, { 
+          capabilities: {
+            roots: { listChanged: false },
+            sampling: {}
+          } 
+        })
 
-      // Roots capability
-      client.setRequestHandler({ method: 'roots/list' } as any, async () => {
-        return {
-          roots: [
-            {
-              uri: `file://${process.cwd()}`,
-              name: 'Workspace corrente'
-            }
-          ]
-        }
-      })
+        // Roots capability
+        client.setRequestHandler(ListRootsRequestSchema, async () => {
+          console.log(`[waforge-mcp-agent] MCP [${friendlyName}] ha richiesto la lista delle directory root.`)
+          return {
+            roots: [
+              {
+                uri: `file://${process.cwd()}`,
+                name: 'Workspace corrente'
+              }
+            ]
+          }
+        })
 
-      // Sampling capability
-      client.setRequestHandler({ method: 'sampling/createMessage' } as any, async (req: any) => {
-        sendEvent('progress', { msg: `Il server MCP richiede un sampling (LLM Inception)...` })
-        let samplingRes: any
-        try {
-          samplingRes = await fetch(`${baseURL}/chat/completions`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-              model: req.params.modelPreferences?.hints?.[0]?.name || model,
-              messages: req.params.messages,
-              max_tokens: req.params.maxTokens || 1000
-            })
-          })
-        } catch (sampErr: any) {
-          if (settings.useCockpit && (sampErr.message?.includes('failed') || sampErr.message?.includes('ECONNREFUSED') || sampErr.message?.includes('Empty reply'))) {
-            const checkModel = (req.params.modelPreferences?.hints?.[0]?.name || model || '').toLowerCase()
-            let fallbackUrl = 'https://openrouter.ai/api/v1'
-            if (checkModel.includes('gemini')) fallbackUrl = 'https://generativelanguage.googleapis.com/v1beta/openai'
-            else if (checkModel.includes('gpt')) fallbackUrl = 'https://api.openai.com/v1'
-            
-            samplingRes = await fetch(`${fallbackUrl}/chat/completions`, {
+        // Sampling capability
+        client.setRequestHandler(CreateMessageRequestSchema, async (req: any) => {
+          console.log(`[waforge-mcp-agent] MCP [${friendlyName}] richiede un sampling (LLM Inception)...`)
+          sendEvent('progress', { msg: `Il server MCP [${friendlyName}] richiede un sampling (LLM Inception)...` })
+          let samplingRes: any
+          try {
+            samplingRes = await fetch(`${baseURL}/chat/completions`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -225,43 +214,64 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
                 max_tokens: req.params.maxTokens || 1000
               })
             })
-          } else {
-            throw sampErr
+          } catch (sampErr: any) {
+            if (settings.useCockpit && (sampErr.message?.includes('failed') || sampErr.message?.includes('ECONNREFUSED') || sampErr.message?.includes('Empty reply'))) {
+              const checkModel = (req.params.modelPreferences?.hints?.[0]?.name || model || '').toLowerCase()
+              let fallbackUrl = 'https://openrouter.ai/api/v1'
+              if (checkModel.includes('gemini')) fallbackUrl = 'https://generativelanguage.googleapis.com/v1beta/openai'
+              else if (checkModel.includes('gpt')) fallbackUrl = 'https://api.openai.com/v1'
+              
+              console.warn(`[waforge-cockpit-agent] Sampling fallito su proxy locale, fallback su API diretta: ${fallbackUrl}`)
+              samplingRes = await fetch(`${fallbackUrl}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                  model: req.params.modelPreferences?.hints?.[0]?.name || model,
+                  messages: req.params.messages,
+                  max_tokens: req.params.maxTokens || 1000
+                })
+              })
+            } else {
+              throw sampErr
+            }
           }
-        }
-        const samplingData = await samplingRes.json()
-        return {
-          role: samplingData.choices[0].message.role,
-          content: { type: 'text', text: samplingData.choices[0].message.content },
-          model: samplingData.model
-        }
-      })
+          const samplingData = await samplingRes.json()
+          return {
+            role: samplingData.choices?.[0]?.message?.role || 'assistant',
+            content: { type: 'text', text: samplingData.choices?.[0]?.message?.content || '' },
+            model: samplingData.model || model
+          }
+        })
 
-      try {
-        // Add a timeout to prevent hanging forever on invalid MCP servers
+        // Add a safe timeout (4s) to prevent hanging forever on missing/404 MCP servers
         await Promise.race([
           client.connect(transport),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout connessione MCP')), 10000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout connessione o pacchetto non trovato')), 4000))
         ])
         
         const toolsRes = await client.listTools()
+        console.log(`[waforge-mcp-agent] Server MCP [${friendlyName}] connesso con successo! Trovati ${toolsRes.tools.length} tool(s).`)
         
         for (const t of toolsRes.tools) {
           availableTools.push({
             type: 'function',
             function: {
-              name: `${command}_${t.name}`.replace(/[^a-zA-Z0-9_-]/g, '_'),
+              name: `${friendlyName.replace(/[^a-zA-Z0-9_-]/g, '_')}_${t.name}`.replace(/[^a-zA-Z0-9_-]/g, '_'),
               description: t.description,
               parameters: t.inputSchema
             },
             _mcpClient: client,
-            _originalName: t.name
+            _originalName: t.name,
+            _friendlyName: friendlyName
           })
         }
-        mcpClients.push({ client, transport, serverName: command })
+        mcpClients.push({ client, transport, serverName: friendlyName })
       } catch (err: any) {
-        console.error(`Error connecting to MCP ${cmd}:`, err)
-        sendEvent('progress', { msg: `Errore caricamento MCP ${command}: ${err.message}` })
+        console.warn(`[waforge-mcp-agent] Impossibile avviare il server MCP [${friendlyName}]: ${err.message}`)
+        sendEvent('progress', { msg: `MCP [${friendlyName}] saltato (${err.message})` })
       }
     }
 
@@ -270,10 +280,14 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
     let currentIteration = 0
     let finalContent = ''
 
+    console.log(`[waforge-llm] Inizio ciclo di generazione. Tool disponibili: ${availableTools.length}`)
     sendEvent('progress', { msg: 'Elaborazione della risposta (LLM)...' })
 
     while (currentIteration < maxIterations) {
-      if (clientAborted) break
+      if (clientAborted) {
+        console.warn(`[waforge-llm] Richiesta interrotta dal client.`)
+        break
+      }
       currentIteration++
       
       const payload: any = {
@@ -287,6 +301,7 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
         payload.tools = availableTools.map(t => ({ type: 'function', function: t.function }))
       }
 
+      console.log(`[waforge-llm] Iterazione #${currentIteration} | Invio richiesta a ${baseURL}/chat/completions | Messaggi: ${messages.length}`)
       let res: any
       try {
         res = await fetch(`${baseURL}/chat/completions`, {
@@ -304,7 +319,8 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
           if (checkModel.includes('gemini')) fallbackUrl = 'https://generativelanguage.googleapis.com/v1beta/openai'
           else if (checkModel.includes('gpt')) fallbackUrl = 'https://api.openai.com/v1'
           
-          sendEvent('progress', { msg: `Proxy Cockpit HTTP non raggiungibile (${proxyErr.message}). Fallback su API diretta (${fallbackUrl})...` })
+          console.warn(`[waforge-cockpit-agent] Proxy Cockpit HTTP (${baseURL}) non raggiungibile: ${proxyErr.message}. Esecuzione failover su API diretta (${fallbackUrl}).`)
+          sendEvent('progress', { msg: `Cockpit proxy failover -> ${fallbackUrl}...` })
           res = await fetch(`${fallbackUrl}/chat/completions`, {
             method: 'POST',
             headers: {
@@ -320,20 +336,26 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
 
       if (!res.ok) {
         const errText = await res.text()
-        throw new Error(`LLM API Error: ${errText}`)
+        console.error(`[waforge-llm] Errore API HTTP ${res.status}: ${errText}`)
+        throw new Error(`LLM API Error (${res.status}): ${errText}`)
       }
 
       const data = await res.json()
-      const message = data.choices[0].message
+      const message = data.choices?.[0]?.message
+      if (!message) {
+        throw new Error('Risposta vuota o formato non valido dal provider LLM')
+      }
       
       messages.push(message)
       
       if (message.tool_calls && message.tool_calls.length > 0) {
+        console.log(`[waforge-llm] Il modello ha richiesto l'esecuzione di ${message.tool_calls.length} tool(s).`)
         // Execute tools
         for (const call of message.tool_calls) {
           const fnName = call.function.name
           const args = JSON.parse(call.function.arguments || '{}')
           
+          console.log(`[waforge-mcp-agent] Esecuzione tool [${fnName}] con argomenti:`, args)
           sendEvent('progress', { msg: `Esecuzione tool: ${fnName}...` })
 
           const toolConfig = availableTools.find(t => t.function.name === fnName)
@@ -343,12 +365,14 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
                 name: toolConfig._originalName,
                 arguments: args
               })
+              console.log(`[waforge-mcp-agent] Tool [${fnName}] eseguito con successo.`)
               messages.push({
                 role: 'tool',
                 tool_call_id: call.id,
                 content: JSON.stringify(result)
               })
             } catch (e: any) {
+              console.error(`[waforge-mcp-agent] Errore esecuzione tool [${fnName}]:`, e.message)
               messages.push({
                 role: 'tool',
                 tool_call_id: call.id,
@@ -356,6 +380,7 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
               })
             }
           } else {
+            console.warn(`[waforge-mcp-agent] Tool non trovato: ${fnName}`)
             messages.push({
               role: 'tool',
               tool_call_id: call.id,
@@ -367,12 +392,14 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
         continue // Continue the while loop with tool outputs
       } else {
         finalContent = message.content
+        console.log(`[waforge-llm] Generazione completata con successo (${finalContent.length} caratteri).`)
         break // No more tool calls
       }
     }
 
     sendEvent('complete', { result: finalContent })
   } catch (err: any) {
+    console.error(`[waforge-llm] Errore critico durante la generazione:`, err.message || err)
     sendEvent('error', { error: err.message || 'Errore Server' })
   } finally {
     // Cleanup MCP processes to avoid memory leaks

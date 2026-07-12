@@ -45,11 +45,9 @@ export const LLM_MODELS: LlmModelEntry[] = [
   { id: 'claude-3.5-haiku',    name: 'Claude 3.5 Haiku',    provider: 'anthropic', category: 'fast' },
 
   // ── Google Gemini ───────────────────────────────
-  { id: 'gemini-1.5-pro',      name: 'Gemini 1.5 Pro',      provider: 'gemini',    category: 'thinking' },
-  { id: 'gemini-1.5-flash',    name: 'Gemini 1.5 Flash',    provider: 'gemini',    category: 'fast' },
-  { id: 'gemini-2.0-flash',    name: 'Gemini 2.0 Flash',    provider: 'gemini',    category: 'fast' },
   { id: 'gemini-2.5-pro',      name: 'Gemini 2.5 Pro',      provider: 'gemini',    category: 'thinking' },
   { id: 'gemini-2.5-flash',    name: 'Gemini 2.5 Flash',    provider: 'gemini',    category: 'fast' },
+  { id: 'gemini-2.0-flash',    name: 'Gemini 2.0 Flash',    provider: 'gemini',    category: 'fast' },
 
   // ── Cohere ──────────────────────────────────────
   { id: 'command-r-plus',      name: 'Command R+',          provider: 'cohere',    category: 'thinking' },

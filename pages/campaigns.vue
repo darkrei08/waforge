@@ -702,16 +702,20 @@ async function handleAiGenerate(action: 'improve'|'antiban', isNew: boolean) {
       buffer = lines.pop() || ''
       for (const line of lines) {
         if (line.startsWith('data: ')) {
+          let data: any = null
           try {
-            const data = JSON.parse(line.slice(6))
+            data = JSON.parse(line.slice(6))
+          } catch(e){}
+          if (data) {
             if (data.type === 'complete') {
               finalContent = data.result
             } else if (data.type === 'error') {
+              aiStatusMsg.value = `❌ Errore AI: ${data.error}`
               throw new Error(data.error)
             } else if (data.type === 'progress') {
-              aiStatusMsg.value = data.msg
+              aiStatusMsg.value = `⏳ ${data.msg}`
             }
-          } catch(e){}
+          }
         }
       }
     }

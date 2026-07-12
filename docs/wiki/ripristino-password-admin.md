@@ -66,8 +66,13 @@ docker exec -it waforge-app bun run admin:reset-password --email admin@admin.com
 
 ---
 
-## 🐞 Risoluzione Problemi e Debug Widget
+## 🐞 Risoluzione Problemi, Debug Widget e Diagnostica LLM/MCP
 
-Se necessiti di analizzare le chiamate API di autenticazione in tempo reale dal browser o ispezionare lo stato di Pinia durante il login:
-1. Il **Debug Widget** è sempre abilitato a runtime in `app.vue`.
-2. Se il pannello è chiuso o minimizzato, clicca sul pulsante flottante **`🐞 Debugger`** in basso a destra per riaprirlo istantaneamente.
+Se necessiti di analizzare le chiamate API di autenticazione, la generazione LLM o l'esecuzione dei tool MCP in tempo reale:
+1. **Debug Widget Frontend**: È sempre abilitato a runtime in `app.vue`. Se il pannello è chiuso o minimizzato, clicca sul pulsante flottante **`🐞 Debugger`** in basso a destra per riaprirlo istantaneamente e verificare store Pinia e network del browser.
+2. **Log Strutturati LLM/MCP in Docker**: Tutte le interazioni di modellazione AI e le chiamate agli strumenti MCP generano log diagnostici strutturati sul terminale del container con i prefissi `[waforge-llm]` e `[waforge-mcp-agent]`. Per monitorare in tempo reale prompt, esecuzione tool e failover:
+   ```bash
+   docker logs -f waforge-app
+   ```
+3. **Compatibilità Modelli**: Assicurati di utilizzare i modelli supportati dalle API recenti (es. `gemini-2.5-flash` o `gemini-2.5-pro` per Google Gemini, poiché la serie 1.5 restituisce 404/Not Found sulle nuove API chiave).
+

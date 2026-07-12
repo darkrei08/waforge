@@ -457,8 +457,8 @@ const mcpCatalog = [
   { name: 'Sentry', cmd: 'npx -y @modelcontextprotocol/server-sentry', desc: 'Sentry Error Tracking', icon: '🐛' },
   { name: 'Memory', cmd: 'npx -y @modelcontextprotocol/server-memory', desc: 'Agent Memory System', icon: '🧠' },
   { name: 'Sequential', cmd: 'npx -y @modelcontextprotocol/server-sequential-thinking', desc: 'Sequential Thinking logic', icon: '⚙️' },
-  { name: 'Twitter / X', cmd: 'npx -y @modelcontextprotocol/server-twitter', desc: 'Social Provider API', icon: '🐦' },
-  { name: 'Facebook', cmd: 'npx -y @modelcontextprotocol/server-facebook', desc: 'Social Provider API', icon: '📘' }
+  { name: 'GitHub', cmd: 'npx -y @modelcontextprotocol/server-github', desc: 'GitHub API & Repository tools', icon: '🐙' },
+  { name: 'Brave Search', cmd: 'npx -y @modelcontextprotocol/server-brave-search', desc: 'Web Search API (richiede BRAVE_API_KEY)', icon: '🦁' }
 ]
 
 function addMcpServer(cmd: string) {

@@ -333,9 +333,11 @@ docker exec -it waforge-app bun run admin:reset-password --email admin@example.c
 > [!TIP]
 > **Docker Note**: From `v2.15.1+`, the `bun` runtime and CLI utilities are embedded directly in the `waforge-app` production container. If you encounter an `executable file not found` error on older containers, rebuild or pull the latest image (`docker compose pull && docker compose up -d --build`).
 
-### 🐞 Debug Widget & LLM Diagnostics
+### 🐞 Debug Widget & LLM / MCP Diagnostics
 - The **Debug Widget** is unconditionally enabled at runtime to inspect application logs, network requests, and Pinia stores. If closed, click the floating **`🐞 Debugger`** button in the bottom right corner.
-- In Cockpit proxy mode (`ws_port` `:19528`), if HTTP requests are refused by the local daemon, automatic failover routes directly to native provider REST endpoints (`OpenRouter`, `Gemini REST`, `OpenAI`).
+- **Full Observability & Tracing**: All LLM generation loops (`[waforge-llm]`) and MCP server execution cycles (`[waforge-mcp-agent]`) stream structured diagnostic logs directly to terminal (`docker logs waforge-app`) and SSE progress events (`Inizializzazione server MCP...`, `Esecuzione tool: ...`), making it effortless to trace prompts, tool inputs, and outputs.
+- **Provider & Model Compatibility**: Natively supports frontier models including **Google Gemini 2.5 Flash / Pro (`gemini-2.5-flash`)**, OpenRouter, and OpenAI. In Cockpit proxy mode (`:19528`), if HTTP requests are refused by the local daemon, automatic failover routes cleanly to direct provider REST APIs.
+
 
 ---
 
