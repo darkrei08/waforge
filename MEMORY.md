@@ -308,3 +308,16 @@ Integrate linee guida privacy da legal-scaffold in waforge. Dettagliato lo stack
   - `server/api/llm/generate.post.ts`
   - `MEMORY.md`
 
+
+### [2026-07-12 11:23] Feature & UI Fix: OpenWA + Hybrid Multi-Engine & Settings Triplicate GoWA Resolution
+- **Decisioni Architetturali:**
+  - Completata l'integrazione di `OpenWA` (`rmyndharis/OpenWA`) come terzo motore WhatsApp nativo basato su Node.js (Baileys) accanto a `WuzAPI` e `GoWA`.
+  - Configurato il `Hybrid Multi-Engine Router` (`lib/whatsapp-engine.ts`) che esegue Load Balancing Round-Robin e Failover automatico tra i 3 motori (`wuzapi` | `gowa` | `openwa`).
+  - **Bugfix UI Settings (`pages/settings.vue`)**: Nella schermata delle Impostazioni apparivano 3 riquadri identici chiamati `go-whatsapp (gowa)`. La causa risiedeva nell'operatore ternario statico `eng === 'wuzapi' ? t('settings.engine_wuzapi') : t('settings.engine_gowa')`, il quale valutava come "gowa" tutte le tre opzioni successive (`gowa`, `openwa`, `hybrid`). Sostituito con chiavi i18n dinamiche (`settings.engine_${eng}`) e aggiunte le traduzioni in `it.json` ed `en.json` per `engine_openwa` ("OpenWA (Node.js Baileys)") ed `engine_hybrid` ("Hybrid Multi-Engine (Round-Robin)").
+  - **Aggiornamento Direttive Loop (`prompt-loop-engine`)**: Aggiornato `SKILL.md` dell'auto-router per imporre l'esecuzione del `Brain-to-Skill` (`ai-graph update` e `book-to-skill`) e controllo grafo semantico in maniera deterministica al PRE-LOOP (Step 1) e al POST-LOOP (Step 10/11) sia per `waforge` che per `Wizard-AI`.
+- **File Modificati:**
+  - `pages/settings.vue`
+  - `i18n/locales/it.json` & `i18n/locales/en.json`
+  - `/home/ema/.gemini/config/skills/prompt-loop-engine/SKILL.md`
+  - `MEMORY.md`
+
