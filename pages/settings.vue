@@ -15,8 +15,8 @@
                   :class="store.settings.whatsappEngine === eng
                     ? 'border-primary bg-primary/10 text-on-surface'
                     : 'border-white/10 bg-white/5 text-on-surface-variant hover:border-white/20'">
-            <p class="font-semibold text-sm">{{ eng === 'wuzapi' ? t('settings.engine_wuzapi') : t('settings.engine_gowa') }}</p>
-            <p class="text-xs mt-1 opacity-70">{{ eng === 'wuzapi' ? t('settings.engine_wuzapi_desc') : t('settings.engine_gowa_desc') }}</p>
+            <p class="font-semibold text-sm">{{ t(`settings.engine_${eng}`) }}</p>
+            <p class="text-xs mt-1 opacity-70">{{ t(`settings.engine_${eng}_desc`) }}</p>
           </button>
         </div>
       </div>
