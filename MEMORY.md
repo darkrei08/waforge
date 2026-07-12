@@ -25,6 +25,21 @@
 - **Data Leakage:** Nessuna query backend deve omettere la clausola `where: { teamId: user.teamId }`.
 - **Workflow:** Pianificare (Plan), Eseguire, Verificare prima di confermare.
 
+## [Session State Snapshot] - 2026-07-13 01:41:00
+### Session Summary - Frontier 2026 Model Catalog, Prompt Registry & Dynamic Chat Override
+
+1. **Guaranteed Frontier Models Merge (`mergeModelsWithFallback`) across Ecosystem**:
+   - Spiegato e risolto il motivo per cui i modelli di frontiera e in preview presenti sulle Web UI dei provider (*ChatGPT*, *Claude.ai*, *AI Studio*) non venivano restituiti dagli endpoint API grezzi di OpenRouter o direct listing.
+   - Aggiornato `lib/llm-models.ts` su `waforge`, `nuxt-mcp-agent-starter` e `nuxt-cockpit-agent-starter` con l'elenco esaustivo 2025/2026: `gemini-3.5-pro`, `gemini-2.5-pro`, `claude-3-7-sonnet-latest`, `claude-3-5-sonnet-latest`, `o3-mini`, `o1`, `gpt-4.5-preview`, `deepseek-reasoner`.
+   - Modificato `fetchModelCatalog()` in `server/utils/llm-catalog.ts` in modo che chiami sempre `mergeModelsWithFallback()`, garantendo al 100% che ogni modello di frontiera sia inietttato con priorità e visibile al volo nei selettori di chat.
+
+2. **Standardized Prompt Registry & Anti-Ban CoT (`lib/prompt-registry.ts`)**:
+   - Centralizzato l'orchestratore di prompt (`PROMPT_INDEX`) nei 3 repository con le modalità *Anti-Ban Stealth Max 2026* (varianza sintattica e Spintax `{a|b}`), *Chain-of-Thought* (`<ragionamento>...</ragionamento>`), *Creative Copywriting* e *Analytical*.
+
+3. **Multi-Repo Build Testing & Deployment (`Loop 1-5`)**:
+   - Eseguiti i test di compilazione per produzione (`bun run build` / `nuxt build`) su tutti e tre i repository, verificando l'assenza di errori di sintassi o tipi (`spec-kit` / TypeScript Strict Base Kit).
+   - Eseguiti i commit e il push sui branch `main` dei 3 repository (`waforge`, `nuxt-mcp-agent-starter`, `nuxt-cockpit-agent-starter`), chiudendo il ciclo Loop 5 e pulendo le directory temporanee (`.nuxt`, `.output`).
+
 ## [Session State Snapshot] - 2026-07-13 00:50:00
 ### Session Summary - Docker Production Bun Bundle & v2.15.1 Release
 
