@@ -302,7 +302,37 @@ docker-compose up -d --build
 ```
 
 > [!TIP]
-> Images are available for `linux/amd64` and `linux/arm64`. Available tags: `latest`, `v2.14.0`, `sha-<commit>`.
+> Images are available for `linux/amd64` and `linux/arm64`. Available tags: `latest`, `v2.15.0`, `sha-<commit>`.
+
+---
+
+## 🔐 Administrator Password Recovery & Troubleshooting
+
+If you lose or lock out an administrator (`SuperAdmin`) account in on-premise or Docker environments, a secure interactive CLI utility is built in.
+
+### Verify and List Administrators
+To list which users have administrative privileges in your PostgreSQL database:
+```bash
+# Local Node/Bun environment:
+bun run admin:reset-password
+
+# Inside Docker (Production):
+docker exec -it waforge bun run admin:reset-password
+```
+
+### Instant Password Reset
+To securely reset the password using cryptographic `bcrypt` hashing (10 rounds):
+```bash
+# Local Node/Bun environment:
+bun run admin:reset-password --email admin@example.com --password NewPassword123!
+
+# Inside Docker (Production):
+docker exec -it waforge bun run admin:reset-password --email admin@example.com --password NewPassword123!
+```
+
+### 🐞 Debug Widget & LLM Diagnostics
+- The **Debug Widget** is unconditionally enabled at runtime to inspect application logs, network requests, and Pinia stores. If closed, click the floating **`🐞 Debugger`** button in the bottom right corner.
+- In Cockpit proxy mode (`ws_port` `:19528`), if HTTP requests are refused by the local daemon, automatic failover routes directly to native provider REST endpoints (`OpenRouter`, `Gemini REST`, `OpenAI`).
 
 ---
 

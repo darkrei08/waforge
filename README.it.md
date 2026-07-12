@@ -305,7 +305,37 @@ docker-compose up -d --build
 ```
 
 > [!TIP]
-> Le immagini sono disponibili per `linux/amd64` e `linux/arm64`. Tag disponibili: `latest`, `v2.14.0`, `sha-<commit>`.
+> Le immagini sono disponibili per `linux/amd64` e `linux/arm64`. Tag disponibili: `latest`, `v2.15.0`, `sha-<commit>`.
+
+---
+
+## 🔐 Ripristino Password Amministratore & Risoluzione Problemi
+
+In caso di smarrimento o blocco delle credenziali di un amministratore (`SuperAdmin`) in ambienti on-premise o Docker, è disponibile un'utility CLI interattiva e sicura.
+
+### Verifica ed Elenco Amministratori
+Per scoprire quali utenti hanno privilegi amministrativi nel database:
+```bash
+# In ambiente locale Node/Bun:
+bun run admin:reset-password
+
+# All'interno di Docker (Produzione):
+docker exec -it waforge bun run admin:reset-password
+```
+
+### Reimpostazione Immediata della Password
+Per reimpostare la password in modo crittografato (`bcrypt` a 10 round):
+```bash
+# In ambiente locale Node/Bun:
+bun run admin:reset-password --email admin@example.com --password NuovaPassword123!
+
+# All'interno di Docker (Produzione):
+docker exec -it waforge bun run admin:reset-password --email admin@example.com --password NuovaPassword123!
+```
+
+### 🐞 Debug Widget & Diagnostica LLM
+- Il **Debug Widget** è sempre accessibile a runtime per ispezionare log, chiamate di rete e stato di Pinia. Se chiuso, clicca sul pulsante flottante **`🐞 Debugger`** in basso a destra.
+- In modalità Cockpit, se il demone locale risponde solo su WebSocket (`ws://`), il sistema intercetta le eccezioni ed esegue automaticamente il failover REST verso i provider nativi.
 
 ---
 
