@@ -25,6 +25,20 @@
 - **Data Leakage:** Nessuna query backend deve omettere la clausola `where: { teamId: user.teamId }`.
 - **Workflow:** Pianificare (Plan), Eseguire, Verificare prima di confermare.
 
+## [Session State Snapshot] - 2026-07-13 00:50:00
+### Session Summary - Docker Production Bun Bundle & v2.15.1 Release
+
+1. **Docker Production Image Refinement (`Dockerfile`)**:
+   - Risolto l'errore `exec: "bun": executable file not found in $PATH` durante l'esecuzione del comando `docker exec -it waforge-app bun run admin:reset-password`.
+   - Il `runner stage` (`node:20-alpine`) copia ora nativamente l'eseguibile di `bun` da `oven/bun:1-alpine`, assieme alla cartella `bin/`, `package.json` e alle dipendenze minime di esecuzione (`@prisma/client` e `bcryptjs`).
+
+2. **Refining CLI Reset Tool & Documentation (`bin/reset-admin-password.ts`, `docs/wiki/ripristino-password-admin.md`, `README.md`)**:
+   - Modificato `bin/reset-admin-password.ts` per terminare con codice `0` (`process.exit(0)`) quando eseguito in modalità informativa per elencare gli amministratori, evitando il messaggio `error: script exited with code 1`.
+   - Aggiornati i file `README.md`, `README.it.md` e `docs/wiki/ripristino-password-admin.md` con il nome corretto del container (`waforge-app`) e le istruzioni di aggiornamento del container (`docker compose pull && docker compose up -d --build`).
+
+3. **Release Automation (`v2.15.1`)**:
+   - Pubblicata e taggata la versione `v2.15.1` con aggiornamento di `package.json` e sincronizzazione del grafo di conoscenza tramite `graphify update .`.
+
 ## [Session State Snapshot] - 2026-07-12 11:45:00
 ### Session Summary - Admin Recovery, Cockpit Resilience & Always-on Debug Widget
 
