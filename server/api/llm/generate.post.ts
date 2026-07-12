@@ -9,7 +9,7 @@ import os from 'os'
 
 export default defineEventHandler(async (event) => {
   const teamId = event.context.user.teamId
-  const { prompt, originalMessage, action, chatHistory } = await readBody(event)
+  const { prompt, originalMessage, action, chatHistory, modelOverride, reasoningMode } = await readBody(event)
 
   // Setup SSE Headers
   setResponseHeader(event, 'Content-Type', 'text/event-stream')
@@ -55,48 +55,34 @@ export default defineEventHandler(async (event) => {
     baseURL = 'https://openrouter.ai/api/v1'
   }
 
-  let apiKey = settings.apiKey || 'dummy-key'
-
-  if (settings.useCockpit) {
-    let targetAccountId = settings.cockpitAccountId
+  // Token Cockpit handling (Read from Cockpit daemon configuration/db)
+  let apiKey = settings.apiKey
+  if (settings.useCockpit && (!apiKey || apiKey === '')) {
     try {
-      const homeDir = os.homedir()
-      let cockpitDir = path.join(homeDir, '.antigravity_cockpit')
-      const dockerCockpitDir = '/home/nuxtjs/.antigravity_cockpit'
-      
-      if (!fs.existsSync(cockpitDir) && fs.existsSync(dockerCockpitDir)) {
-        cockpitDir = dockerCockpitDir
-      }
-      
-      if (!targetAccountId) {
-        const accountsFile = path.join(cockpitDir, 'accounts.json')
-        if (fs.existsSync(accountsFile)) {
-          const accList = JSON.parse(fs.readFileSync(accountsFile, 'utf-8'))
-          if (accList?.accounts?.[0]?.id) {
-            targetAccountId = accList.accounts[0].id
-          }
-        }
-      }
-
-      if (targetAccountId) {
-        const accFilePath = path.join(cockpitDir, 'accounts', `${targetAccountId}.json`)
-        if (fs.existsSync(accFilePath)) {
-          const accData = JSON.parse(fs.readFileSync(accFilePath, 'utf-8'))
-          apiKey = accData?.token?.access_token || accData?.oauth_token || accData?.api_key || settings.cockpitAccount || 'dummy-key'
-        }
+      const fs = await import('fs/promises')
+      const os = await import('os')
+      const path = await import('path')
+      const configPath = path.join(os.homedir(), '.antigravity_cockpit', 'config.json')
+      const data = await fs.readFile(configPath, 'utf-8')
+      const json = JSON.parse(data)
+      // Check if there are auth keys or accounts
+      if (json && json.secret_key) {
+        apiKey = json.secret_key
+      } else if (json && json.accounts && json.accounts.length > 0) {
+        apiKey = json.accounts[0].access_token || json.accounts[0].token || 'cockpit_dummy_token'
       } else {
-        apiKey = settings.cockpitAccount || 'dummy-key'
+        apiKey = 'cockpit_dummy_token'
       }
 
       // Smart Cockpit Proxy & Fallback Routing
       if (baseURL.includes(':19528')) {
         // 19528 is Cockpit Daemon WebSocket port. If HTTP proxy is not on another port, fallback to direct provider API using Cockpit token
-        const checkModel = (settings.model || '').toLowerCase()
+        const checkModel = (modelOverride || settings.model || '').toLowerCase()
         if (checkModel.includes('gemini')) {
           baseURL = 'https://generativelanguage.googleapis.com/v1beta/openai'
         } else if (checkModel.includes('claude')) {
           baseURL = 'https://openrouter.ai/api/v1'
-        } else if (checkModel.includes('gpt')) {
+        } else if (checkModel.includes('gpt') || checkModel.includes('o3') || checkModel.includes('o4')) {
           baseURL = 'https://api.openai.com/v1'
         } else {
           baseURL = 'https://openrouter.ai/api/v1'
@@ -107,23 +93,36 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const model = settings.model || 'gpt-4o-mini'
+  const model = modelOverride || settings.model || 'gpt-4o-mini'
 
   if (!apiKey && !settings.useCockpit && settings.provider !== 'custom') {
     throw createError({ statusCode: 400, statusMessage: 'API Key mancante nelle impostazioni LLM.' })
   }
 
-  let systemPrompt = "Sei un esperto di marketing su WhatsApp. Il tuo compito è assistere l'utente nella scrittura di messaggi."
+  let systemPrompt = "Sei un esperto di marketing e comunicazione su WhatsApp. Il tuo compito è assistere l'utente in modo preciso ed efficace."
   
-  if (action === 'antiban') {
-    systemPrompt = `Sei un esperto di WhatsApp Marketing e Anti-Ban. 
-Il tuo obiettivo è riscrivere il messaggio fornito seguendo scrupolosamente le linee guida anti-ban per il 2026:
-1. Usa sintassi Spintax (es. {Ciao|Buongiorno|Ehi} oppure [Ciao|Buongiorno|Ehi]) per creare variazioni e impedire che i messaggi siano identici.
-2. Inserisci sempre una chiara via di uscita (es. "Rispondi STOP per disiscriverti").
-3. Evita linguaggio spam (TUTTO MAIUSCOLO, link eccessivi, keyword promozionali aggressive).
-4. Usa variabili di personalizzazione come {{Name}} se opportuno.
+  if (reasoningMode === 'creative') {
+    systemPrompt = `Sei un Copywriter Creativo e Coinvolgente specializzato per WhatsApp.
+Usa un tono dinamico, empatico e accattivante. Inserisci emoji pertinenti per spezzare il testo, micro-storytelling, agganci emotivi immediati nelle prime righe e mantieni una formattazione visiva chiara con *grassetto* e _corsivo_. Se appropriato, usa la sintassi Spintax ({Ciao|Ehi|Salve}) per rendere le varianti fresche e dinamiche.`
+  } else if (reasoningMode === 'analytical') {
+    systemPrompt = `Sei un Analista Strutturale di Spintax e Ottimizzatore Matematico per WhatsApp.
+Il tuo compito è analizzare o creare messaggi massimizzando al 100% la varianza lessicale e sintattica. DEVI utilizzare Spintax nidificati ad alta efficienza (es. {Ciao {amico|membro}|{Salve|Ehi} {{Name}}}) ed eliminare qualsiasi struttura ripetitiva che possa innescare filtri algoritmici. Restituisci codice Spintax rigoroso ed esempi di espansione.`
+  } else if (reasoningMode === 'antiban' || action === 'antiban') {
+    systemPrompt = `Sei un esperto di WhatsApp Marketing e Anti-Ban (Stealth Max 2026). 
+Il tuo obiettivo è riscrivere o generare il messaggio fornito seguendo scrupolosamente le linee guida anti-ban per il 2026:
+1. Usa sintassi Spintax (es. {Ciao|Buongiorno|Ehi} oppure [Ciao|Buongiorno|Ehi]) per creare variazioni elevate e impedire che i messaggi inviati siano identici.
+2. Inserisci sempre una chiara via di uscita/opt-out non invasiva (es. "Rispondi STOP per disiscriverti").
+3. Evita assolutamente linguaggio spam (TUTTO MAIUSCOLO, link eccessivi, keyword promozionali aggressive o urgenti).
+4. Usa variabili di personalizzazione come {{Name}} per umanizzare la comunicazione.
 5. Usa formattazione leggibile (*grassetto*, _corsivo_).
-Restituisci SOLO il messaggio riscritto, pronto per l'uso.`
+Restituisci SOLO il messaggio o la risposta ottimizzata a prova di ban, pronta per l'uso.`
+  } else if (reasoningMode === 'cot') {
+    systemPrompt = `Sei un AI Strategist Logico per WhatsApp (metodologia Chain of Thought).
+Prima di fornire la risposta finale o il messaggio strutturato, DEVI obbligatoriamente ragionare passo-passo all'interno di un blocco <ragionamento>...</ragionamento> analizzando:
+1. Obiettivo psicologico e persuasivo nei confronti del destinatario.
+2. Tono di voce e riduzione degli attriti cognitivi.
+3. Ottimizzazione della Call to Action (CTA) e leggibilità da smartphone.
+Subito dopo aver chiuso il tag </ragionamento>, fornisci la risposta finale o il messaggio WhatsApp ottimizzato (*grassetto*, _corsivo_, Spintax).`
   } else if (action === 'improve') {
     systemPrompt = `Sei un copywriter esperto. Il tuo compito è migliorare il lessico, la sintassi e la leggibilità del testo fornito.
 DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo_) per evidenziare le parole chiave, e USARE la sintassi Spintax (es. {Ciao|Salve|Ehi} o [Ciao|Salve|Ehi]) dove possibile per creare varianti del messaggio e renderlo dinamico.`

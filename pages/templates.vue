@@ -159,7 +159,27 @@
             <Sparkles class="w-5 h-5 text-primary" />
             Assistente AI
           </h3>
-          <p class="text-xs text-on-surface-variant mb-4 shrink-0">Usa l'intelligenza artificiale per migliorare il tuo messaggio o applicare tecniche Anti-Ban.</p>
+          <p class="text-xs text-on-surface-variant mb-4 shrink-0">Usa l'intelligenza artificiale per conversare, migliorare il tuo messaggio o applicare tecniche Anti-Ban.</p>
+
+          <div class="grid grid-cols-2 gap-2 mb-3 shrink-0 bg-black/30 p-2 rounded-lg border border-white/5 text-xs">
+            <div>
+              <label class="block font-medium text-on-surface-variant mb-1">Modello AI</label>
+              <select v-model="aiModelOverride" class="w-full p-1.5 bg-surface border border-white/10 rounded text-on-surface outline-none">
+                <option value="">⚙️ Predefinito (da Impostazioni)</option>
+                <option v-for="m in LLM_MODELS" :key="m.id" :value="m.id">{{ m.name }} ({{ m.provider }})</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium text-on-surface-variant mb-1">Tipo di Ragionamento</label>
+              <select v-model="aiReasoningMode" class="w-full p-1.5 bg-surface border border-white/10 rounded text-on-surface outline-none">
+                <option value="standard">🎯 Standard / Copywriter</option>
+                <option value="creative">✨ Creativo & Coinvolgente</option>
+                <option value="analytical">📊 Analitico / Spintax Deep</option>
+                <option value="antiban">🛡️ Anti-Ban & Stealth Max</option>
+                <option value="cot">🧠 Ragionamento Logico (CoT)</option>
+              </select>
+            </div>
+          </div>
 
           <div class="flex-1 overflow-y-auto mb-4 space-y-3 pr-2 scrollbar-thin">
             <div class="bg-black/20 p-3 rounded-lg border border-white/5 w-11/12 text-sm text-on-surface-variant">
@@ -218,6 +238,7 @@ import { ref, onMounted, inject } from 'vue'
 import { Plus, Edit2, Trash2, Info, Upload, Loader2, Sparkles, Send } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useTemplatesStore, type Template } from '~/stores/templates'
+import { LLM_MODELS } from '~/lib/llm-models'
 
 import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
 
@@ -235,6 +256,8 @@ const formData = ref({ id: '', name: '', description: '', body: '', mediaUrl: ''
 
 const showAiAssistant = ref(false)
 const aiPrompt = ref('')
+const aiModelOverride = ref('')
+const aiReasoningMode = ref('standard')
 const isGeneratingAi = ref(false)
 const chatHistory = ref<{role: string, content: string}[]>([])
 
@@ -258,7 +281,9 @@ async function handleAiGenerate(action: 'custom' | 'antiban' | 'improve' | 'chat
         prompt: action === 'chat' ? aiPrompt.value : undefined,
         originalMessage: formData.value.body,
         action,
-        chatHistory: historyToSend
+        chatHistory: historyToSend,
+        modelOverride: aiModelOverride.value || undefined,
+        reasoningMode: aiReasoningMode.value
       })
     })
 

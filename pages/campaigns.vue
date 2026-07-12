@@ -686,7 +686,7 @@ async function handleAiGenerate(action: 'improve'|'antiban', isNew: boolean) {
     const res = await fetch('/api/llm/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ originalMessage, action })
+      body: JSON.stringify({ originalMessage, action, reasoningMode: action === 'antiban' ? 'antiban' : 'standard' })
     })
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
     const reader = res.body?.getReader()
