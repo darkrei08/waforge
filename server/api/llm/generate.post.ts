@@ -1,5 +1,6 @@
 import { defineEventHandler, readBody, createError, setResponseHeader } from 'h3'
 import { prisma } from '~/server/utils/prisma'
+import { addDebugLog } from '~/server/utils/debug-logger'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { ListRootsRequestSchema, CreateMessageRequestSchema } from '@modelcontextprotocol/sdk/types.js'
@@ -176,14 +177,54 @@ Restituisci ESCLUSIVAMENTE il testo migliorato e formattato, pronto per essere c
     ]
   }
 
-  const mcpServers = Array.isArray(settings.mcpServers) ? settings.mcpServers : []
+  const rawMcpServers = Array.isArray(settings.mcpServers) ? settings.mcpServers : []
   let availableTools: any[] = []
   const mcpClients: { client: Client, transport: StdioClientTransport, serverName: string }[] = []
 
   console.log(`[waforge-llm] Avvio richiesta LLM | Action: ${action || 'default'} | Model: ${model} | Provider: ${settings.provider} | UseCockpit: ${settings.useCockpit || false}`)
 
+  // Smart MCP Routing & Filtering (Loop Engineering 01-04):
+  // Non attivare i server MCP pesanti quando non necessari per risparmiare latenza, processi e token del context window.
+  const promptContextText = JSON.stringify(messages).toLowerCase()
+  const mcpServers = rawMcpServers.filter(cmd => {
+    if (!cmd.trim() || cmd.trim().startsWith('{')) return false
+    const lowerCmd = cmd.toLowerCase()
+    
+    // Su azioni di semplice editing/antiban/spintax/tone, disabilitiamo i server esterni pesanti
+    if (action === 'improve' || action === 'antiban' || action === 'spintax' || action === 'tone') {
+      if (lowerCmd.includes('cockpit-tools-mcp') || lowerCmd.includes('spintax')) return true
+      return false
+    }
+
+    // Su chiamate generiche e chat, i server leggeri locali di Memoria e Cockpit sono ammessi per dare continuità al contesto e diagnostica
+    if (lowerCmd.includes('cockpit-tools-mcp') || lowerCmd.includes('server-memory') || lowerCmd.includes('sequential-thinking')) {
+      return true
+    }
+
+    // Per i server esterni pesanti (GitHub, Brave Search, DB, Puppeteer, Stripe, ecc.), attiviamo SOLO se il testo della richiesta fa riferimento al loro dominio!
+    if (lowerCmd.includes('github') && (promptContextText.includes('github') || promptContextText.includes('repo') || promptContextText.includes('issue') || promptContextText.includes('pr ') || promptContextText.includes('pull request') || promptContextText.includes('commit'))) return true
+    if (lowerCmd.includes('brave') && (promptContextText.includes('cerca') || promptContextText.includes('search') || promptContextText.includes('web') || promptContextText.includes('brave') || promptContextText.includes('notizie') || promptContextText.includes('online'))) return true
+    if ((lowerCmd.includes('sqlite') || lowerCmd.includes('postgres')) && (promptContextText.includes('sql') || promptContextText.includes('db') || promptContextText.includes('database') || promptContextText.includes('tabella') || promptContextText.includes('query'))) return true
+    if ((lowerCmd.includes('puppeteer') || lowerCmd.includes('fetch')) && (promptContextText.includes('sito') || promptContextText.includes('browser') || promptContextText.includes('url') || promptContextText.includes('pagina') || promptContextText.includes('scrap') || promptContextText.includes('http'))) return true
+    if (lowerCmd.includes('stripe') && (promptContextText.includes('stripe') || promptContextText.includes('pagament') || promptContextText.includes('abbonament') || promptContextText.includes('fattur'))) return true
+    if ((lowerCmd.includes('twilio') || lowerCmd.includes('sendgrid')) && (promptContextText.includes('sms') || promptContextText.includes('email') || promptContextText.includes('mail') || promptContextText.includes('invio'))) return true
+    if ((lowerCmd.includes('slack') || lowerCmd.includes('notion') || lowerCmd.includes('gdrive')) && (promptContextText.includes('slack') || promptContextText.includes('notion') || promptContextText.includes('drive') || promptContextText.includes('doc') || promptContextText.includes('cartella'))) return true
+    if (lowerCmd.includes('filesystem') && (promptContextText.includes('file') || promptContextText.includes('cartella') || promptContextText.includes('directory') || promptContextText.includes('percorso'))) return true
+    
+    // Per tool MCP custom o non catalogati, controlliamo se l'utente ha richiesto di usare tool ("usa tool", "mcp") o la parola del tool
+    if (promptContextText.includes('tool') || promptContextText.includes('strument') || promptContextText.includes('mcp')) return true
+
+    return false
+  })
+
+  if (mcpServers.length < rawMcpServers.length) {
+    console.log(`[waforge-llm] MCP Routing Intelligente: Attivati ${mcpServers.length}/${rawMcpServers.length} server MCP per l'azione '${action || 'chat'}' (risparmio risorse e token antirisucchio).`)
+  }
+
   try {
-    sendEvent('progress', { msg: 'Inizializzazione server MCP...' })
+    if (mcpServers.length > 0) {
+      sendEvent('progress', { msg: 'Inizializzazione server MCP specifici...' })
+    }
 
     // 1. Initialize MCP Clients if servers are defined
     for (const cmd of mcpServers) {

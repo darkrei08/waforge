@@ -307,6 +307,35 @@ docker-compose up -d --build
 > [!TIP]
 > Le immagini sono disponibili per `linux/amd64` e `linux/arm64`. Tag disponibili: `latest`, `v2.15.0`, `sha-<commit>`.
 
+### 🌐 Pubblicazione su Internet col proprio Dominio (Traefik, NUXT_PUBLIC_APP_URL, Crikket Bug Tracker & CORS)
+
+Quando pubblichi **WaForge** o **Crikket** su un server di produzione esposto su Internet tramite un reverse proxy (es. Traefik, Nginx o Cloudflare Tunnel) con un dominio personalizzato (es. `https://waforge.iltuodominio.com` e `https://crikket.iltuodominio.com`), è fondamentale configurare correttamente le variabili d'ambiente nel file `.env`.
+
+#### Perché è necessario modificare i valori `http://localhost:3000`?
+Nei framework moderni come **Nuxt 3** (`NUXT_PUBLIC_*`) e **Next.js** (`NEXT_PUBLIC_*`), le variabili d'ambiente marcate come *pubbliche* vengono **integrate direttamente all'interno del codice JavaScript inviato al browser del client**.
+Se lasci `NUXT_PUBLIC_APP_URL=http://localhost:3000` su un server di produzione, quando un utente apre `https://waforge.iltuodominio.com` dal proprio smartphone o PC, il suo browser tenterà di effettuare le chiamate API verso `http://localhost:3000` (cioè sul proprio telefono/PC locale!), fallendo istantaneamente con errori di connessione e **CORS (Cross-Origin Resource Sharing)**.
+
+#### Tabella delle Variabili da Modificare per Dominio Custom:
+
+| Variabile nel `.env` | Valore Locale (Sviluppo) | Valore di Produzione (Dominio Custom) | Descrizione |
+| :--- | :--- | :--- | :--- |
+| **`NUXT_PUBLIC_APP_URL`** | `http://localhost:3000` | `https://waforge.iltuodominio.com` | URL pubblico dell'app Nuxt 3 per chiamate API e callback da browser |
+| **`DOMAIN`** | `localhost` | `waforge.iltuodominio.com` | Dominio di routing Traefik per l'applicazione principale |
+| **`CRIKKET_PUBLIC_WEB_URL`** | `http://localhost:3151` | `https://crikket.iltuodominio.com` | URL pubblico del frontend Web Crikket (Bug Tracker) |
+| **`CRIKKET_PUBLIC_SERVER_URL`** | `http://localhost:3150` | `https://crikket-api.iltuodominio.com` | URL pubblico dell'API Server Crikket |
+| **`CRIKKET_WEB_DOMAIN`** | `crikket.localhost` | `crikket.iltuodominio.com` | Dominio di routing Traefik per la dashboard Crikket |
+| **`CRIKKET_API_DOMAIN`** | `crikket-api.localhost` | `crikket-api.iltuodominio.com` | Dominio di routing Traefik per l'API Crikket |
+| **`CRIKKET_CORS_ORIGINS`** | `http://localhost:3000` | `https://waforge.iltuodominio.com,https://crikket.iltuodominio.com` | Elenco domini autorizzati ad inviare report di errore a Crikket |
+
+#### Configurazione Automatica Traefik (`docker-compose.yml`)
+Nel file `docker-compose.yml` fornito, tutti i container dispongono già delle etichette (`labels`) di Traefik predisposte e dei tag `expose` per isolare le porte. Per abilitare la pubblicazione automatica con SSL/TLS (Let's Encrypt), ti basta impostare nel `.env`:
+```env
+TRAEFIK_ENABLE=true
+DOMAIN=waforge.iltuodominio.com
+CRIKKET_WEB_DOMAIN=crikket.iltuodominio.com
+CRIKKET_API_DOMAIN=crikket-api.iltuodominio.com
+```
+
 ---
 
 ## 🔐 Ripristino Password Amministratore & Risoluzione Problemi
@@ -340,8 +369,31 @@ docker exec -it waforge-app bun run admin:reset-password --email admin@example.c
 
 WaForge integra nativamente il supporto al **Model Context Protocol (MCP)**, permettendo all'AI Assistant di interfacciarsi con strumenti esterni, database e memoria persistente in tempo reale.
 
+#### 🚀 Guida Universale: Come Usare e Configurare Cockpit AI, MCP & Memoria
+WaForge è progettato per funzionare in modo scalabile e universale su qualsiasi macchina (PC locale, server Docker o VPS Cloud remoto). Ecco come configurare il sistema nei tre scenari principali:
+
+##### 1. Modalità Zero-Config (Desktop Locale / Docker Volume Mount)
+Se utilizzi l'app sul tuo PC dove gira il client Cockpit o Pi.dev (che crea la cartella `~/.antigravity_cockpit`), **non devi inserire alcuna API Key o configurare nulla manualmente!**
+- Nel `docker-compose.yml`, WaForge monta in sola lettura il volume:
+  ```yaml
+  volumes:
+    - ~/.antigravity_cockpit:/home/nuxtjs/.antigravity_cockpit:ro
+  ```
+- Abilita semplicemente l'interruttore **Cockpit AI** nel pannello **Impostazioni -> Intelligenza Artificiale (AI)**. Il motore di WaForge (`generate.post.ts`) leggerà istantaneamente i token OAuth dai file `accounts/*.json` accreditando la generazione di campagne, Spintax e chat AI direttamente sui crediti e quote orarie di Claude, Gemini e OpenAI.
+
+##### 2. Modalità Server Remoto / Cloud (VPS o Server Aziendale)
+Se WaForge è installato su un server remoto dove non è presente la cartella `~/.antigravity_cockpit` in locale:
+- Puoi collegare l'app al tuo proxy Cockpit o al microservizio Docker dedicato indicando in `COCKPIT_HOST_URL` (o dal pannello impostazioni) l'indirizzo del demone: `http://waforge-cockpit-agent:3000` oppure l'IP del tuo proxy (`http://tuo-server:19528`).
+- In alternativa, puoi incollare il tuo token Cockpit o API Key direttamente nel campo **API Key / Token Cockpit** delle impostazioni: il routing intelligente di WaForge utilizzerà quel token per scalare le quote in modo trasparente.
+
+##### 3. Esecuzione dei Server MCP & Cockpit Tools (`cockpit-tools-mcp`)
+Per arricchire l'Assistente AI di funzionalità aggiuntive senza errori di dipendenze:
+- Vai in **Impostazioni -> Server MCP** e clicca sui badge del catalogo rapido.
+- **✈️ Cockpit Tools (`node ./bin/cockpit-tools-mcp.mjs`)**: È il server MCP nativo e integrato in WaForge. Fornisce i comandi per monitorare le quote residue in tempo reale (`cockpit_status`), elencare e variare il profilo attivo (`cockpit_list_accounts`, `cockpit_switch_account`) ed eseguire test di rete (`cockpit_diagnose_proxy`) **senza dover scaricare pacchetti esterni via npm e senza errori 404**.
+- Per gli altri server MCP esterni (`@modelcontextprotocol/server-...`), WaForge li avvia in una sandbox isolata all'interno del container tramite `StdioClientTransport`.
+
 #### 🛠️ Preset MCP Disponibili nell'Interfaccia
-Per abilitare i server, vai su **Impostazioni -> Server MCP** e clicca su uno dei badge rapidi:
+- **✈️ Cockpit Tools (`cockpit-tools-mcp`)**: Strumento di diagnostica e controllo quote Cockpit AI integrato in locale.
 - **🔍 Brave Search**: Ricerca Web e acquisizione informazioni in tempo reale.
 - **🐙 GitHub**: Gestione completa di repository, pull request e issue.
 - **📁 File System**: Navigazione e lettura diretta dei file di progetto.
@@ -350,7 +402,6 @@ Per abilitare i server, vai su **Impostazioni -> Server MCP** e clicca su uno de
 - **💬 Slack / 📝 Notion / 📂 Google Drive**: Connessione alle suite di produttività aziendale.
 - **💳 Stripe**: Integrazione con abbonamenti, fatturazione e pagamenti.
 - **📱 Twilio / 📧 SendGrid**: Invio di SMS e notifiche email transazionali.
-- **✈️ Cockpit Tools (`cockpit-tools-mcp`)**: Strumento proxy per la gestione degli account Cockpit AI. Consente all'assistente di verificare quote residui (Claude/Gemini/OpenAI), effettuare lo switch automatico degli account e monitorare lo stato del demone senza dover gestire chiavi API manuali.
 - **🔌 OpenAPI / Swagger**: Connessione dinamica a qualsiasi API REST fornendo la specifica OpenAPI.
 
 #### 🧠 Memoria di Progetto Continua (`Memory`)

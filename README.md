@@ -304,6 +304,35 @@ docker-compose up -d --build
 > [!TIP]
 > Images are available for `linux/amd64` and `linux/arm64`. Available tags: `latest`, `v2.15.0`, `sha-<commit>`.
 
+### 🌐 Internet Publishing & Custom Domain Setup (Traefik, NUXT_PUBLIC_APP_URL, Crikket Bug Tracker & CORS)
+
+When deploying **WaForge** or **Crikket** to a production server exposed on the Internet behind a reverse proxy (such as Traefik, Nginx, or Cloudflare Tunnel) with a custom domain (e.g., `https://waforge.yourdomain.com` and `https://crikket.yourdomain.com`), configuring environment variables correctly in `.env` is essential.
+
+#### Why must you change `http://localhost:3000`?
+In modern frontend frameworks like **Nuxt 3** (`NUXT_PUBLIC_*`) and **Next.js** (`NEXT_PUBLIC_*`), environment variables marked as *public* are **inlined directly into the JavaScript client bundles sent to the user's browser**.
+If you leave `NUXT_PUBLIC_APP_URL=http://localhost:3000` on a production server, when an end user opens `https://waforge.yourdomain.com` from their phone or laptop, their browser will attempt to make API requests to `http://localhost:3000` (meaning their own local device!), immediately failing with connection errors and **CORS (Cross-Origin Resource Sharing)** violations.
+
+#### Table of Variables to Modify for Custom Domain Deployment:
+
+| Variable in `.env` | Local Value (Development) | Production Value (Custom Domain) | Description |
+| :--- | :--- | :--- | :--- |
+| **`NUXT_PUBLIC_APP_URL`** | `http://localhost:3000` | `https://waforge.yourdomain.com` | Public URL of the Nuxt 3 app for browser API calls and OAuth callbacks |
+| **`DOMAIN`** | `localhost` | `waforge.yourdomain.com` | Traefik routing host for the main WaForge application |
+| **`CRIKKET_PUBLIC_WEB_URL`** | `http://localhost:3151` | `https://crikket.yourdomain.com` | Public URL of the Crikket Web frontend dashboard |
+| **`CRIKKET_PUBLIC_SERVER_URL`** | `http://localhost:3150` | `https://crikket-api.yourdomain.com` | Public URL of the Crikket Backend API Server |
+| **`CRIKKET_WEB_DOMAIN`** | `crikket.localhost` | `crikket.yourdomain.com` | Traefik routing host for the Crikket dashboard |
+| **`CRIKKET_API_DOMAIN`** | `crikket-api.localhost` | `crikket-api.yourdomain.com` | Traefik routing host for the Crikket API |
+| **`CRIKKET_CORS_ORIGINS`** | `http://localhost:3000` | `https://waforge.yourdomain.com,https://crikket.yourdomain.com` | Comma-separated list of allowed domains that can send bug reports |
+
+#### Automatic Traefik Configuration (`docker-compose.yml`)
+In the provided `docker-compose.yml`, all containers already include pre-configured Traefik labels and `expose` tags to isolate internal ports. To enable automatic production routing with SSL/TLS (Let's Encrypt), simply set in your `.env`:
+```env
+TRAEFIK_ENABLE=true
+DOMAIN=waforge.yourdomain.com
+CRIKKET_WEB_DOMAIN=crikket.yourdomain.com
+CRIKKET_API_DOMAIN=crikket-api.yourdomain.com
+```
+
 ---
 
 ## 🔐 Administrator Password Recovery & Troubleshooting

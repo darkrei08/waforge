@@ -31,8 +31,14 @@ export default defineNuxtConfig({
     redisUrl: process.env.REDIS_URL || '',
     databaseUrl: process.env.DATABASE_URL || '',
     public: {
-      enableDebugWidget: process.env.ENABLE_DEBUG_WIDGET || 'false',
-      oauthEnabled: !!process.env.OAUTH_CLIENT_ID
+      enableDebugWidget: process.env.ENABLE_DEBUG_WIDGET || 'true',
+      oauthEnabled: !!process.env.OAUTH_CLIENT_ID,
+      logLevelWaForge: process.env.LOG_LEVEL || process.env.LOG_LEVEL_WAFORGE || 'verbose',
+      logLevelWuzAPI: process.env.LOG_LEVEL_WUZAPI || 'info',
+      logLevelGoWA: process.env.LOG_LEVEL_GOWA || 'info',
+      logLevelOpenWA: process.env.LOG_LEVEL_OPENWA || 'info',
+      logLevelCockpit: process.env.LOG_LEVEL_COCKPIT || 'info',
+      logLevelMCP: process.env.LOG_LEVEL_MCP || 'info'
     }
   },
 

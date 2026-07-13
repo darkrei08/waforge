@@ -106,7 +106,7 @@ export const CreateCampaignSchema = z.object({
 
 export const PaginationSchema = z.object({
   page:   z.coerce.number().int().min(1).default(1),
-  limit:  z.coerce.number().int().min(1).max(200).default(50),
+  limit:  z.coerce.number().int().min(1).max(50000).default(50),
   search: z.string().trim().max(100).optional(),
   groupId: z.string().cuid().optional(),
 })

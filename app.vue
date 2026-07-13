@@ -3,7 +3,9 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-    <DebugWidget />
+    <ClientOnly>
+      <DebugWidget />
+    </ClientOnly>
   </div>
 </template>
 

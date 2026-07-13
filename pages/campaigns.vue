@@ -389,13 +389,14 @@
           <div class="flex flex-col gap-2 mt-6">
             <p v-if="wizardStep === 1 && !formData.name" class="text-xs text-error text-right">Inserisci il nome della campagna per proseguire.</p>
             <p v-if="wizardStep === 2 && !formData.templateId" class="text-xs text-error text-right">Seleziona un template per proseguire.</p>
+            <p v-if="wizardStep === 3 && targetMode === 'GROUPS' && (!Array.isArray(formData.contactIds) || formData.contactIds.length === 0)" class="text-xs text-error text-right">Seleziona almeno una rubrica per proseguire.</p>
             <div class="flex justify-between">
               <button @click="wizardStep > 1 ? wizardStep-- : showWizard = false"
                       class="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors">
                 {{ wizardStep > 1 ? t('campaigns.btn_back') : t('campaigns.btn_cancel') }}
               </button>
               <button v-if="wizardStep < 4" @click="wizardStep++"
-                      :disabled="(wizardStep === 1 && !formData.name) || (wizardStep === 2 && (!formData.templateId || formData.templateId === 'new')) || (wizardStep === 3 && formData.delayMin >= formData.delayMax)"
+                      :disabled="(wizardStep === 1 && !formData.name) || (wizardStep === 2 && (!formData.templateId || formData.templateId === 'new')) || (wizardStep === 3 && formData.delayMin >= formData.delayMax) || (wizardStep === 3 && targetMode === 'GROUPS' && (!Array.isArray(formData.contactIds) || formData.contactIds.length === 0))"
                       class="px-5 py-2 bg-primary text-on-primary font-semibold rounded-lg transition-all disabled:opacity-30">
                 {{ t('campaigns.btn_next') }}
               </button>
@@ -928,28 +929,33 @@ function getSecondaryList(contact: any): string[] {
 }
 
 async function openTargetPreviewModal() {
+  if (targetMode.value === 'GROUPS' && (!Array.isArray(formData.value.contactIds) || formData.value.contactIds.length === 0)) {
+    addToast('Attenzione: Seleziona almeno una rubrica prima di visualizzare l\'anteprima contatti!', 'warning')
+    return
+  }
   showTargetPreviewModal.value = true
   targetPreviewLoading.value = true
   try {
     const res = await $fetch<{ data: any[] }>('/api/contacts', {
-      params: { limit: 1000 }
+      params: { limit: 50000 }
     })
     let contacts = res.data || []
     
     // Filter according to current Target Mode
-    if (formData.value.contactIds !== 'ALL' && Array.isArray(formData.value.contactIds)) {
+    if (targetMode.value === 'GROUPS' && Array.isArray(formData.value.contactIds)) {
       const groupIds = formData.value.contactIds.filter(id => id.startsWith('GROUP:')).map(id => id.replace('GROUP:', ''))
       const explicitIds = formData.value.contactIds.filter(id => !id.startsWith('GROUP:'))
       
       contacts = contacts.filter(c => {
         if (explicitIds.includes(c.id)) return true
-        if (groupIds.length > 0 && c.groups?.some((g: any) => groupIds.includes(g.id))) return true
+        if (groupIds.length > 0 && c.groups?.some((g: any) => groupIds.includes(g.id || g))) return true
         return false
       })
     }
     targetPreviewContacts.value = contacts
   } catch (err: any) {
-    addToast('Errore nel caricamento destinatari', 'error')
+    console.error('[TargetPreview Error]:', err)
+    addToast('Errore nel caricamento destinatari per l\'anteprima', 'error')
   } finally {
     targetPreviewLoading.value = false
   }

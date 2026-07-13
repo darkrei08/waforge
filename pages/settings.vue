@@ -500,7 +500,7 @@ const mcpCatalog = [
   { name: 'Stripe', cmd: 'npx -y @stripe/mcp', desc: 'Integrazione pagamenti e fatturazione Stripe', icon: '💳' },
   { name: 'Twilio', cmd: 'npx -y @modelcontextprotocol/server-twilio', desc: 'Invio SMS e chiamate API', icon: '📱' },
   { name: 'SendGrid', cmd: 'npx -y @modelcontextprotocol/server-sendgrid', desc: 'Email transazionali SendGrid', icon: '📧' },
-  { name: 'Cockpit Tools', cmd: 'npx -y cockpit-tools-mcp', desc: 'Strumenti di debug e monitoraggio Cockpit AI', icon: '✈️' },
+  { name: 'Cockpit Tools', cmd: 'node ./bin/cockpit-tools-mcp.mjs', desc: 'Strumenti di debug, switch account e monitoraggio quote Cockpit AI', icon: '✈️' },
   { name: 'OpenAPI / Swagger', cmd: 'npx -y @modelcontextprotocol/server-openapi', desc: 'Connessione a qualsiasi API REST con spec OpenAPI', icon: '🔌' }
 ]
 

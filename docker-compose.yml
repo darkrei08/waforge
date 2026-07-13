@@ -78,12 +78,23 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    expose:
+      - "3000"
     environment:
       # --- App Configuration ---
       - NODE_ENV=${NODE_ENV:-production}
       - NUXT_PUBLIC_APP_URL=${NUXT_PUBLIC_APP_URL:-http://localhost:3000}
       - APP_SECRET=${APP_SECRET:-change-me}
       - NUXT_PUBLIC_ENABLE_DEBUG_WIDGET=${ENABLE_DEBUG_WIDGET:-true}
+      - LOG_LEVEL=${LOG_LEVEL_WAFORGE:-verbose}
+      - LOG_LEVEL_WAFORGE=${LOG_LEVEL_WAFORGE:-verbose}
+      - LOG_LEVEL_WUZAPI=${LOG_LEVEL_WUZAPI:-info}
+      - LOG_LEVEL_GOWA=${LOG_LEVEL_GOWA:-info}
+      - LOG_LEVEL_OPENWA=${LOG_LEVEL_OPENWA:-info}
+      - LOG_LEVEL_COCKPIT=${LOG_LEVEL_COCKPIT:-info}
+      - LOG_LEVEL_MCP=${LOG_LEVEL_MCP:-info}
+      - CRIKKET_SERVER_URL=http://crikket-server:3000
+
 
       # --- Database & Storage (BullMQ + PostgreSQL) ---
       - REDIS_URL=redis://redis:6379
@@ -163,6 +174,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-waforge}
     ports:
       - "5432:5432"
+    expose:
+      - "5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks:
@@ -200,6 +213,10 @@ services:
     restart: unless-stopped
     ports:
       - "3001:3000"
+    expose:
+      - "3000"
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL_MCP:-info}
     networks:
       - wa-net
     extra_hosts:
@@ -215,6 +232,10 @@ services:
     restart: unless-stopped
     ports:
       - "3002:3000"
+    expose:
+      - "3000"
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL_COCKPIT:-info}
     networks:
       - wa-net
     volumes:
@@ -222,7 +243,115 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  # ============================================================================
+  # ─── Crikket Bug Reporting Stack (Automated Error Tracker for AI & Devs) ──
+  # ============================================================================
+
+  # ─── 1. Crikket Database (Isolated PostgreSQL Instance on Host Port 5434) ──
+  crikket-postgres:
+    image: postgres:17-alpine
+    container_name: crikket-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${CRIKKET_POSTGRES_USER:-crikket}
+      POSTGRES_PASSWORD: ${CRIKKET_POSTGRES_PASSWORD:-crikket_secret}
+      POSTGRES_DB: ${CRIKKET_POSTGRES_DB:-crikket}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "${CRIKKET_POSTGRES_PORT:-5434}:5432"
+    expose:
+      - "5432"
+    volumes:
+      - crikket_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CRIKKET_POSTGRES_USER:-crikket} -d ${CRIKKET_POSTGRES_DB:-crikket}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - wa-net
+
+  # ─── 2. Crikket DB Migrations (One-shot schema setup job) ─────────────────
+  crikket-migrate:
+    image: ghcr.io/redpangilinan/crikket-server:latest
+    container_name: crikket-migrate
+    restart: "no"
+    pull_policy: always
+    depends_on:
+      crikket-postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://${CRIKKET_POSTGRES_USER:-crikket}:${CRIKKET_POSTGRES_PASSWORD:-crikket_secret}@crikket-postgres:5432/${CRIKKET_POSTGRES_DB:-crikket}"
+      NODE_ENV: development
+    command: ["bun", "run", "--filter", "@crikket/db", "db:migrate"]
+    networks:
+      - wa-net
+
+  # ─── 3. Crikket Server API (Backend Service on Host Port 3150) ────────────
+  crikket-server:
+    image: ghcr.io/redpangilinan/crikket-server:latest
+    container_name: crikket-server
+    restart: unless-stopped
+    pull_policy: always
+    depends_on:
+      crikket-postgres:
+        condition: service_healthy
+      crikket-migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: "postgresql://${CRIKKET_POSTGRES_USER:-crikket}:${CRIKKET_POSTGRES_PASSWORD:-crikket_secret}@crikket-postgres:5432/${CRIKKET_POSTGRES_DB:-crikket}"
+      NODE_ENV: development
+      PORT: 3000
+      PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}
+      PUBLIC_WEB_URL: ${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-crikket_super_secret_key_change_me}
+      BETTER_AUTH_URL: ${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}
+      BETTER_AUTH_TRUSTED_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
+      CORS_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
+      ENABLE_PAYMENTS: "false"
+    ports:
+      - "${CRIKKET_SERVER_PORT:-3150}:3000"
+    expose:
+      - "3000"
+    networks:
+      - wa-net
+    labels:
+      traefik.enable: "${TRAEFIK_ENABLE:-false}"
+      traefik.http.routers.crikket-api.rule: "Host(`${CRIKKET_API_DOMAIN:-crikket-api.localhost}`)"
+      traefik.http.routers.crikket-api.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
+      traefik.http.routers.crikket-api.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
+      traefik.http.services.crikket-api.loadbalancer.server.port: "3000"
+
+  # ─── 4. Crikket Web Dashboard (Frontend UI on Host Port 3151) ─────────────
+  crikket-web:
+    image: ghcr.io/redpangilinan/crikket-web:latest
+    container_name: crikket-web
+    restart: unless-stopped
+    pull_policy: always
+    depends_on:
+      - crikket-server
+    environment:
+      NEXT_PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}
+      NEXT_PUBLIC_APP_URL: ${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}
+      NEXT_PUBLIC_SITE_URL: ${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}
+      PORT: 3001
+    ports:
+      - "${CRIKKET_WEB_PORT:-3151}:3001"
+    expose:
+      - "3001"
+    networks:
+      - wa-net
+    labels:
+      traefik.enable: "${TRAEFIK_ENABLE:-false}"
+      traefik.http.routers.crikket-web.rule: "Host(`${CRIKKET_WEB_DOMAIN:-crikket.localhost}`)"
+      traefik.http.routers.crikket-web.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
+      traefik.http.routers.crikket-web.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
+      traefik.http.services.crikket-web.loadbalancer.server.port: "3001"
+
+
 volumes:
+  crikket_postgres_data:
+    driver: local
   wuzapi_data:
     driver: local
   gowa_data:
