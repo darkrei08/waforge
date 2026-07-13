@@ -1,6 +1,6 @@
 ---
 compiled: false
-ingested_at: '2026-07-13T00:25:33.442100+00:00'
+ingested_at: '2026-07-13T00:29:10.223810+00:00'
 title: MEMORY
 type: local_file
 ---
