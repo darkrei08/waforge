@@ -17,8 +17,11 @@
          :class="isDockedBottom ? 'bottom-0 left-0 right-0 w-full h-[340px] rounded-none border-t-2 border-primary/40 border-l-0 border-r-0 border-b-0' : (isCollapsed ? 'w-[420px] rounded-xl' : 'w-[620px] h-[540px] rounded-xl')">
       
       <!-- ─── HEADER / WINDOW BAR ─────────────────────────────────────── -->
-      <div ref="handleRef" class="px-3 py-2 bg-[#1f1f1f] border-b border-white/10 flex items-center justify-between cursor-move shrink-0"
-           :class="isDockedBottom ? 'cursor-default' : 'rounded-t-xl'"
+      <div ref="handleRef" class="px-3 py-2 bg-[#1f1f1f] flex items-center justify-between cursor-move shrink-0 transition-all duration-200"
+           :class="[
+             isDockedBottom ? 'cursor-default' : (isCollapsed ? 'rounded-xl' : 'rounded-t-xl'),
+             isCollapsed ? '' : 'border-b border-white/10'
+           ]"
            @dblclick="isDockedBottom ? null : (isCollapsed = !isCollapsed)">
         <div class="flex items-center gap-2.5">
           <div class="w-3 h-3 rounded-full bg-primary/20 border border-primary/60 flex items-center justify-center">

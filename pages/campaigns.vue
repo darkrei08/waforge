@@ -195,20 +195,18 @@
                 </button>
               </div>
 
-              <!-- Formattazione Legenda -->
-              <div class="mt-4 p-3 bg-white/5 border border-white/10 rounded-lg flex items-start gap-2">
-                <Info class="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <span class="block font-medium text-sm text-on-surface mb-1">Legenda Formattazione e Variabili</span>
-                  <ul class="space-y-1 text-xs text-on-surface-variant" v-pre>
-                    <li><code>{{Name}}</code>, <code>{{Phone}}</code>, <code>{{Email}}</code>, <code>{{Company}}</code></li>
-                  </ul>
-                  <div class="mt-3 text-[11px] text-on-surface-variant leading-relaxed">
-                    <strong class="text-on-surface">Spintax supportato:</strong> <code>{Ciao|Salve}</code> verrà scelto a caso ad ogni invio.<br/><br/>
-                    <strong class="text-on-surface">Formattazione WhatsApp:</strong><br/>
-                    • <code>*grassetto*</code>, <code>_corsivo_</code>, <code>~barrato~</code><br/>
-                    • <code>```monospaziato```</code>, <code>`codice inline`</code><br/>
-                    • Elenchi: <code>* item</code> o <code>- item</code>
+              <!-- Formattazione Legenda espandibile / compatta -->
+              <div class="mt-4 p-3 rounded-xl bg-white/[0.03] border border-white/5 text-xs text-on-surface-variant shrink-0">
+                <div class="flex items-center justify-between mb-1 font-semibold text-on-surface">
+                  <span class="flex items-center gap-1.5"><Info class="w-3.5 h-3.5 text-primary"/> Variabili & WhatsApp Formatting</span>
+                  <span class="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded">Spintax: {A|B}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-[11px] opacity-80 mt-1.5">
+                  <div>
+                    <code>{{Name}}</code>, <code>{{Phone}}</code>, <code>{{Email}}</code>, <code>{{Company}}</code>
+                  </div>
+                  <div>
+                    <code>*grassetto*</code>, <code>_corsivo_</code>, <code>~barrato~</code>, <code>```codice```</code>
                   </div>
                 </div>
               </div>
@@ -245,19 +243,17 @@
                   </button>
                 </div>
 
-                <!-- Formattazione Legenda -->
-                <div class="mt-4 p-3 bg-white/5 border border-white/10 rounded-lg flex items-start gap-2">
-                  <Info class="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <span class="block font-medium text-sm text-on-surface mb-1">Legenda Formattazione e Variabili</span>
-                    <ul class="space-y-1 text-xs text-on-surface-variant" v-pre>
-                      <li><code>{{Name}}</code>, <code>{{Phone}}</code>, <code>{{Email}}</code>, <code>{{Company}}</code></li>
-                    </ul>
-                    <div class="mt-3 text-[11px] text-on-surface-variant leading-relaxed">
-                      <strong class="text-on-surface">Spintax supportato:</strong> <code>{Ciao|Salve}</code> verrà scelto a caso ad ogni invio.<br/><br/>
-                      <strong class="text-on-surface">Formattazione WhatsApp:</strong><br/>
-                      • <code>*grassetto*</code>, <code>_corsivo_</code>, <code>~barrato~</code><br/>
-                      • <code>```monospaziato```</code>, <code>`codice inline`</code>
+                <div class="mt-4 p-3 rounded-xl bg-white/[0.03] border border-white/5 text-xs text-on-surface-variant shrink-0">
+                  <div class="flex items-center justify-between mb-1 font-semibold text-on-surface">
+                    <span class="flex items-center gap-1.5"><Info class="w-3.5 h-3.5 text-primary"/> Variabili & WhatsApp Formatting</span>
+                    <span class="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded">Spintax: {A|B}</span>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2 text-[11px] opacity-80 mt-1.5">
+                    <div>
+                      <code>{{Name}}</code>, <code>{{Phone}}</code>, <code>{{Email}}</code>, <code>{{Company}}</code>
+                    </div>
+                    <div>
+                      <code>*grassetto*</code>, <code>_corsivo_</code>, <code>~barrato~</code>, <code>```codice```</code>, <code>`codice inline`</code>
                     </div>
                   </div>
                 </div>
