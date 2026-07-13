@@ -318,19 +318,20 @@ If you leave `NUXT_PUBLIC_APP_URL=http://localhost:3000` on a production server,
 | :--- | :--- | :--- | :--- |
 | **`NUXT_PUBLIC_APP_URL`** | `http://localhost:3000` | `https://waforge.yourdomain.com` | Public URL of the Nuxt 3 app for browser API calls and OAuth callbacks |
 | **`DOMAIN`** | `localhost` | `waforge.yourdomain.com` | Traefik routing host for the main WaForge application |
-| **`CRIKKET_PUBLIC_WEB_URL`** | `http://localhost:3151` | `https://crikket.yourdomain.com` | Public URL of the Crikket Web frontend dashboard |
-| **`CRIKKET_PUBLIC_SERVER_URL`** | `http://localhost:3150` | `https://crikket-api.yourdomain.com` | Public URL of the Crikket Backend API Server |
-| **`CRIKKET_WEB_DOMAIN`** | `crikket.localhost` | `crikket.yourdomain.com` | Traefik routing host for the Crikket dashboard |
-| **`CRIKKET_API_DOMAIN`** | `crikket-api.localhost` | `crikket-api.yourdomain.com` | Traefik routing host for the Crikket API |
+| **`CRIKKET_DOMAIN`** | `crikket.localhost` | `crikket.yourdomain.com` | **Single Traefik routing host for BOTH Crikket Dashboard AND API Server** |
+| **`CRIKKET_PUBLIC_URL`** | `http://localhost:3151` | `https://crikket.yourdomain.com` | Public URL of Crikket Bug Tracker (Web + API on `/api` route) |
 | **`CRIKKET_CORS_ORIGINS`** | `http://localhost:3000` | `https://waforge.yourdomain.com,https://crikket.yourdomain.com` | Comma-separated list of allowed domains that can send bug reports |
+
+> [!TIP]
+> **Single Domain Traefik Routing:** Using priority and path prefix matching (`PathPrefix`), both the Web Dashboard (port `3001`, priority `10`) and the API Server (`/api`, `/better-auth`, `/trpc`, port `3000`, priority `20`) are securely exposed under a single domain `crikket.yourdomain.com`! You no longer need to manage two separate subdomains or certificates.
 
 #### Automatic Traefik Configuration (`docker-compose.yml`)
 In the provided `docker-compose.yml`, all containers already include pre-configured Traefik labels and `expose` tags to isolate internal ports. To enable automatic production routing with SSL/TLS (Let's Encrypt), simply set in your `.env`:
 ```env
 TRAEFIK_ENABLE=true
 DOMAIN=waforge.yourdomain.com
-CRIKKET_WEB_DOMAIN=crikket.yourdomain.com
-CRIKKET_API_DOMAIN=crikket-api.yourdomain.com
+CRIKKET_DOMAIN=crikket.yourdomain.com
+CRIKKET_PUBLIC_URL=https://crikket.yourdomain.com
 ```
 
 ---

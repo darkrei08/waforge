@@ -306,12 +306,12 @@ services:
       DATABASE_URL: "postgresql://${CRIKKET_POSTGRES_USER:-crikket}:${CRIKKET_POSTGRES_PASSWORD:-crikket_secret}@crikket-postgres:5432/${CRIKKET_POSTGRES_DB:-crikket}"
       NODE_ENV: development
       PORT: 3000
-      PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}
-      PUBLIC_WEB_URL: ${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}
+      PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}}
+      PUBLIC_WEB_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-crikket_super_secret_key_change_me}
-      BETTER_AUTH_URL: ${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}
-      BETTER_AUTH_TRUSTED_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
-      CORS_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
+      BETTER_AUTH_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}}
+      BETTER_AUTH_TRUSTED_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
+      CORS_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
       ENABLE_PAYMENTS: "false"
       STORAGE_BUCKET: "${CRIKKET_STORAGE_BUCKET:-mock-bucket}"
       STORAGE_ACCESS_KEY_ID: "${CRIKKET_STORAGE_ACCESS_KEY_ID:-mock-key}"
@@ -325,7 +325,8 @@ services:
       - wa-net
     labels:
       traefik.enable: "${TRAEFIK_ENABLE:-false}"
-      traefik.http.routers.crikket-api.rule: "Host(`${CRIKKET_API_DOMAIN:-crikket-api.localhost}`)"
+      traefik.http.routers.crikket-api.rule: "(Host(`${CRIKKET_DOMAIN:-crikket.localhost}`) && (PathPrefix(`/api`) || PathPrefix(`/better-auth`) || PathPrefix(`/trpc`) || PathPrefix(`/storage`) || PathPrefix(`/oauth`))) || Host(`${CRIKKET_API_DOMAIN:-crikket-api.localhost}`)"
+      traefik.http.routers.crikket-api.priority: "20"
       traefik.http.routers.crikket-api.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
       traefik.http.routers.crikket-api.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
       traefik.http.services.crikket-api.loadbalancer.server.port: "3000"
@@ -339,9 +340,9 @@ services:
     depends_on:
       - crikket-server
     environment:
-      NEXT_PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}
-      NEXT_PUBLIC_APP_URL: ${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}
-      NEXT_PUBLIC_SITE_URL: ${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}
+      NEXT_PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}}
+      NEXT_PUBLIC_APP_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}}
+      NEXT_PUBLIC_SITE_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}}
       PORT: 3001
     ports:
       - "${CRIKKET_WEB_PORT:-3151}:3001"
@@ -351,7 +352,8 @@ services:
       - wa-net
     labels:
       traefik.enable: "${TRAEFIK_ENABLE:-false}"
-      traefik.http.routers.crikket-web.rule: "Host(`${CRIKKET_WEB_DOMAIN:-crikket.localhost}`)"
+      traefik.http.routers.crikket-web.rule: "Host(`${CRIKKET_DOMAIN:-crikket.localhost}`) || Host(`${CRIKKET_WEB_DOMAIN:-crikket.localhost}`)"
+      traefik.http.routers.crikket-web.priority: "10"
       traefik.http.routers.crikket-web.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
       traefik.http.routers.crikket-web.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
       traefik.http.services.crikket-web.loadbalancer.server.port: "3001"

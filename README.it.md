@@ -321,19 +321,20 @@ Se lasci `NUXT_PUBLIC_APP_URL=http://localhost:3000` su un server di produzione,
 | :--- | :--- | :--- | :--- |
 | **`NUXT_PUBLIC_APP_URL`** | `http://localhost:3000` | `https://waforge.iltuodominio.com` | URL pubblico dell'app Nuxt 3 per chiamate API e callback da browser |
 | **`DOMAIN`** | `localhost` | `waforge.iltuodominio.com` | Dominio di routing Traefik per l'applicazione principale |
-| **`CRIKKET_PUBLIC_WEB_URL`** | `http://localhost:3151` | `https://crikket.iltuodominio.com` | URL pubblico del frontend Web Crikket (Bug Tracker) |
-| **`CRIKKET_PUBLIC_SERVER_URL`** | `http://localhost:3150` | `https://crikket-api.iltuodominio.com` | URL pubblico dell'API Server Crikket |
-| **`CRIKKET_WEB_DOMAIN`** | `crikket.localhost` | `crikket.iltuodominio.com` | Dominio di routing Traefik per la dashboard Crikket |
-| **`CRIKKET_API_DOMAIN`** | `crikket-api.localhost` | `crikket-api.iltuodominio.com` | Dominio di routing Traefik per l'API Crikket |
+| **`CRIKKET_DOMAIN`** | `crikket.localhost` | `crikket.iltuodominio.com` | **Dominio UNICO Traefik per la dashboard Crikket E le API Server** |
+| **`CRIKKET_PUBLIC_URL`** | `http://localhost:3151` | `https://crikket.iltuodominio.com` | URL pubblico del Bug Tracker (Web + API su rotta `/api`) |
 | **`CRIKKET_CORS_ORIGINS`** | `http://localhost:3000` | `https://waforge.iltuodominio.com,https://crikket.iltuodominio.com` | Elenco domini autorizzati ad inviare report di errore a Crikket |
+
+> [!TIP]
+> **Dominio Unico Crikket in Traefik:** Grazie al routing basato su priorità e prefissi di percorso (`PathPrefix`), sia la Web Dashboard (porta `3001`, priorità `10`) che il Server API (`/api`, `/better-auth`, `/trpc`, porta `3000`, priorità `20`) vengono esposti in modo sicuro sotto l'unico dominio `crikket.iltuodominio.com`! Non è più necessario gestire due sottodomini e certificati separati.
 
 #### Configurazione Automatica Traefik (`docker-compose.yml`)
 Nel file `docker-compose.yml` fornito, tutti i container dispongono già delle etichette (`labels`) di Traefik predisposte e dei tag `expose` per isolare le porte. Per abilitare la pubblicazione automatica con SSL/TLS (Let's Encrypt), ti basta impostare nel `.env`:
 ```env
 TRAEFIK_ENABLE=true
 DOMAIN=waforge.iltuodominio.com
-CRIKKET_WEB_DOMAIN=crikket.iltuodominio.com
-CRIKKET_API_DOMAIN=crikket-api.iltuodominio.com
+CRIKKET_DOMAIN=crikket.iltuodominio.com
+CRIKKET_PUBLIC_URL=https://crikket.iltuodominio.com
 ```
 
 ---
