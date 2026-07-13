@@ -1,6 +1,8 @@
 import { prisma } from '../../utils/prisma'
 import { broadcastToTeam } from '../../routes/ws'
 import { handleOptOutKeywords } from '../../../lib/whatsapp-policy'
+import { parseAndCleanPhone } from '../../../lib/phone'
+
 
 /**
  * Webhook per ricevere eventi in tempo reale da WuzAPI (Messaggi in arrivo)
@@ -34,12 +36,16 @@ export default defineEventHandler(async (event) => {
     })
 
     if (!contact) {
+      const parsed = parseAndCleanPhone(phone)
       contact = await prisma.contact.create({
         data: {
           teamId,
-          fullPhone: phone,
+          fullPhone: parsed.fullPhone || phone,
+          prefix: parsed.prefix,
+          phone: parsed.phone || phone,
           name: msgData.Info?.PushName || phone, // Nome su WA
-          isActive: true
+          isActive: true,
+          source: 'webhook'
         } as any
       })
     }

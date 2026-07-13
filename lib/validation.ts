@@ -48,6 +48,12 @@ export const CreateContactSchema = z.object({
   customFields: z.record(safeString(200)).optional(),
   groupIds: z.array(z.string().cuid()).optional(),
   consentStatus: z.enum(['PENDING', 'GRANTED', 'DENIED']).optional(),
+  source: safeString(50).optional(),
+  labels: z.array(z.string()).optional(),
+  secondaryPhones: z.array(z.string()).optional(),
+  pec: z.string().trim().email().max(320).toLowerCase().optional().or(z.literal('')),
+  declarantName: safeString(100).optional(),
+  declarantPhone: z.string().trim().optional(),
 })
 
 export const UpdateContactSchema = CreateContactSchema.partial()

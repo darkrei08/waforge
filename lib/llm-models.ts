@@ -126,7 +126,7 @@ export function getModelsGroupedByCategory(
   dynamicModels?: LlmModelEntry[]
 ): { category: ModelCategory; label: string; icon: string; models: LlmModelEntry[] }[] {
   const all = mergeModelsWithFallback(dynamicModels)
-  const providerModels = all.filter(m => m.provider === provider)
+  const providerModels = (provider === 'all' || provider === 'cockpit' || !provider) ? all : all.filter(m => m.provider === provider)
   const groups: { category: ModelCategory; label: string; icon: string; models: LlmModelEntry[] }[] = []
 
   for (const [cat, meta] of Object.entries(MODEL_CATEGORIES)) {

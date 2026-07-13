@@ -124,7 +124,31 @@
                      class="rounded border-white/20 bg-white/5" />
             </td>
             <td class="p-4 text-sm font-medium text-on-surface">{{ contact.name }}</td>
-            <td class="p-4 text-sm text-on-surface-variant font-mono">{{ contact.prefix }}{{ contact.phone }}</td>
+            <td class="p-4 text-sm text-on-surface-variant font-mono">
+              <div class="flex flex-col gap-1.5">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-white">+{{ contact.fullPhone }}</span>
+                </div>
+                <!-- Secondary Phones list -->
+                <div v-if="getSecondaryPhonesList(contact).length > 0" class="flex flex-wrap gap-1">
+                  <span v-for="(sp, sIdx) in getSecondaryPhonesList(contact)" :key="sIdx" 
+                        class="px-2 py-0.5 text-xs bg-black/40 rounded border border-white/10 text-gray-300 flex items-center gap-1.5">
+                    <span>+{{ sp }}</span>
+                    <button @click="removeSecondaryPhone(contact, sIdx)" title="Rimuovi questo numero" class="text-error hover:text-red-400 font-bold ml-1">×</button>
+                  </span>
+                </div>
+                <!-- Add secondary form inline -->
+                <div v-if="addingPhoneFor === contact.id" class="flex items-center gap-1 mt-1">
+                  <input v-model="newSecondaryPhoneInput" placeholder="+39333..." @keyup.enter="saveSecondaryPhone(contact)" 
+                         class="w-28 px-2 py-1 text-xs bg-black/60 border border-primary/50 rounded text-white font-mono outline-none" />
+                  <button @click="saveSecondaryPhone(contact)" class="px-2 py-1 bg-primary text-black text-xs font-bold rounded hover:brightness-110">✔</button>
+                  <button @click="addingPhoneFor = null" class="px-2 py-1 bg-white/10 text-gray-300 text-xs rounded hover:bg-white/20">✕</button>
+                </div>
+                <button v-else @click="openAddSecondaryPhone(contact)" class="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5 w-fit">
+                  + Aggiungi Altro Numero
+                </button>
+              </div>
+            </td>
             <td class="p-4 text-sm text-on-surface-variant">{{ contact.email || '—' }}</td>
             <td class="p-4 text-sm text-on-surface-variant">{{ contact.company || '—' }}</td>
             <td class="p-4">
@@ -407,7 +431,7 @@ async function handleImport() {
 
 function downloadCsvTemplate() {
   const headers = csvTemplateHeaders.map(h => h.name).join(',')
-  const sample = 'Mario Rossi,39,3331234567,mario@azienda.com,Azienda SpA'
+  const sample = 'Mario Rossi,39,3331234567,3339876543,3341122334,,mario@azienda.com,Azienda SpA'
   const blob = new Blob([`${headers}\n${sample}`], { type: 'text/csv;charset=utf-8;' })
   const link = document.createElement('a')
   link.href = URL.createObjectURL(blob)
@@ -454,6 +478,61 @@ async function updateConsent(contact: any) {
     addToast('Stato consenso aggiornato', 'success')
   } catch(e: any) {
     addToast('Errore aggiornamento consenso', 'error')
+  }
+}
+
+// ── Multi-Telefono & Numeri Secondari ──
+const addingPhoneFor = ref<string | null>(null)
+const newSecondaryPhoneInput = ref('')
+
+function getSecondaryPhonesList(contact: any): string[] {
+  if (!contact.secondaryPhones) return []
+  try {
+    const parsed = typeof contact.secondaryPhones === 'string' ? JSON.parse(contact.secondaryPhones) : contact.secondaryPhones
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return contact.secondaryPhones.split(',').map((s: string) => s.trim().replace(/\D/g, '')).filter(Boolean)
+  }
+}
+
+function openAddSecondaryPhone(contact: any) {
+  addingPhoneFor.value = contact.id
+  newSecondaryPhoneInput.value = '+39'
+}
+
+async function saveSecondaryPhone(contact: any) {
+  if (!newSecondaryPhoneInput.value.trim() || newSecondaryPhoneInput.value.trim() === '+39') return
+  const current = getSecondaryPhonesList(contact)
+  const clean = newSecondaryPhoneInput.value.trim().replace(/[^\d+]/g, '').replace(/^\+/, '')
+  if (clean && !current.includes(clean)) {
+    const updatedList = [...current, clean]
+    try {
+      await $fetch(`/api/contacts/${contact.id}`, {
+        method: 'PUT',
+        body: { secondaryPhones: updatedList }
+      })
+      contact.secondaryPhones = JSON.stringify(updatedList)
+      addToast('Numero secondario aggiunto con successo', 'success')
+    } catch {
+      addToast('Errore durante il salvataggio del numero', 'error')
+    }
+  }
+  addingPhoneFor.value = null
+  newSecondaryPhoneInput.value = ''
+}
+
+async function removeSecondaryPhone(contact: any, idx: number) {
+  const current = getSecondaryPhonesList(contact)
+  current.splice(idx, 1)
+  try {
+    await $fetch(`/api/contacts/${contact.id}`, {
+      method: 'PUT',
+      body: { secondaryPhones: current }
+    })
+    contact.secondaryPhones = JSON.stringify(current)
+    addToast('Numero rimosso', 'success')
+  } catch {
+    addToast('Errore durante la rimozione', 'error')
   }
 }
 

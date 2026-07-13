@@ -1,7 +1,8 @@
 import { prisma } from '../../utils/prisma'
 import { broadcastToTeam } from '../../routes/ws'
-import crypto from 'crypto'
 import { handleOptOutKeywords } from '../../../lib/whatsapp-policy'
+import { parseAndCleanPhone } from '../../../lib/phone'
+
 
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
@@ -61,8 +62,9 @@ export default defineEventHandler(async (event) => {
             where: { teamId, fullPhone: from }
           })
           if (!contact) {
+            const parsed = parseAndCleanPhone(from)
             contact = await prisma.contact.create({
-              data: { teamId, fullPhone: from, phone: from, name: pushName, isActive: true }
+              data: { teamId, fullPhone: parsed.fullPhone || from, prefix: parsed.prefix, phone: parsed.phone || from, name: pushName, isActive: true, source: 'webhook' }
             })
           }
 
@@ -145,8 +147,9 @@ export default defineEventHandler(async (event) => {
               })
 
               if (!contact) {
+                const parsed = parseAndCleanPhone(from)
                 contact = await prisma.contact.create({
-                  data: { teamId, fullPhone: from, phone: from, name: pushName, isActive: true }
+                  data: { teamId, fullPhone: parsed.fullPhone || from, prefix: parsed.prefix, phone: parsed.phone || from, name: pushName, isActive: true, source: 'webhook' }
                 })
               }
 

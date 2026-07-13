@@ -12,24 +12,10 @@ export default defineEventHandler(async (event) => {
   const data = await zodReadBody(event, CreateContactSchema)
   const teamId = event.context.user.teamId
 
-  let fullPhone = (data.prefix + data.phone).replace(/\D/g, '')
-  let formattedPrefix = data.prefix
-  let formattedPhone = data.phone
-
-  try {
-    // Attempt to parse the combined number assuming Italy (IT) as default region if no + is found
-    const phoneNumberStr = data.phone.startsWith('+') ? data.phone : `${data.prefix}${data.phone}`
-    const phoneNumber = parsePhoneNumber(phoneNumberStr, 'IT')
-    
-    if (phoneNumber && phoneNumber.isValid()) {
-      fullPhone = phoneNumber.number.replace('+', '')
-      formattedPrefix = `+${phoneNumber.countryCallingCode}`
-      formattedPhone = phoneNumber.nationalNumber
-    }
-  } catch (e) {
-    // Fallback to basic stripping if parsing fails
-    console.error('Phone parsing error:', e)
-  }
+  const parsed = parseAndCleanPhone(data.prefix + data.phone)
+  const fullPhone = parsed.fullPhone || (data.prefix + data.phone).replace(/\D/g, '')
+  const formattedPrefix = parsed.prefix || data.prefix
+  const formattedPhone = parsed.phone || data.phone
 
   const contact = await prisma.contact.create({
     data: {
@@ -42,6 +28,12 @@ export default defineEventHandler(async (event) => {
       company: data.company,
       notes: data.notes,
       customFields: data.customFields ? JSON.stringify(data.customFields) : null,
+      source: data.source || 'manual',
+      labels: data.labels ? JSON.stringify(data.labels) : null,
+      secondaryPhones: data.secondaryPhones ? JSON.stringify(data.secondaryPhones) : null,
+      pec: data.pec || null,
+      declarantName: data.declarantName || null,
+      declarantPhone: data.declarantPhone || null,
       ...(data.groupIds?.length ? {
         groups: {
           connect: data.groupIds.map(id => ({ id }))

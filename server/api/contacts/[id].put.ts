@@ -29,6 +29,12 @@ export default defineEventHandler(async (event) => {
   if (data.customFields) {
     updateData.customFields = JSON.stringify(data.customFields)
   }
+  if (data.labels) {
+    updateData.labels = Array.isArray(data.labels) ? JSON.stringify(data.labels) : data.labels
+  }
+  if (data.secondaryPhones) {
+    updateData.secondaryPhones = Array.isArray(data.secondaryPhones) ? JSON.stringify(data.secondaryPhones) : data.secondaryPhones
+  }
 
   if (data.groupIds !== undefined) {
     updateData.groups = {

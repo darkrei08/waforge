@@ -307,7 +307,32 @@
               </div>
             </div>
 
-            <label class="block text-sm font-medium text-on-surface-variant pt-2 border-t border-white/10">{{ t('campaigns.delay_label') }}</label>
+            <!-- Multi-Telefono & Trasmissione Contemporanea -->
+            <div class="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3 mt-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-sm font-bold text-primary flex items-center gap-2">
+                    <ShieldAlert class="w-4 h-4" /> Trasmissione Multi-Telefono & Filtro Anti-Fissi
+                  </h4>
+                  <p class="text-xs text-on-surface-variant mt-1">
+                    Invia contemporaneamente ai numeri aggiuntivi di ogni contatto, escludendo in automatico i numeri fissi o non abilitati a WhatsApp.
+                  </p>
+                </div>
+                <div @click="formData.sendToSecondaryPhones = !formData.sendToSecondaryPhones" class="w-10 h-6 bg-black/50 rounded-full relative transition-colors cursor-pointer" :class="{ 'bg-primary': formData.sendToSecondaryPhones !== false }">
+                  <div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1 transition-transform" :class="{ 'translate-x-4': formData.sendToSecondaryPhones !== false }"></div>
+                </div>
+              </div>
+
+              <!-- Live Verification & Target Preview Button -->
+              <div class="pt-2 border-t border-white/10 flex items-center justify-between">
+                <span class="text-xs text-gray-300">Gestisci righe contatti e verifica se abilitati a WhatsApp:</span>
+                <button type="button" @click="openTargetPreviewModal" class="px-3 py-1.5 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/40 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all">
+                  <CheckCircle2 class="w-3.5 h-3.5" /> Anteprima, Multi-Telefono & Verifica Live
+                </button>
+              </div>
+            </div>
+
+            <label class="block text-sm font-medium text-on-surface-variant pt-3 border-t border-white/10">{{ t('campaigns.delay_label') }}</label>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="text-xs text-on-surface-variant">{{ t('campaigns.delay_min') }}</label>
@@ -475,6 +500,101 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Target Preview & Multi-Phone Verification Modal -->
+    <Teleport to="body">
+      <div v-if="showTargetPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" @click.self="showTargetPreviewModal = false">
+        <div class="w-full max-w-5xl h-[85vh] flex flex-col bg-[#0d1117] border border-white/10 rounded-2xl shadow-2xl animate-slide-in overflow-hidden">
+          <!-- Header -->
+          <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-white/5">
+            <div>
+              <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <CheckCircle2 class="w-5 h-5 text-primary" />
+                Anteprima Destinatari & Multi-Telefono Contatti
+              </h3>
+              <p class="text-xs text-gray-400 mt-0.5">
+                Verifica in tempo reale quali numeri sono su WhatsApp. I numeri fissi o non abilitati vengono esclusi in automatico dalla campagna.
+              </p>
+            </div>
+            <div class="flex items-center gap-3">
+              <button @click="verifyTargetNumbers" :disabled="isVerifyingTargets" class="px-4 py-2 bg-primary text-black font-bold rounded-lg text-xs flex items-center gap-1.5 shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:brightness-110 transition-all disabled:opacity-50">
+                <Loader2 v-if="isVerifyingTargets" class="w-4 h-4 animate-spin" />
+                <CheckCircle2 v-else class="w-4 h-4" /> Verifica WhatsApp Subito
+              </button>
+              <button @click="showTargetPreviewModal = false" class="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white">
+                <X class="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Filters Bar -->
+          <div class="p-4 border-b border-white/10 bg-black/40 flex items-center justify-between gap-4">
+            <input v-model="targetPreviewSearch" placeholder="Cerca tra i destinatari (Nome, Telefono, Azienda)..." class="flex-1 px-3 py-2 bg-surface-container border border-white/10 rounded-lg text-sm text-white outline-none focus:border-primary" />
+            <span class="text-xs font-mono text-gray-400">
+              Contatti in Target: <strong class="text-white">{{ targetPreviewContacts.length }}</strong> | Numeri Totali: <strong class="text-primary">{{ targetPreviewPhonesCount }}</strong>
+            </span>
+          </div>
+
+          <!-- Contacts Table -->
+          <div class="flex-1 overflow-auto p-4">
+            <div v-if="targetPreviewLoading" class="flex items-center justify-center h-full">
+              <Loader2 class="w-8 h-8 animate-spin text-primary" />
+            </div>
+            <table v-else class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-white/10 text-xs font-semibold text-gray-400 uppercase">
+                  <th class="p-3">Contatto & Azienda</th>
+                  <th class="p-3">Telefono Principale</th>
+                  <th class="p-3">Numeri Secondari / Altre Colonne</th>
+                  <th class="p-3 text-right">Azioni</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="contact in filteredTargetContacts" :key="contact.id" class="border-b border-white/5 hover:bg-white/5 transition-colors text-sm">
+                  <td class="p-3">
+                    <div class="font-bold text-white">{{ contact.name }}</div>
+                    <div class="text-xs text-gray-400">{{ contact.company || contact.email || '—' }}</div>
+                  </td>
+                  <td class="p-3 font-mono">
+                    <div class="flex items-center gap-2">
+                      <span>+{{ contact.fullPhone }}</span>
+                      <span v-if="targetVerificationResults[contact.fullPhone]?.isOnWhatsApp === true || contact.isOnWhatsApp === true" class="px-2 py-0.5 text-[10px] bg-primary/20 text-primary font-bold rounded">WA ✔</span>
+                      <span v-else-if="targetVerificationResults[contact.fullPhone]?.isOnWhatsApp === false || contact.isOnWhatsApp === false" class="px-2 py-0.5 text-[10px] bg-error/20 text-error font-bold rounded" :title="targetVerificationResults[contact.fullPhone]?.reason || 'Non su WhatsApp'">Fisso / No WA ❌</span>
+                      <span v-else class="px-2 py-0.5 text-[10px] bg-white/10 text-gray-400 font-bold rounded">Non Verificato</span>
+                    </div>
+                  </td>
+                  <td class="p-3 font-mono">
+                    <div class="flex flex-wrap gap-1.5 items-center">
+                      <span v-for="(sp, idx) in getSecondaryList(contact)" :key="idx" class="px-2 py-1 text-xs bg-black/50 border border-white/10 rounded flex items-center gap-1.5 text-gray-300">
+                        <span>+{{ sp }}</span>
+                        <span v-if="targetVerificationResults[sp]?.isOnWhatsApp === true" class="text-primary font-bold">✔</span>
+                        <span v-else-if="targetVerificationResults[sp]?.isOnWhatsApp === false" class="text-error font-bold">❌</span>
+                        <button @click="removeTargetPhone(contact, idx)" class="text-error hover:text-red-400 ml-1 font-bold">×</button>
+                      </span>
+
+                      <!-- Inline Add Input -->
+                      <div v-if="addingTargetPhoneFor === contact.id" class="flex items-center gap-1">
+                        <input v-model="newTargetPhoneInput" placeholder="+39333..." @keyup.enter="saveTargetPhone(contact)" class="w-28 px-2 py-1 text-xs bg-black/60 border border-primary/50 rounded text-white outline-none font-mono" />
+                        <button @click="saveTargetPhone(contact)" class="px-2 py-1 bg-primary text-black text-xs font-bold rounded">✔</button>
+                        <button @click="addingTargetPhoneFor = null" class="px-2 py-1 bg-white/10 text-gray-300 text-xs rounded">✕</button>
+                      </div>
+                      <button v-else @click="openAddTargetPhone(contact)" class="text-xs text-primary hover:underline font-sans font-bold flex items-center gap-1">
+                        + Aggiungi Numero
+                      </button>
+                    </div>
+                  </td>
+                  <td class="p-3 text-right">
+                    <button @click="verifySingleContact(contact)" title="Verifica ora questo contatto" class="px-2.5 py-1 text-xs bg-white/5 hover:bg-white/10 text-gray-300 rounded border border-white/10">
+                      🔍 Verifica
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 <script setup lang="ts">
@@ -506,7 +626,7 @@ function parseUTCDateToLocal(utcDateString: string) {
   return (new Date(d.getTime() - tzoffset)).toISOString().slice(0, 16)
 }
 
-const initialForm = { id: '', name: '', templateId: '', delayMin: 15, delayMax: 45, scheduledAt: getLocalFutureDate(3), contactIds: 'ALL' as any, includeGdprDisclaimer: false }
+const initialForm = { id: '', name: '', templateId: '', delayMin: 15, delayMax: 45, scheduledAt: getLocalFutureDate(3), contactIds: 'ALL' as any, includeGdprDisclaimer: false, sendToSecondaryPhones: true }
 const formData = ref({ ...initialForm })
 const targetMode = ref<'ALL'|'GROUPS'>('ALL')
 
@@ -764,6 +884,147 @@ async function handleSave() {
     formData.value = { ...initialForm }
   } catch (e: any) {
     addToast(e.data?.message || 'Errore durante il salvataggio', 'error')
+  }
+}
+
+// ── Multi-Telefono & Anteprima Destinatari Campagna ──
+const showTargetPreviewModal = ref(false)
+const targetPreviewContacts = ref<any[]>([])
+const targetPreviewSearch = ref('')
+const targetPreviewLoading = ref(false)
+const isVerifyingTargets = ref(false)
+const targetVerificationResults = ref<Record<string, { isOnWhatsApp: boolean, phone: string, reason?: string }>>({})
+const addingTargetPhoneFor = ref<string | null>(null)
+const newTargetPhoneInput = ref('')
+
+const addToast = inject('addToast', (msg: string, type?: string) => console.log(msg, type))
+
+const filteredTargetContacts = computed(() => {
+  if (!targetPreviewSearch.value.trim()) return targetPreviewContacts.value
+  const q = targetPreviewSearch.value.toLowerCase()
+  return targetPreviewContacts.value.filter(c =>
+    (c.name && c.name.toLowerCase().includes(q)) ||
+    (c.fullPhone && c.fullPhone.includes(q)) ||
+    (c.company && c.company.toLowerCase().includes(q)) ||
+    (c.secondaryPhones && c.secondaryPhones.includes(q))
+  )
+})
+
+const targetPreviewPhonesCount = computed(() => {
+  let count = 0
+  for (const c of targetPreviewContacts.value) {
+    count++ // primary
+    count += getSecondaryList(c).length
+  }
+  return count
+})
+
+function getSecondaryList(contact: any): string[] {
+  if (!contact.secondaryPhones) return []
+  try {
+    const parsed = typeof contact.secondaryPhones === 'string' ? JSON.parse(contact.secondaryPhones) : contact.secondaryPhones
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return contact.secondaryPhones.split(',').map((s: string) => s.trim().replace(/\D/g, '')).filter(Boolean)
+  }
+}
+
+async function openTargetPreviewModal() {
+  showTargetPreviewModal.value = true
+  targetPreviewLoading.value = true
+  try {
+    const res = await $fetch<{ data: any[] }>('/api/contacts', {
+      params: { limit: 1000 }
+    })
+    let contacts = res.data || []
+    
+    // Filter according to current Target Mode
+    if (formData.value.contactIds !== 'ALL' && Array.isArray(formData.value.contactIds)) {
+      const groupIds = formData.value.contactIds.filter(id => id.startsWith('GROUP:')).map(id => id.replace('GROUP:', ''))
+      const explicitIds = formData.value.contactIds.filter(id => !id.startsWith('GROUP:'))
+      
+      contacts = contacts.filter(c => {
+        if (explicitIds.includes(c.id)) return true
+        if (groupIds.length > 0 && c.groups?.some((g: any) => groupIds.includes(g.id))) return true
+        return false
+      })
+    }
+    targetPreviewContacts.value = contacts
+  } catch (err: any) {
+    addToast('Errore nel caricamento destinatari', 'error')
+  } finally {
+    targetPreviewLoading.value = false
+  }
+}
+
+function openAddTargetPhone(contact: any) {
+  addingTargetPhoneFor.value = contact.id
+  newTargetPhoneInput.value = '+39'
+}
+
+async function saveTargetPhone(contact: any) {
+  if (!newTargetPhoneInput.value.trim() || newTargetPhoneInput.value.trim() === '+39') return
+  const current = getSecondaryList(contact)
+  const clean = newTargetPhoneInput.value.trim().replace(/[^\d+]/g, '').replace(/^\+/, '')
+  if (clean && !current.includes(clean)) {
+    const updatedList = [...current, clean]
+    try {
+      await $fetch(`/api/contacts/${contact.id}`, {
+        method: 'PUT',
+        body: { secondaryPhones: updatedList }
+      })
+      contact.secondaryPhones = JSON.stringify(updatedList)
+      addToast('Numero aggiunto al contatto per la trasmissione', 'success')
+    } catch {
+      addToast('Errore durante il salvataggio del numero', 'error')
+    }
+  }
+  addingTargetPhoneFor.value = null
+  newTargetPhoneInput.value = ''
+}
+
+async function removeTargetPhone(contact: any, idx: number) {
+  const current = getSecondaryList(contact)
+  current.splice(idx, 1)
+  try {
+    await $fetch(`/api/contacts/${contact.id}`, {
+      method: 'PUT',
+      body: { secondaryPhones: current }
+    })
+    contact.secondaryPhones = JSON.stringify(current)
+    addToast('Numero rimosso dalla trasmissione', 'success')
+  } catch {
+    addToast('Errore durante la rimozione', 'error')
+  }
+}
+
+async function verifyTargetNumbers() {
+  isVerifyingTargets.value = true
+  try {
+    const contactIds = targetPreviewContacts.value.map(c => c.id)
+    const res = await $fetch<{ results: Record<string, { isOnWhatsApp: boolean, phone: string, reason?: string }> }>('/api/contacts/verify-instant', {
+      method: 'POST',
+      body: { contactIds }
+    })
+    targetVerificationResults.value = { ...targetVerificationResults.value, ...res.results }
+    addToast('Verifica WhatsApp e filtro anti-fissi completata in tempo reale!', 'success')
+  } catch (err: any) {
+    addToast(err.data?.statusMessage || err.message || 'Errore durante la verifica Live', 'error')
+  } finally {
+    isVerifyingTargets.value = false
+  }
+}
+
+async function verifySingleContact(contact: any) {
+  try {
+    const res = await $fetch<{ results: Record<string, { isOnWhatsApp: boolean, phone: string, reason?: string }> }>('/api/contacts/verify-instant', {
+      method: 'POST',
+      body: { contactIds: [contact.id] }
+    })
+    targetVerificationResults.value = { ...targetVerificationResults.value, ...res.results }
+    addToast(`Verificato: +${contact.fullPhone}`, 'success')
+  } catch (e: any) {
+    addToast('Errore verifica contatto', 'error')
   }
 }
 

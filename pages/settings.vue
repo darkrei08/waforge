@@ -147,59 +147,67 @@
           <div v-else>
             <!-- Account Cockpit Disponibili -->
             <div class="mt-4">
-              <label class="block text-sm text-on-surface-variant font-medium mb-3">Seleziona Account Attivo per WaForge</label>
+              <div class="flex items-center justify-between mb-3">
+                <label class="block text-sm text-on-surface-variant font-medium">Seleziona Account Attivo per WaForge</label>
+                <button @click="refreshCockpit" :disabled="refreshingCockpit"
+                        class="text-xs bg-white/5 hover:bg-white/10 text-on-surface-variant px-3 py-1.5 rounded-lg transition-colors border border-white/10 flex items-center gap-1.5">
+                  <span v-if="refreshingCockpit" class="animate-spin">⟳</span>
+                  <span v-else>🔄</span>
+                  Verifica Cockpit
+                </button>
+              </div>
               
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div v-for="acc in cockpitStatus.accounts" :key="acc.id" 
                      @click="store.llmSettings.cockpitAccountId = acc.id"
-                     class="relative p-4 rounded-xl border transition-all cursor-pointer flex flex-col gap-3"
+                     class="relative p-5 rounded-xl border transition-all cursor-pointer flex flex-col gap-4"
                      :class="store.llmSettings.cockpitAccountId === acc.id ? 'bg-primary/5 border-primary shadow-[0_0_15px_rgba(37,211,102,0.15)]' : 'bg-surface border-white/5 hover:border-white/20'">
                   
                   <!-- Intestazione Card -->
                   <div class="flex justify-between items-start">
                     <div class="flex items-center gap-2">
-                      <div class="w-2 h-2 rounded-full" :class="store.llmSettings.cockpitAccountId === acc.id ? 'bg-primary' : 'bg-white/20'"></div>
-                      <span class="text-sm font-semibold text-on-surface truncate max-w-[150px]" :title="acc.email">{{ acc.email.split('@')[0] }}</span>
+                      <div class="w-2.5 h-2.5 rounded-full" :class="store.llmSettings.cockpitAccountId === acc.id ? 'bg-primary' : 'bg-white/20'"></div>
+                      <span class="text-sm font-semibold text-on-surface truncate max-w-[160px]" :title="acc.email">{{ acc.email.split('@')[0] }}</span>
                     </div>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" 
+                    <span class="text-[11px] font-bold px-2.5 py-1 rounded-full" 
                           :class="acc.tier === 'PRO' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-white/10 text-white/50 border border-white/10'">
                       {{ acc.tier }}
                     </span>
                   </div>
 
                   <!-- Quote Grid -->
-                  <div class="grid grid-cols-2 gap-4 mt-2">
+                  <div class="grid grid-cols-2 gap-5 mt-1">
                     <!-- Colonna Claude -->
                     <div class="space-y-3">
                       <h5 class="text-xs font-bold text-on-surface-variant">Claude</h5>
                       <!-- Claude 5h -->
-                      <div v-if="getModelQuota(acc, '3p-5h')" class="space-y-1">
-                        <div class="flex justify-between text-[10px]">
+                      <div v-if="getModelQuota(acc, '3p-5h')" class="space-y-1.5">
+                        <div class="flex justify-between text-[11px] font-medium">
                           <span class="text-white/50">5h</span>
                           <span :class="getModelQuota(acc, '3p-5h').percentage > 10 ? 'text-primary' : 'text-red-400'">{{ getModelQuota(acc, '3p-5h').percentage }}%</span>
                         </div>
-                        <div class="h-1 bg-white/10 rounded-full overflow-hidden">
-                          <div class="h-full rounded-full transition-all" 
+                        <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all duration-500" 
                                :class="getModelQuota(acc, '3p-5h').percentage > 10 ? 'bg-primary' : 'bg-red-500'" 
                                :style="`width: ${getModelQuota(acc, '3p-5h').percentage}%`"></div>
                         </div>
-                        <div class="text-[9px] text-white/40 pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                        <div class="text-[11px] text-white/40 pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                           {{ formatDate(getModelQuota(acc, '3p-5h').reset_time) }}
                         </div>
                       </div>
                       
                       <!-- Claude Weekly -->
-                      <div v-if="getModelQuota(acc, '3p-weekly')" class="space-y-1 pt-1">
-                        <div class="flex justify-between text-[10px]">
+                      <div v-if="getModelQuota(acc, '3p-weekly')" class="space-y-1.5 pt-1">
+                        <div class="flex justify-between text-[11px] font-medium">
                           <span class="text-white/50">Weekly</span>
                           <span :class="getModelQuota(acc, '3p-weekly').percentage > 10 ? 'text-yellow-400' : 'text-red-400'">{{ getModelQuota(acc, '3p-weekly').percentage }}%</span>
                         </div>
-                        <div class="h-1 bg-white/10 rounded-full overflow-hidden">
-                          <div class="h-full rounded-full transition-all" 
+                        <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all duration-500" 
                                :class="getModelQuota(acc, '3p-weekly').percentage > 10 ? 'bg-yellow-500' : 'bg-red-500'" 
                                :style="`width: ${getModelQuota(acc, '3p-weekly').percentage}%`"></div>
                         </div>
-                        <div class="text-[9px] text-white/40 pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                        <div class="text-[11px] text-white/40 pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                           {{ formatDate(getModelQuota(acc, '3p-weekly').reset_time) }}
                         </div>
                       </div>
@@ -209,33 +217,33 @@
                     <div class="space-y-3">
                       <h5 class="text-xs font-bold text-on-surface-variant">Gemini</h5>
                       <!-- Gemini 5h -->
-                      <div v-if="getModelQuota(acc, 'gemini-5h')" class="space-y-1">
-                        <div class="flex justify-between text-[10px]">
+                      <div v-if="getModelQuota(acc, 'gemini-5h')" class="space-y-1.5">
+                        <div class="flex justify-between text-[11px] font-medium">
                           <span class="text-white/50">5h</span>
                           <span :class="getModelQuota(acc, 'gemini-5h').percentage > 10 ? 'text-primary' : 'text-red-400'">{{ getModelQuota(acc, 'gemini-5h').percentage }}%</span>
                         </div>
-                        <div class="h-1 bg-white/10 rounded-full overflow-hidden">
-                          <div class="h-full rounded-full transition-all" 
+                        <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all duration-500" 
                                :class="getModelQuota(acc, 'gemini-5h').percentage > 10 ? 'bg-primary' : 'bg-red-500'" 
                                :style="`width: ${getModelQuota(acc, 'gemini-5h').percentage}%`"></div>
                         </div>
-                        <div class="text-[9px] text-white/40 pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                        <div class="text-[11px] text-white/40 pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                           {{ formatDate(getModelQuota(acc, 'gemini-5h').reset_time) }}
                         </div>
                       </div>
                       
                       <!-- Gemini Weekly -->
-                      <div v-if="getModelQuota(acc, 'gemini-weekly')" class="space-y-1 pt-1">
-                        <div class="flex justify-between text-[10px]">
+                      <div v-if="getModelQuota(acc, 'gemini-weekly')" class="space-y-1.5 pt-1">
+                        <div class="flex justify-between text-[11px] font-medium">
                           <span class="text-white/50">Weekly</span>
                           <span :class="getModelQuota(acc, 'gemini-weekly').percentage > 10 ? 'text-primary' : 'text-red-400'">{{ getModelQuota(acc, 'gemini-weekly').percentage }}%</span>
                         </div>
-                        <div class="h-1 bg-white/10 rounded-full overflow-hidden">
-                          <div class="h-full rounded-full transition-all" 
+                        <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all duration-500" 
                                :class="getModelQuota(acc, 'gemini-weekly').percentage > 10 ? 'bg-primary' : 'bg-red-500'" 
                                :style="`width: ${getModelQuota(acc, 'gemini-weekly').percentage}%`"></div>
                         </div>
-                        <div class="text-[9px] text-white/40 pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                        <div class="text-[11px] text-white/40 pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                           {{ formatDate(getModelQuota(acc, 'gemini-weekly').reset_time) }}
                         </div>
                       </div>
@@ -434,6 +442,19 @@ function formatDate(isoStr: string) {
   return `(${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')})`
 }
 
+const refreshingCockpit = ref(false)
+async function refreshCockpit() {
+  refreshingCockpit.value = true
+  try {
+    await store.checkCockpit()
+    addToast('Stato Cockpit Tools aggiornato', 'success')
+  } catch (err) {
+    addToast('Impossibile verificare Cockpit Tools', 'error')
+  } finally {
+    refreshingCockpit.value = false
+  }
+}
+
 function saveCustomMcp() {
   if (!newCustomMcp.value.name || !newCustomMcp.value.cmd) return
   if (!store.llmSettings.customCatalog) {
@@ -445,8 +466,8 @@ function saveCustomMcp() {
 }
 
 const mcpCatalog = [
-  { name: 'Brave Search', cmd: 'npx -y @modelcontextprotocol/server-brave-search', desc: 'Ricerca Web', icon: '🔍' },
-  { name: 'GitHub', cmd: 'npx -y @modelcontextprotocol/server-github', desc: 'Gestione Repository', icon: '🐙' },
+  { name: 'Brave Search', cmd: 'npx -y @modelcontextprotocol/server-brave-search', desc: 'Ricerca Web (richiede BRAVE_API_KEY)', icon: '🔍' },
+  { name: 'GitHub', cmd: 'npx -y @modelcontextprotocol/server-github', desc: 'Gestione Repository & API GitHub', icon: '🐙' },
   { name: 'File System', cmd: 'npx -y @modelcontextprotocol/server-filesystem /', desc: 'Accesso ai file locali', icon: '📁' },
   { name: 'SQLite', cmd: 'npx -y @modelcontextprotocol/server-sqlite --db /path/to/db', desc: 'Database SQL', icon: '🗄️' },
   { name: 'PostgreSQL', cmd: 'npx -y @modelcontextprotocol/server-postgres postgres://localhost/db', desc: 'Database PostgreSQL', icon: '🐘' },
@@ -457,16 +478,27 @@ const mcpCatalog = [
   { name: 'Sentry', cmd: 'npx -y @modelcontextprotocol/server-sentry', desc: 'Sentry Error Tracking', icon: '🐛' },
   { name: 'Memory', cmd: 'npx -y @modelcontextprotocol/server-memory', desc: 'Agent Memory System', icon: '🧠' },
   { name: 'Sequential', cmd: 'npx -y @modelcontextprotocol/server-sequential-thinking', desc: 'Sequential Thinking logic', icon: '⚙️' },
-  { name: 'GitHub', cmd: 'npx -y @modelcontextprotocol/server-github', desc: 'GitHub API & Repository tools', icon: '🐙' },
-  { name: 'Brave Search', cmd: 'npx -y @modelcontextprotocol/server-brave-search', desc: 'Web Search API (richiede BRAVE_API_KEY)', icon: '🦁' }
+  { name: 'Fetch', cmd: 'npx -y @modelcontextprotocol/server-fetch', desc: 'Lettura contenuti web (URL → testo)', icon: '🌍' },
+  { name: 'Everything', cmd: 'npx -y @modelcontextprotocol/server-everything', desc: 'Server di test/riferimento MCP completo', icon: '🧪' },
+  { name: 'Google Maps', cmd: 'npx -y @modelcontextprotocol/server-google-maps', desc: 'Geocoding, indicazioni stradali, POI', icon: '🗺️' },
+  { name: 'Time', cmd: 'npx -y @modelcontextprotocol/server-time', desc: 'Fuso orario e conversione ora', icon: '🕐' },
+  { name: 'EverArt', cmd: 'npx -y @modelcontextprotocol/server-everart', desc: 'Generazione immagini AI', icon: '🎨' },
+  { name: 'Stripe', cmd: 'npx -y @stripe/mcp', desc: 'Integrazione pagamenti e fatturazione Stripe', icon: '💳' },
+  { name: 'Twilio', cmd: 'npx -y @modelcontextprotocol/server-twilio', desc: 'Invio SMS e chiamate API', icon: '📱' },
+  { name: 'SendGrid', cmd: 'npx -y @modelcontextprotocol/server-sendgrid', desc: 'Email transazionali SendGrid', icon: '📧' },
+  { name: 'Cockpit Tools', cmd: 'npx -y cockpit-tools-mcp', desc: 'Strumenti di debug e monitoraggio Cockpit AI', icon: '✈️' },
+  { name: 'OpenAPI / Swagger', cmd: 'npx -y @modelcontextprotocol/server-openapi', desc: 'Connessione a qualsiasi API REST con spec OpenAPI', icon: '🔌' }
 ]
 
 function addMcpServer(cmd: string) {
   if (!store.llmSettings.mcpServers) {
     store.llmSettings.mcpServers = []
   }
-  if (!store.llmSettings.mcpServers.includes(cmd)) {
-    store.llmSettings.mcpServers.push(cmd)
+  // Remove trailing spaces or duplicates based on package name
+  const cleanCmd = cmd.trim()
+  const exists = store.llmSettings.mcpServers.some(s => s.trim() === cleanCmd || (cleanCmd.includes('server-') && s.includes(cleanCmd.split(' ').find(w => w.includes('server-')) || 'xyz')))
+  if (!exists && cleanCmd) {
+    store.llmSettings.mcpServers.push(cleanCmd)
   }
 }
 

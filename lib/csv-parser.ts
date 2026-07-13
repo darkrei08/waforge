@@ -10,6 +10,7 @@ export interface ParsedContact {
   prefix: string
   phone: string
   fullPhone: string
+  secondaryPhones?: string[]
   email?: string
   company?: string
   customFields?: Record<string, string>
@@ -98,11 +99,59 @@ export function parseCSV(text: string): ParseResult {
       continue
     }
 
-    // Custom fields: any column not in standard set
-    const standardCols = new Set(['name', 'nome', 'prefix', 'prefisso', 'phone', 'telefono', 'numero', 'email', 'company', 'azienda', 'message'])
+    // Identifichiamo tutte le colonne destinate a telefoni secondari ("Telefono 2", "Telefono 3", "Telefono 4", "Phone 2..5", "Cellulare 2..5", ecc.)
+    const secPatterns: (string | RegExp)[] = [
+      'telefono 2', 'phone 2', 'cellulare 2', 'mobile 2', 'tel 2', 'numero 2', 'whatsapp 2', 'wa 2', 'secondario 1', 'telefono2', 'phone2', 'cellulare2',
+      'telefono 3', 'phone 3', 'cellulare 3', 'mobile 3', 'tel 3', 'numero 3', 'whatsapp 3', 'wa 3', 'secondario 2', 'telefono3', 'phone3', 'cellulare3',
+      'telefono 4', 'phone 4', 'cellulare 4', 'mobile 4', 'tel 4', 'numero 4', 'whatsapp 4', 'wa 4', 'secondario 3', 'telefono4', 'phone4', 'cellulare4',
+      'telefono 5', 'phone 5', 'cellulare 5', 'mobile 5', 'tel 5', 'numero 5', 'whatsapp 5', 'wa 5', 'secondario 4', 'telefono5', 'phone5', 'cellulare5',
+      'secondary phones', 'secondaryphones', 'altri numeri', 'altrinumeri', 'altri telefoni', 'altritelefoni', 'numeri aggiuntivi', 'telefoni aggiuntivi',
+      /^(telefono|phone|cellulare|mobile|tel|numero|wa|whatsapp|secondario|secondaryphone|altronumero|altrotelefono)[\s_-]*([2-5])$/i
+    ]
+
+    const secColVals: string[] = []
+    headers.forEach((h, idx) => {
+      const hNorm = h.trim().toLowerCase().replace(/\s+/g, ' ').replace(/_/g, ' ')
+      const hNoSpace = h.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
+      const matches = secPatterns.some(p => {
+        if (typeof p === 'string') return hNorm === p || hNoSpace === p
+        return p.test(hNorm) || p.test(hNoSpace)
+      })
+      if (matches) {
+        const val = (cells[idx] || '').trim().replace(/^"|"$/g, '')
+        if (val) secColVals.push(val)
+      }
+    })
+
+    const secondaryPhones: string[] = []
+    secColVals.forEach(rawVal => {
+      if (rawVal) {
+        const parts = rawVal.split(',').map(s => s.trim()).filter(Boolean)
+        for (const p of parts) {
+          if (secondaryPhones.length < 4) {
+            const spSan = sanitizePhone(prefix, p)
+            if (spSan.full.length >= 5 && spSan.full !== sanitized.full && !secondaryPhones.includes(spSan.full)) {
+              secondaryPhones.push(spSan.full)
+            }
+          }
+        }
+      }
+    })
+
+    // Custom fields: any column not in standard set and not caught as secondary phone column
+    const standardSetNorm = new Set([
+      'name', 'nome', 'nominativo', 'prefix', 'prefisso', 'phone', 'telefono', 'numero', 'email', 'company', 'azienda', 'message', 'messaggio'
+    ])
     const customFields: Record<string, string> = {}
     headers.forEach((h, idx) => {
-      if (!standardCols.has(h.toLowerCase())) {
+      const hNorm = h.trim().toLowerCase().replace(/\s+/g, ' ').replace(/_/g, ' ')
+      const hNoSpace = h.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
+      const isSecCol = secPatterns.some(p => {
+        if (typeof p === 'string') return hNorm === p || hNoSpace === p
+        return p.test(hNorm) || p.test(hNoSpace)
+      })
+
+      if (!standardSetNorm.has(hNorm) && !standardSetNorm.has(hNoSpace) && !isSecCol) {
         customFields[h] = (cells[idx] || '').trim().replace(/^"|"$/g, '')
       }
     })
@@ -112,6 +161,7 @@ export function parseCSV(text: string): ParseResult {
       prefix: sanitized.pref,
       phone: sanitized.nat,
       fullPhone: sanitized.full,
+      secondaryPhones: secondaryPhones.length > 0 ? secondaryPhones : undefined,
       email: getCol(cells, 'email') || undefined,
       company: getCol(cells, 'Company') || getCol(cells, 'azienda') || undefined,
       customFields: Object.keys(customFields).length > 0 ? customFields : undefined,

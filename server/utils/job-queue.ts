@@ -149,29 +149,54 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
     gdprDisclaimerSent = true
   }
 
+  // Determinazione del numero destinatario (principale o secondario multi-telefono)
+  const targetPhone = job.data.targetPhone || contact.fullPhone
+
+  // ── ANTI-BAN & PRE-VERIFICA WHATSAPP ──
+  // Verifica se il numero è abilitato a WhatsApp, evitando di contattare numeri fissi o non registrati
+  const isTargetValid = await checkPhone(session.token, targetPhone)
+  if (!isTargetValid) {
+    console.log(`[ANTI-BAN] Skipped targetPhone ${targetPhone} for contact ${contact.id}: Not on WhatsApp or Landline.`)
+    await prisma.message.create({
+      data: {
+        contactId,
+        campaignId,
+        body: '[SKIPPED - NON SU WHATSAPP O NUMERO FISSO]',
+        status: 'FAILED',
+        errorReason: 'Numero fisso o non registrato su WhatsApp (escluso in automatico)'
+      }
+    })
+    const updatedCampaign = await prisma.campaign.update({
+      where: { id: campaignId },
+      data: { failedCount: { increment: 1 } }
+    })
+    broadcastToTeam(teamId, 'campaign_updated', updatedCampaign)
+    return { skipped: true, reason: 'Not on WhatsApp / Landline' }
+  }
+
   // ── ANTI-BAN: Typing Simulation ──
   // Simula "sta scrivendo..." prima dell'invio per sembrare umano
-  await sendPresence(session.token, contact.fullPhone, body.length)
+  await sendPresence(session.token, targetPhone, body.length)
 
   // Chiamata all'Engine Multi-Tenant
   let result
   if (campaign.template.mediaUrl && campaign.template.mediaType && campaign.template.mediaType !== 'text') {
     result = await sendMedia(
       session.token, 
-      contact.fullPhone, 
+      targetPhone, 
       campaign.template.mediaType as any, 
       campaign.template.mediaUrl, 
       body
     )
   } else {
-    result = await sendMessage(session.token, contact.fullPhone, body)
+    result = await sendMessage(session.token, targetPhone, body)
   }
 
   // Se dobbiamo inviare il disclaimer e il primo msg è andato a buon fine, mandiamolo ora
   if (gdprDisclaimerSent && result.success) {
     const gdprMsg = "*Informativa Privacy:* Ricevi questo messaggio perché hai prestato il consenso. Rispondi STOP in qualsiasi momento per disiscriverti."
-    await sendPresence(session.token, contact.fullPhone, gdprMsg.length)
-    await sendMessage(session.token, contact.fullPhone, gdprMsg)
+    await sendPresence(session.token, targetPhone, gdprMsg.length)
+    await sendMessage(session.token, targetPhone, gdprMsg)
   }
 
   // ── ANTI-BAN: Auto-Pause su errori 403 (ban/antifraud trigger) ──
@@ -347,16 +372,50 @@ export async function startCampaign(campaignId: string, teamId: string) {
 
   let cumulativeDelay = 0
 
-  const jobs = remainingContacts.map(contact => {
-    // Gaussian jitter: varia naturalmente come un umano, non come un timer
-    const jitter = Math.max(8000, gaussianRandom(meanDelay, stddev))
-    cumulativeDelay += jitter
-    return {
-      name: 'send-message',
-      data: { campaignId, contactId: contact.id, teamId },
-      opts: { delay: Math.floor(cumulativeDelay) }
+  const jobs: any[] = []
+  for (const contact of remainingContacts) {
+    const phonesToSend: string[] = [contact.fullPhone]
+
+    // Se il contatto ha altri numeri (multi-telefono / righe con colonne di altri campi)
+    if (contact.secondaryPhones) {
+      try {
+        const sec = JSON.parse(contact.secondaryPhones)
+        if (Array.isArray(sec)) {
+          for (const sp of sec) {
+            const cleanSp = sp.replace(/\D/g, '')
+            if (cleanSp && !phonesToSend.includes(cleanSp)) {
+              phonesToSend.push(cleanSp)
+            }
+          }
+        }
+      } catch {
+        // Fallback per stringhe separate da virgola
+        const parts = contact.secondaryPhones.split(',').map(s => s.trim().replace(/\D/g, ''))
+        for (const part of parts) {
+          if (part && !phonesToSend.includes(part)) phonesToSend.push(part)
+        }
+      }
     }
-  })
+
+    for (const targetPhone of phonesToSend) {
+      const jitter = Math.max(8000, gaussianRandom(meanDelay, stddev))
+      cumulativeDelay += jitter
+      jobs.push({
+        name: 'send-message',
+        data: { campaignId, contactId: contact.id, teamId, targetPhone },
+        opts: { delay: Math.floor(cumulativeDelay) }
+      })
+    }
+  }
+
+  // Aggiorna il totalCount con precisione assoluta per riflettere i target effettivi multi-telefono
+  const totalTargetCount = jobs.length + existingMessages.length
+  if (totalTargetCount !== contacts.length) {
+    await prisma.campaign.update({
+      where: { id: campaignId },
+      data: { totalCount: totalTargetCount }
+    })
+  }
 
   // Inserisci in BullMQ (li schedula tutti nel futuro in base al delay!)
   await campaignQueue.addBulk(jobs)

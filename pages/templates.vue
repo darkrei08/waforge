@@ -132,10 +132,16 @@
                 </div>
               </div>
               <div>
-                <label class="block text-sm font-medium text-on-surface-variant mb-1">{{ t('templates.preview_label') }}</label>
-                <div class="w-full p-3 bg-black/20 border border-white/5 rounded-lg h-[240px] overflow-y-auto">
-                  <div class="text-sm text-on-surface whitespace-pre-wrap leading-relaxed" v-html="formatWhatsAppText(formData.body)"></div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-sm font-medium text-on-surface-variant">{{ t('templates.preview_label') }}</label>
+                  <button v-if="formData.body" @click="spintaxPreviewTrigger++" class="text-[11px] text-primary hover:text-primary-fixed-dim transition-colors flex items-center gap-1">
+                    🎲 Anteprima Spintax
+                  </button>
                 </div>
+                <div class="w-full p-3 bg-black/20 border border-white/5 rounded-lg h-[240px] overflow-y-auto">
+                  <div class="text-sm text-on-surface whitespace-pre-wrap leading-relaxed" v-html="spintaxPreview"></div>
+                </div>
+                <p v-if="spintaxVariationCount > 1" class="text-[11px] text-on-surface-variant mt-1 text-right">🔄 {{ spintaxVariationCount.toLocaleString() }} varianti possibili</p>
               </div>
             </div>
           </div>
@@ -154,24 +160,26 @@
     <!-- AI Assistant Modal -->
     <Teleport to="body">
       <div v-if="showAiAssistant" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showAiAssistant = false">
-        <div class="w-full max-w-lg bg-surface-container-high border border-primary/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(37,211,102,0.15)] flex flex-col h-[600px] animate-slide-in">
-          <h3 class="text-lg font-bold text-on-surface mb-2 flex items-center gap-2 shrink-0">
-            <Sparkles class="w-5 h-5 text-primary" />
+        <div class="w-full max-w-3xl bg-surface-container-high border border-primary/30 rounded-2xl p-8 shadow-[0_0_40px_rgba(37,211,102,0.2)] flex flex-col h-[700px] animate-slide-in">
+          <h3 class="text-xl font-bold text-on-surface mb-2 flex items-center gap-2 shrink-0">
+            <Sparkles class="w-6 h-6 text-primary" />
             Assistente AI
           </h3>
-          <p class="text-xs text-on-surface-variant mb-4 shrink-0">Usa l'intelligenza artificiale per conversare, migliorare il tuo messaggio o applicare tecniche Anti-Ban.</p>
+          <p class="text-sm text-on-surface-variant mb-5 shrink-0">Usa l'intelligenza artificiale per conversare, migliorare il tuo messaggio o applicare tecniche Anti-Ban.</p>
 
-          <div class="grid grid-cols-2 gap-2 mb-3 shrink-0 bg-black/30 p-2 rounded-lg border border-white/5 text-xs">
+          <div class="grid grid-cols-2 gap-4 mb-4 shrink-0 bg-black/30 p-4 rounded-xl border border-white/5">
             <div>
-              <label class="block font-medium text-on-surface-variant mb-1">Modello AI</label>
-              <select v-model="aiModelOverride" class="w-full p-1.5 bg-surface border border-white/10 rounded text-on-surface outline-none">
-                <option value="">⚙️ Predefinito (da Impostazioni)</option>
-                <option v-for="m in LLM_MODELS" :key="m.id" :value="m.id">{{ m.name }} ({{ m.provider }})</option>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1.5 uppercase tracking-wider">Modello AI</label>
+              <select v-model="aiModelOverride" class="w-full p-2.5 bg-surface border border-white/10 rounded-lg text-on-surface text-sm outline-none focus:border-primary transition-colors">
+                <option value="">⚙️ {{ defaultModelLabel }}</option>
+                <optgroup v-for="group in aiModelGroups" :key="group.category" :label="`${group.icon} ${group.label}`">
+                  <option v-for="m in group.models" :key="m.id" :value="m.id">{{ m.name }} ({{ m.provider }})</option>
+                </optgroup>
               </select>
             </div>
             <div>
-              <label class="block font-medium text-on-surface-variant mb-1">Tipo di Ragionamento</label>
-              <select v-model="aiReasoningMode" class="w-full p-1.5 bg-surface border border-white/10 rounded text-on-surface outline-none">
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1.5 uppercase tracking-wider">Tipo di Ragionamento</label>
+              <select v-model="aiReasoningMode" class="w-full p-2.5 bg-surface border border-white/10 rounded-lg text-on-surface text-sm outline-none focus:border-primary transition-colors">
                 <option value="standard">🎯 Standard / Copywriter</option>
                 <option value="creative">✨ Creativo & Coinvolgente</option>
                 <option value="analytical">📊 Analitico / Spintax Deep</option>
@@ -181,51 +189,53 @@
             </div>
           </div>
 
-          <div class="flex-1 overflow-y-auto mb-4 space-y-3 pr-2 scrollbar-thin">
-            <div class="bg-black/20 p-3 rounded-lg border border-white/5 w-11/12 text-sm text-on-surface-variant">
-              Ciao! Posso aiutarti a migliorare il messaggio o a renderlo a prova di ban. Seleziona un'azione rapida o scrivimi cosa vuoi fare.
+          <div class="flex-1 overflow-y-auto mb-4 space-y-4 pr-2 scrollbar-thin">
+            <div class="bg-black/20 p-4 rounded-xl border border-white/5 w-11/12 text-sm text-on-surface-variant leading-relaxed">
+              Ciao! 👋 Posso aiutarti a migliorare il messaggio o a renderlo a prova di ban. Seleziona un'azione rapida o scrivimi cosa vuoi fare.
             </div>
             
             <div v-for="(msg, i) in chatHistory" :key="i" 
                  :class="msg.role === 'user' ? 'bg-primary/10 border-primary/20 ml-auto' : 'bg-black/20 border-white/5 mr-auto'"
-                 class="p-3 rounded-lg border w-11/12 text-sm whitespace-pre-wrap">
-              <span v-if="msg.role === 'user'" class="text-primary font-medium block mb-1">Tu</span>
-              <span v-else class="text-secondary font-medium block mb-1">Assistente</span>
-              <span class="text-on-surface">{{ msg.content }}</span>
-              <button v-if="msg.role === 'assistant'" @click="formData.body = msg.content; showAiAssistant = false" 
-                      class="mt-2 text-xs bg-primary/20 text-primary px-2 py-1 rounded hover:bg-primary/30 transition-colors">
-                Usa questo testo
+                 class="p-4 rounded-xl border w-11/12 whitespace-pre-wrap">
+              <span v-if="msg.role === 'user'" class="text-primary font-semibold block mb-2 text-xs uppercase tracking-wider">Tu</span>
+              <span v-else class="text-secondary font-semibold block mb-2 text-xs uppercase tracking-wider">Assistente</span>
+              <div v-if="msg.role === 'assistant'" class="text-sm text-on-surface leading-relaxed" v-html="formatWhatsAppText(msg.content)"></div>
+              <span v-else class="text-sm text-on-surface leading-relaxed">{{ msg.content }}</span>
+              <button v-if="msg.role === 'assistant' && isAiReadyContent(msg.content)" 
+                      @click="formData.body = msg.content; showAiAssistant = false" 
+                      class="mt-3 text-xs bg-primary/20 text-primary px-3 py-1.5 rounded-lg hover:bg-primary/30 transition-colors font-medium flex items-center gap-1.5">
+                ✅ Usa questo testo
               </button>
             </div>
-            <div v-if="isGeneratingAi" class="bg-black/20 p-3 rounded-lg border border-white/5 w-11/12 mr-auto flex items-center gap-2">
-              <Loader2 class="w-4 h-4 animate-spin text-primary" />
-              <span class="text-xs text-on-surface-variant">Elaborazione in corso...</span>
+            <div v-if="isGeneratingAi" class="bg-black/20 p-4 rounded-xl border border-white/5 w-11/12 mr-auto flex items-center gap-3">
+              <Loader2 class="w-5 h-5 animate-spin text-primary" />
+              <span class="text-sm text-on-surface-variant">Elaborazione in corso...</span>
             </div>
           </div>
 
-          <div class="space-y-2 shrink-0">
-            <div class="flex gap-2">
+          <div class="space-y-3 shrink-0">
+            <div class="flex gap-3">
               <button @click="handleAiGenerate('improve')" :disabled="isGeneratingAi || !formData.body"
-                      class="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-on-surface-variant hover:text-on-surface text-xs font-medium rounded-lg transition-colors border border-white/5">
+                      class="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-on-surface-variant hover:text-on-surface text-sm font-medium rounded-xl transition-colors border border-white/5">
                 ✨ Migliora Formattazione
               </button>
               <button @click="handleAiGenerate('antiban')" :disabled="isGeneratingAi || !formData.body"
-                      class="flex-1 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium rounded-lg transition-colors border border-primary/20">
+                      class="flex-1 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-medium rounded-xl transition-colors border border-primary/20">
                 🛡️ Applica Anti-Ban
               </button>
             </div>
-            <div class="flex gap-2 relative">
+            <div class="flex gap-3 relative">
               <input v-model="aiPrompt" type="text" placeholder="Chiedi all'IA..." @keyup.enter="handleAiGenerate('chat')"
-                     class="flex-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none" />
+                     class="flex-1 p-3.5 bg-black/30 border border-white/10 rounded-xl text-on-surface text-sm focus:border-primary outline-none" />
               <button @click="handleAiGenerate('chat')" :disabled="isGeneratingAi || !aiPrompt"
-                      class="px-4 bg-primary text-on-primary rounded-lg hover:bg-primary-fixed-dim transition-colors disabled:opacity-50 flex items-center justify-center">
-                <Send class="w-4 h-4" />
+                      class="px-5 bg-primary text-on-primary rounded-xl hover:bg-primary-fixed-dim transition-colors disabled:opacity-50 flex items-center justify-center">
+                <Send class="w-5 h-5" />
               </button>
             </div>
           </div>
           
-          <div class="flex justify-end gap-3 mt-4 shrink-0">
-            <button @click="showAiAssistant = false" class="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors">Chiudi</button>
+          <div class="flex justify-end gap-3 mt-5 shrink-0">
+            <button @click="showAiAssistant = false" class="px-5 py-2.5 text-sm text-on-surface-variant hover:text-on-surface transition-colors rounded-lg hover:bg-white/5">Chiudi</button>
           </div>
         </div>
       </div>
@@ -234,18 +244,54 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, inject } from 'vue'
+import { ref, computed, onMounted, inject } from 'vue'
 import { Plus, Edit2, Trash2, Info, Upload, Loader2, Sparkles, Send } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useTemplatesStore, type Template } from '~/stores/templates'
-import { LLM_MODELS } from '~/lib/llm-models'
+import { useSettingsStore } from '~/stores/settings'
+import { LLM_MODELS, getModelsGroupedByCategory } from '~/lib/llm-models'
+import { countVariations } from '~/lib/spintax'
 
 import { useWhatsAppFormat } from '~/composables/useWhatsAppFormat'
 
 const { t } = useI18n()
 const store = useTemplatesStore()
-const { formatWhatsAppText } = useWhatsAppFormat()
+const settingsStore = useSettingsStore()
+const { formatWhatsAppText, renderSpintax } = useWhatsAppFormat()
 const addToast = inject('addToast') as Function
+
+// Spintax preview for template body
+const spintaxPreviewTrigger = ref(0)
+const spintaxPreview = computed(() => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+  spintaxPreviewTrigger.value // Track dependency for re-randomization
+  return formatWhatsAppText(renderSpintax(formData.value.body))
+})
+const spintaxVariationCount = computed(() => countVariations(formData.value.body))
+
+// AI model groups from settings store dynamic catalog
+const aiModelGroups = computed(() => {
+  const provider = settingsStore.llmSettings.useCockpit ? 'all' : (settingsStore.llmSettings.provider || 'openai')
+  return getModelsGroupedByCategory(provider, settingsStore.dynamicModels.length ? settingsStore.dynamicModels : undefined)
+})
+
+// Label for default model showing what's actually configured
+const defaultModelLabel = computed(() => {
+  const model = settingsStore.llmSettings.model
+  if (!model || model === 'gpt-4o-mini') return 'Predefinito (GPT-4o Mini)'
+  const found = LLM_MODELS.find(m => m.id === model)
+  return found ? `Predefinito (${found.name})` : `Predefinito (${model})`
+})
+
+// Check if an AI message is actual content (not progress/error)
+function isAiReadyContent(content: string): boolean {
+  if (!content) return false
+  if (content.startsWith('⏳') || content.includes('⏳')) return false
+  if (content.startsWith('❌') || content.includes('❌')) return false
+  if (content.includes('Inizializzazione...') || content.includes('Elaborazione in corso') || content.includes('Attesa di risposta')) return false
+  if (content.trim().length < 15 && (content.includes('...') || content.startsWith('ℹ️'))) return false
+  return true
+}
 
 const showWizard = ref(false)
 const isEditing = ref(false)

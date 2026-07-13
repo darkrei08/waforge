@@ -105,6 +105,14 @@ model Contact {
   customFields String? // JSON blob for extra CSV columns
   isActive     Boolean @default(true)
 
+  // Enhanced CRM fields & multi-number support
+  source          String  @default("manual") // manual, webhook, import
+  labels          String? @default("[]") // JSON array of label tags e.g. ["VIP", "Struttura"]
+  secondaryPhones String? @default("[]") // JSON array e.g. ["+39333111222"]
+  pec             String? // PEC email
+  declarantName   String? // Nome del dichiarante / referente
+  declarantPhone  String? // Telefono del dichiarante / referente
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

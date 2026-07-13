@@ -75,6 +75,20 @@ export default defineEventHandler(async (event) => {
       }
 
       // Smart Cockpit Proxy & Fallback Routing
+      // Use the selected cockpitAccountId if available
+      if (settings.cockpitAccountId) {
+        try {
+          const accountFilePath = path.join(os.homedir(), '.antigravity_cockpit', 'accounts', `${settings.cockpitAccountId}.json`)
+          const accountData = await fs.readFile(accountFilePath, 'utf-8')
+          const accountJson = JSON.parse(accountData)
+          if (accountJson.access_token || accountJson.token) {
+            apiKey = accountJson.access_token || accountJson.token
+          }
+        } catch (accErr) {
+          console.warn(`[waforge-cockpit] Could not read account ${settings.cockpitAccountId}:`, (accErr as Error).message)
+        }
+      }
+
       if (baseURL.includes(':19528')) {
         // 19528 is Cockpit Daemon WebSocket port. If HTTP proxy is not on another port, fallback to direct provider API using Cockpit token
         const checkModel = (modelOverride || settings.model || '').toLowerCase()
@@ -99,14 +113,16 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'API Key mancante nelle impostazioni LLM.' })
   }
 
-  let systemPrompt = "Sei un esperto di marketing e comunicazione su WhatsApp. Il tuo compito è assistere l'utente in modo preciso ed efficace."
+  let systemPrompt = "Sei un esperto di marketing e comunicazione su WhatsApp. Il tuo compito è assistere l'utente in modo preciso ed efficace. Rispondi ESCLUSIVAMENTE con il contenuto richiesto, senza meta-commenti o spiegazioni aggiuntive."
   
   if (reasoningMode === 'creative') {
     systemPrompt = `Sei un Copywriter Creativo e Coinvolgente specializzato per WhatsApp.
-Usa un tono dinamico, empatico e accattivante. Inserisci emoji pertinenti per spezzare il testo, micro-storytelling, agganci emotivi immediati nelle prime righe e mantieni una formattazione visiva chiara con *grassetto* e _corsivo_. Se appropriato, usa la sintassi Spintax ({Ciao|Ehi|Salve}) per rendere le varianti fresche e dinamiche.`
+Usa un tono dinamico, empatico e accattivante. Inserisci emoji pertinenti per spezzare il testo, micro-storytelling, agganci emotivi immediati nelle prime righe e mantieni una formattazione visiva chiara con *grassetto* e _corsivo_. Se appropriato, usa la sintassi Spintax ({Ciao|Ehi|Salve}) per rendere le varianti fresche e dinamiche.
+Restituisci ESCLUSIVAMENTE il testo migliorato e formattato, pronto per essere copiato. NESSUN commento introduttivo, NESSUNA spiegazione, NESSUN meta-testo come "Ecco il testo migliorato:" o simili. Il primo carattere della tua risposta DEVE essere il primo carattere del messaggio finale.`
   } else if (reasoningMode === 'analytical') {
     systemPrompt = `Sei un Analista Strutturale di Spintax e Ottimizzatore Matematico per WhatsApp.
-Il tuo compito è analizzare o creare messaggi massimizzando al 100% la varianza lessicale e sintattica. DEVI utilizzare Spintax nidificati ad alta efficienza (es. {Ciao {amico|membro}|{Salve|Ehi} {{Name}}}) ed eliminare qualsiasi struttura ripetitiva che possa innescare filtri algoritmici. Restituisci codice Spintax rigoroso ed esempi di espansione.`
+Il tuo compito è analizzare o creare messaggi massimizzando al 100% la varianza lessicale e sintattica. DEVI utilizzare Spintax nidificati ad alta efficienza (es. {Ciao {amico|membro}|{Salve|Ehi} {{Name}}}) ed eliminare qualsiasi struttura ripetitiva che possa innescare filtri algoritmici. Restituisci codice Spintax rigoroso ed esempi di espansione.
+Restituisci ESCLUSIVAMENTE il testo migliorato e formattato, pronto per essere copiato. NESSUN commento introduttivo, NESSUNA spiegazione, NESSUN meta-testo come "Ecco il testo migliorato:" o simili. Il primo carattere della tua risposta DEVE essere il primo carattere del messaggio finale.`
   } else if (reasoningMode === 'antiban' || action === 'antiban') {
     systemPrompt = `Sei un esperto di WhatsApp Marketing e Anti-Ban (Stealth Max 2026). 
 Il tuo obiettivo è riscrivere o generare il messaggio fornito seguendo scrupolosamente le linee guida anti-ban per il 2026:
@@ -115,17 +131,28 @@ Il tuo obiettivo è riscrivere o generare il messaggio fornito seguendo scrupolo
 3. Evita assolutamente linguaggio spam (TUTTO MAIUSCOLO, link eccessivi, keyword promozionali aggressive o urgenti).
 4. Usa variabili di personalizzazione come {{Name}} per umanizzare la comunicazione.
 5. Usa formattazione leggibile (*grassetto*, _corsivo_).
-Restituisci SOLO il messaggio o la risposta ottimizzata a prova di ban, pronta per l'uso.`
+Restituisci ESCLUSIVAMENTE il testo migliorato e formattato, pronto per essere copiato. NESSUN commento introduttivo, NESSUNA spiegazione, NESSUN meta-testo come "Ecco il testo migliorato:" o simili. Il primo carattere della tua risposta DEVE essere il primo carattere del messaggio finale.`
   } else if (reasoningMode === 'cot') {
     systemPrompt = `Sei un AI Strategist Logico per WhatsApp (metodologia Chain of Thought).
 Prima di fornire la risposta finale o il messaggio strutturato, DEVI obbligatoriamente ragionare passo-passo all'interno di un blocco <ragionamento>...</ragionamento> analizzando:
 1. Obiettivo psicologico e persuasivo nei confronti del destinatario.
 2. Tono di voce e riduzione degli attriti cognitivi.
 3. Ottimizzazione della Call to Action (CTA) e leggibilità da smartphone.
-Subito dopo aver chiuso il tag </ragionamento>, fornisci la risposta finale o il messaggio WhatsApp ottimizzato (*grassetto*, _corsivo_, Spintax).`
+Subito dopo aver chiuso il tag </ragionamento>, fornisci ESCLUSIVAMENTE il testo migliorato e formattato (*grassetto*, _corsivo_, Spintax), senza alcun commento o meta-testo aggiuntivo.`
   } else if (action === 'improve') {
-    systemPrompt = `Sei un copywriter esperto. Il tuo compito è migliorare il lessico, la sintassi e la leggibilità del testo fornito.
-DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo_) per evidenziare le parole chiave, e USARE la sintassi Spintax (es. {Ciao|Salve|Ehi} o [Ciao|Salve|Ehi]) dove possibile per creare varianti del messaggio e renderlo dinamico.`
+    systemPrompt = `Sei un copywriter esperto specializzato nella comunicazione WhatsApp professionale.
+Il tuo compito è migliorare il lessico, la sintassi e la leggibilità del testo fornito.
+
+Regole OBBLIGATORIE:
+- Usa la formattazione ufficiale di WhatsApp: *grassetto* per evidenziare parole chiave, _corsivo_ per enfasi.
+- Mantieni il tono professionale ma accessibile.
+- Usa elenchi puntati (• oppure - o 1.) per strutturare le informazioni.
+- Inserisci emoji pertinenti con moderazione per migliorare la leggibilità.
+- Preserva il significato originale del testo.
+- NON aggiungere Spintax ({Ciao|Salve}) — la randomizzazione viene gestita separatamente dal sistema.
+- NON aggiungere parole alternative tra parentesi o barre.
+
+Restituisci ESCLUSIVAMENTE il testo migliorato e formattato, pronto per essere copiato. NESSUN commento introduttivo, NESSUNA spiegazione, NESSUN meta-testo come "Ecco il testo migliorato:" o simili. Il primo carattere della tua risposta DEVE essere il primo carattere del messaggio finale.`
   }
 
   let messages = []
@@ -280,7 +307,7 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
     let finalContent = ''
 
     console.log(`[waforge-llm] Inizio ciclo di generazione. Tool disponibili: ${availableTools.length}`)
-    sendEvent('progress', { msg: 'Elaborazione della risposta (LLM)...' })
+    sendEvent('progress', { msg: `Elaborazione (${model})...` })
 
     while (currentIteration < maxIterations) {
       if (clientAborted) {
@@ -293,7 +320,7 @@ DEVI OBBLIGATORIAMENTE usare la formattazione di WhatsApp (*grassetto*, _corsivo
         model: model,
         messages: messages,
         temperature: 0.7,
-        max_tokens: 1500
+        max_tokens: 16384
       }
       
       if (availableTools.length > 0) {

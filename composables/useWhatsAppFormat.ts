@@ -40,7 +40,10 @@ export function useWhatsAppFormat() {
   const csvTemplateHeaders = [
     { name: 'Name', required: false, description: 'Nome del contatto (opzionale)' },
     { name: 'Prefix', required: false, description: 'Prefisso internazionale es. 39 (default: 39 se assente)' },
-    { name: 'Phone', required: true, description: 'Numero di telefono senza prefisso' },
+    { name: 'Phone', required: true, description: 'Numero di telefono principale senza prefisso' },
+    { name: 'Telefono 2', required: false, description: 'Secondo numero di telefono (opzionale)' },
+    { name: 'Telefono 3', required: false, description: 'Terzo numero di telefono (opzionale)' },
+    { name: 'Telefono 4', required: false, description: 'Quarto numero di telefono (opzionale)' },
     { name: 'Email', required: false, description: 'Indirizzo email (opzionale)' },
     { name: 'Company', required: false, description: 'Nome azienda (opzionale)' },
   ]

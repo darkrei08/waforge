@@ -28,6 +28,7 @@ export default defineEventHandler(async (event) => {
           prefix: contact.prefix,
           phone: contact.phone,
           fullPhone: contact.fullPhone,
+          secondaryPhones: contact.secondaryPhones ? JSON.stringify(contact.secondaryPhones) : null,
           email: contact.email,
           company: contact.company,
           customFields: contact.customFields ? JSON.stringify(contact.customFields) : null,
@@ -35,6 +36,7 @@ export default defineEventHandler(async (event) => {
         },
         update: {
           name: contact.name,
+          secondaryPhones: contact.secondaryPhones ? JSON.stringify(contact.secondaryPhones) : undefined,
           email: contact.email,
           company: contact.company,
           customFields: contact.customFields ? JSON.stringify(contact.customFields) : null,
