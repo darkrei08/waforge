@@ -1,6 +1,6 @@
 ---
 compiled: false
-ingested_at: '2026-07-13T00:22:57.991914+00:00'
+ingested_at: '2026-07-13T00:25:33.442100+00:00'
 title: MEMORY
 type: local_file
 ---
@@ -378,3 +378,7 @@ Integrate linee guida privacy da legal-scaffold in waforge. Dettagliato lo stack
 
 ## [Session State Snapshot] - 2026-07-13 02:13:02
 Integrato lucasastorian/llmwiki (ai-llmwiki/ai-wiki) con interfaccia grafica e stabilite regole mandatory nei loop per graphify, book-to-skill e rag-anything
+
+
+## [Session State Snapshot] - 2026-07-13 02:24:00
+Creata e applicata architettura modulare universale Wizard-AI (wizard-ai-init) su waforge e nuxt-mcp-agent-starter con auto-sincronizzazione dei file AGENTS.md, CLAUDE.md e GEMINI.md
