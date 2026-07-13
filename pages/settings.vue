@@ -342,8 +342,22 @@
               </div>
             </div>
 
+            <!-- Help box esplicativo e guida alla configurazione -->
+            <div class="mt-2.5 p-3 bg-primary/5 border border-primary/20 rounded-lg text-xs text-on-surface-variant space-y-1.5">
+              <div class="flex items-center gap-1.5 font-bold text-primary">
+                <span>ℹ️</span> Come configurare i Server MCP & Memoria di Progetto
+              </div>
+              <p>
+                I server <strong>MCP (Model Context Protocol)</strong> collegano l'AI Assistant a strumenti esterni in tempo reale. Clicca su un <strong>badge rapido</strong> qui sotto per aggiungerlo all'elenco dei server attivi, oppure clicca <em>"+ Aggiungi Manuale"</em> per inserire un comando personalizzato (es. <code>npx -y @modelcontextprotocol/server-xyz</code>).
+              </p>
+              <div class="pt-1 border-t border-white/5 space-y-1">
+                <p><strong>🧠 Memoria di Progetto (`Memory`):</strong> Abilitando il server <code>Memory</code> (o <code>Sequential Thinking</code>), l'assistente AI manterrà un knowledge graph persistente di tutte le chiamate, preferenze e istruzioni della tua azienda tra una sessione e l'altra.</p>
+                <p><strong>✈️ Cockpit Tools:</strong> Consente all'AI di monitorare in tempo reale lo stato, i crediti e i limiti delle quote (Claude/Gemini/OpenAI) sugli account Cockpit attivi ed effettuare controlli diagnostici automatici.</p>
+              </div>
+            </div>
+
             <!-- Catalogo MCP Rapido -->
-            <div class="mt-2 flex flex-wrap gap-2">
+            <div class="mt-3 flex flex-wrap gap-2">
               <button v-for="mcp in [...mcpCatalog, ...(store.llmSettings.customCatalog || [])]" :key="mcp.name"
                       @click="addMcpServer(mcp.cmd)"
                       class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white/5 border border-white/10 hover:border-primary/50 transition-colors text-xs text-on-surface-variant hover:text-on-surface"

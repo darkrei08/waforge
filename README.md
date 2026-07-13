@@ -333,6 +333,26 @@ docker exec -it waforge-app bun run admin:reset-password --email admin@example.c
 > [!TIP]
 > **Docker Note**: From `v2.15.1+`, the `bun` runtime and CLI utilities are embedded directly in the `waforge-app` production container. If you encounter an `executable file not found` error on older containers, rebuild or pull the latest image (`docker compose pull && docker compose up -d --build`).
 
+### 🔌 MCP Servers Configuration & Project Memory
+
+WaForge integrates natively with the **Model Context Protocol (MCP)**, empowering your AI Assistant with live tools, databases, and continuous memory across sessions.
+
+#### 🛠️ Available MCP Presets in UI
+To activate these tools, navigate to **Impostazioni (Settings) -> Server MCP** and click on any preset badge:
+- **🔍 Brave Search**: Real-time web browsing and information retrieval.
+- **🐙 GitHub**: Repository management, issue reading, and pull request automation.
+- **📁 File System**: Direct local workspace file exploration.
+- **🗄️ SQLite / 🐘 PostgreSQL**: Direct query execution and database inspection.
+- **🌐 Puppeteer / 🌍 Fetch**: Automated browser interaction and web content extraction.
+- **💬 Slack / 📝 Notion / 📂 Google Drive**: Workspace productivity integrations.
+- **💳 Stripe**: Live subscription, invoice, and payment processing.
+- **📱 Twilio / 📧 SendGrid**: Transactional SMS and email communications.
+- **✈️ Cockpit Tools (`cockpit-tools-mcp`)**: AI proxy management tool that allows the assistant to inspect active Cockpit accounts, check quota percentages (Claude/Gemini/OpenAI models), switch active profiles, and run diagnostics automatically without manual API key management.
+- **🔌 OpenAPI / Swagger**: Dynamically connect any REST API using its OpenAPI specification.
+
+#### 🧠 Continuous Project Memory (`Memory`)
+By enabling the **`Memory` (`@modelcontextprotocol/server-memory`)** or **`Sequential Thinking`** presets, the WaForge AI Assistant builds and maintains a **persistent Knowledge Graph** of your company's rules, messaging tones, and past campaign decisions across all user sessions and AI calls (`/api/llm/generate`).
+
 ### 🐞 Debug Widget & LLM / MCP Diagnostics
 - The **Debug Widget** is unconditionally enabled at runtime to inspect application logs, network requests, and Pinia stores. If closed, click the floating **`🐞 Debugger`** button in the bottom right corner.
 - **Full Observability & Tracing**: All LLM generation loops (`[waforge-llm]`) and MCP server execution cycles (`[waforge-mcp-agent]`) stream structured diagnostic logs directly to terminal (`docker logs waforge-app`) and SSE progress events (`Inizializzazione server MCP...`, `Esecuzione tool: ...`), making it effortless to trace prompts, tool inputs, and outputs.

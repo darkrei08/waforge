@@ -336,6 +336,26 @@ docker exec -it waforge-app bun run admin:reset-password --email admin@example.c
 > [!TIP]
 > **Nota Docker**: A partire dalla versione `v2.15.1+`, il runtime `bun` e gli script CLI sono inclusi direttamente nel container di produzione `waforge-app`. Se su container precedenti riscontri l'errore `executable file not found`, aggiorna e ricrea l'immagine (`docker compose pull && docker compose up -d --build`).
 
+### 🔌 Configurazione Server MCP (Model Context Protocol) & Memoria di Progetto
+
+WaForge integra nativamente il supporto al **Model Context Protocol (MCP)**, permettendo all'AI Assistant di interfacciarsi con strumenti esterni, database e memoria persistente in tempo reale.
+
+#### 🛠️ Preset MCP Disponibili nell'Interfaccia
+Per abilitare i server, vai su **Impostazioni -> Server MCP** e clicca su uno dei badge rapidi:
+- **🔍 Brave Search**: Ricerca Web e acquisizione informazioni in tempo reale.
+- **🐙 GitHub**: Gestione completa di repository, pull request e issue.
+- **📁 File System**: Navigazione e lettura diretta dei file di progetto.
+- **🗄️ SQLite / 🐘 PostgreSQL**: Interrogazione e analisi diretta su database relazionali.
+- **🌐 Puppeteer / 🌍 Fetch**: Automazione browser e parsing di pagine web esterne.
+- **💬 Slack / 📝 Notion / 📂 Google Drive**: Connessione alle suite di produttività aziendale.
+- **💳 Stripe**: Integrazione con abbonamenti, fatturazione e pagamenti.
+- **📱 Twilio / 📧 SendGrid**: Invio di SMS e notifiche email transazionali.
+- **✈️ Cockpit Tools (`cockpit-tools-mcp`)**: Strumento proxy per la gestione degli account Cockpit AI. Consente all'assistente di verificare quote residui (Claude/Gemini/OpenAI), effettuare lo switch automatico degli account e monitorare lo stato del demone senza dover gestire chiavi API manuali.
+- **🔌 OpenAPI / Swagger**: Connessione dinamica a qualsiasi API REST fornendo la specifica OpenAPI.
+
+#### 🧠 Memoria di Progetto Continua (`Memory`)
+Abilitando i server **`Memory` (`@modelcontextprotocol/server-memory`)** o **`Sequential Thinking`**, l'AI Assistant genera e mantiene un **Knowledge Graph persistente** di tutte le chiamate, preferenze, tag di contatto e istruzioni di tone-of-voice della tua azienda, conservando la memoria di progetto tra le diverse sessioni utente.
+
 ### 🐞 Debug Widget & Diagnostica LLM
 - Il **Debug Widget** è sempre accessibile a runtime per ispezionare log, chiamate di rete e stato di Pinia. Se chiuso, clicca sul pulsante flottante **`🐞 Debugger`** in basso a destra.
 - In modalità Cockpit, se il demone locale risponde solo su WebSocket (`ws://`), il sistema intercetta le eccezioni ed esegue automaticamente il failover REST verso i provider nativi.

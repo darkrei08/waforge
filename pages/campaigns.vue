@@ -897,8 +897,6 @@ const targetVerificationResults = ref<Record<string, { isOnWhatsApp: boolean, ph
 const addingTargetPhoneFor = ref<string | null>(null)
 const newTargetPhoneInput = ref('')
 
-const addToast = inject('addToast', (msg: string, type?: string) => console.log(msg, type))
-
 const filteredTargetContacts = computed(() => {
   if (!targetPreviewSearch.value.trim()) return targetPreviewContacts.value
   const q = targetPreviewSearch.value.toLowerCase()
