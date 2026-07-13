@@ -42,9 +42,12 @@ export default defineEventHandler(async (event) => {
     })
   )
 
+  // Filter out pending ghost sessions (no phone and disconnected)
+  const validSessions = activeSessions.filter(s => s.phone || s.connected)
+
   return {
     success: true,
-    data: activeSessions,
+    data: validSessions,
     activeEngine: ENGINE,
     supportedEngines: ['wuzapi', 'gowa']
   }

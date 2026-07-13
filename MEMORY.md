@@ -3,7 +3,7 @@
 > File di contesto persistente. Compresso e ottimizzato tramite best practices (cavemanv, sqz, lean-ctx).
 
 ## 📌 Identità & Architettura
-- **Nome:** WaForge (ex WA Sender Pro).
+- **Nome:** WaForge.
 - **Modello:** SaaS Multi-Tenant (B2B). I team/agenzie sono isolati tramite `teamId`.
 - **Stack:** Nuxt 4 (Vue 3, Nitro) + PostgreSQL + Prisma v5.22.0.
 - **UI/UX:** Design premium (Glassmorphism, TailwindCSS, Color Mode).

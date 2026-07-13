@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.1] - 2026-07-13
+
+### Fixed
+- **UI & Legenda Formattazione**: Rimossa la duplicazione della legenda WhatsApp (variabili e formattazione grassetto/corsivo) nei file `campaigns.vue` e `templates.vue`, unificata tramite il componente `WhatsAppFormattingLegend.vue`.
+- **Dispositivi Fantasma (Ghost Devices)**: Risolto il problema in `/devices` in cui un tentativo di connessione interrotto senza scansionare il QR code lasciava un dispositivo perennemente visibile ("In attesa..."). Le sessioni vuote ora vengono filtrate e pulite automaticamente nel database dal cron `retention.ts` ogni ora.
+- **Denominazione Progetto Standardizzata**: Tutti i riferimenti legacy (Center Pro, One Forge Pro, WA Sender Pro) nel codice, documentazione, `MEMORY.md` e nel report sono stati aggiornati alla denominazione standard ufficiale **WaForge**.
+
 ## [2.15.0] - 2026-07-12
 
 ### Added
@@ -79,7 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Campaign Wizard: step-by-step bulk send with configurable rate limiting
 - Real-time QR Code scan modal for WhatsApp connection
 - Dashboard analytics: sent/failed stats, campaign history
-- Migration script from legacy `wa sender v5` CSV format
+- Migration script from legacy `waforge v5` CSV format
 - GitHub Actions CI/CD pipeline
 - `.env.example` with all required environment variables
 
