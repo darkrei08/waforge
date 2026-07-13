@@ -283,6 +283,10 @@ services:
     environment:
       DATABASE_URL: "postgresql://${CRIKKET_POSTGRES_USER:-crikket}:${CRIKKET_POSTGRES_PASSWORD:-crikket_secret}@crikket-postgres:5432/${CRIKKET_POSTGRES_DB:-crikket}"
       NODE_ENV: development
+      STORAGE_BUCKET: "${CRIKKET_STORAGE_BUCKET:-mock-bucket}"
+      STORAGE_ACCESS_KEY_ID: "${CRIKKET_STORAGE_ACCESS_KEY_ID:-mock-key}"
+      STORAGE_SECRET_ACCESS_KEY: "${CRIKKET_STORAGE_SECRET_ACCESS_KEY:-mock-secret}"
+      STORAGE_ENDPOINT: "${CRIKKET_STORAGE_ENDPOINT:-http://localhost:9000}"
     command: ["bun", "run", "--filter", "@crikket/db", "db:migrate"]
     networks:
       - wa-net
@@ -309,6 +313,10 @@ services:
       BETTER_AUTH_TRUSTED_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
       CORS_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
       ENABLE_PAYMENTS: "false"
+      STORAGE_BUCKET: "${CRIKKET_STORAGE_BUCKET:-mock-bucket}"
+      STORAGE_ACCESS_KEY_ID: "${CRIKKET_STORAGE_ACCESS_KEY_ID:-mock-key}"
+      STORAGE_SECRET_ACCESS_KEY: "${CRIKKET_STORAGE_SECRET_ACCESS_KEY:-mock-secret}"
+      STORAGE_ENDPOINT: "${CRIKKET_STORAGE_ENDPOINT:-http://localhost:9000}"
     ports:
       - "${CRIKKET_SERVER_PORT:-3150}:3000"
     expose:
