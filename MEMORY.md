@@ -368,3 +368,7 @@ Integrate linee guida privacy da legal-scaffold in waforge. Dettagliato lo stack
   - `/home/ema/.gemini/config/skills/prompt-loop-engine/SKILL.md`
   - `MEMORY.md`
 
+
+## [Session State Snapshot] - 2026-07-13 02:13:02
+Integrato lucasastorian/llmwiki (ai-llmwiki/ai-wiki) con interfaccia grafica e stabilite regole mandatory nei loop per graphify, book-to-skill e rag-anything
+
