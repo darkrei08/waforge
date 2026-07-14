@@ -1,7 +1,7 @@
 import { defineEventHandler } from 'h3'
-import fs from 'fs'
-import path from 'path'
-import os from 'os'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import * as os from 'node:os'
 
 export default defineEventHandler(async () => {
   try {
@@ -23,25 +23,31 @@ export default defineEventHandler(async () => {
         // Enrich accounts with quota from individual files
         const enrichedAccounts = data.accounts.map((acc: any) => {
           let quota = null
-          let tier = 'FREE'
+          let tierStr = 'FREE'
           
           try {
-            const accFilePath = path.join(accountsDir, `${acc.id}.json`)
-            if (fs.existsSync(accFilePath)) {
-              const accData = JSON.parse(fs.readFileSync(accFilePath, 'utf-8'))
-              if (accData.quota) {
-                quota = accData.quota.models
-                tier = accData.quota.subscription_tier || 'FREE'
+            if (acc && acc.id) {
+              const accFilePath = path.join(accountsDir, `${acc.id}.json`)
+              if (fs.existsSync(accFilePath)) {
+                const accData = JSON.parse(fs.readFileSync(accFilePath, 'utf-8'))
+                if (accData && accData.quota) {
+                  quota = accData.quota.models
+                  tierStr = accData.quota.subscription_tier || 'FREE'
+                }
               }
             }
           } catch (e) {
             // Ignore parse errors for individual files
           }
 
+          // Safe type checks to prevent 500 errors
+          const isPro = typeof tierStr === 'string' && tierStr.toLowerCase().includes('pro')
+          const safeEmail = (acc && acc.email && typeof acc.email === 'string') ? acc.email : 'Unknown'
+          
           return {
-            id: acc.id,
-            email: acc.email,
-            tier: tier.includes('pro') ? 'PRO' : 'FREE',
+            id: acc?.id || 'unknown',
+            email: safeEmail,
+            tier: isPro ? 'PRO' : 'FREE',
             quota: quota
           }
         })

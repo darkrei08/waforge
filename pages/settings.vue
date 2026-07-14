@@ -30,17 +30,17 @@
           <div>
             <label class="text-sm text-on-surface-variant font-medium">{{ t('settings.delay_min') }}</label>
             <input v-model.number="store.settings.delayMin" type="number" min="5" max="300"
-                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary focus:ring-2 focus:ring-primary/30 hover:border-white/20 outline-none transition-all" />
           </div>
           <div>
             <label class="text-sm text-on-surface-variant font-medium">{{ t('settings.delay_max') }}</label>
             <input v-model.number="store.settings.delayMax" type="number" min="10" max="600"
-                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary focus:ring-2 focus:ring-primary/30 hover:border-white/20 outline-none transition-all" />
           </div>
           <div>
             <label class="text-sm text-on-surface-variant font-medium">{{ t('settings.max_per_hour') }}</label>
             <input v-model.number="store.settings.maxMessagesPerHour" type="number" min="1" max="1000"
-                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary focus:ring-2 focus:ring-primary/30 hover:border-white/20 outline-none transition-all" />
           </div>
         </div>
       </div>
@@ -73,20 +73,20 @@
           <div>
             <label class="text-sm text-on-surface-variant font-medium">Primary Color</label>
             <div class="flex items-center gap-2 mt-1">
-              <input type="color" v-model="store.brandSettings.primaryColor" class="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent" />
-              <input type="text" v-model="store.brandSettings.primaryColor" class="w-full p-2 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+              <input type="color" v-model="store.brandSettings.primaryColor" class="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent hover:scale-105 transition-transform" />
+              <input type="text" v-model="store.brandSettings.primaryColor" class="w-full p-2 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary focus:ring-2 focus:ring-primary/30 hover:border-white/20 outline-none transition-all" />
             </div>
           </div>
           <div>
             <label class="text-sm text-on-surface-variant font-medium">Secondary Color</label>
             <div class="flex items-center gap-2 mt-1">
-              <input type="color" v-model="store.brandSettings.secondaryColor" class="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent" />
-              <input type="text" v-model="store.brandSettings.secondaryColor" class="w-full p-2 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+              <input type="color" v-model="store.brandSettings.secondaryColor" class="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent hover:scale-105 transition-transform" />
+              <input type="text" v-model="store.brandSettings.secondaryColor" class="w-full p-2 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-secondary focus:ring-2 focus:ring-secondary/30 hover:border-white/20 outline-none transition-all" />
             </div>
           </div>
           <div>
             <label class="text-sm text-on-surface-variant font-medium">Typography (Font Family)</label>
-            <select v-model="store.brandSettings.fontName" class="w-full mt-1 p-2 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors">
+            <select v-model="store.brandSettings.fontName" class="w-full mt-1 p-2 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary focus:ring-2 focus:ring-primary/30 hover:border-white/20 outline-none transition-all cursor-pointer">
               <option value="Inter">Inter (Default)</option>
               <option value="Roboto">Roboto</option>
               <option value="Outfit">Outfit</option>

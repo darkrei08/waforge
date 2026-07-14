@@ -14,7 +14,7 @@
     <!-- Main WebKit DevTools Window (Floating or Docked to Bottom) -->
     <div v-if="isOpen" ref="widgetRef" :style="isDockedBottom ? {} : style" 
          class="fixed z-[9999] bg-surface-container dark:bg-surface-container-highest/95 backdrop-blur-2xl border border-outline/20 shadow-2xl flex flex-col transition-all duration-200"
-         :class="isDockedBottom ? 'bottom-0 left-0 right-0 w-full h-[340px] rounded-none border-t-2 border-primary/40 border-l-0 border-r-0 border-b-0 max-w-full' : (isCollapsed ? 'w-full max-w-[420px] rounded-xl' : 'w-full max-w-[620px] h-[540px] max-h-[85vh] rounded-xl')">
+         :class="isDockedBottom ? 'bottom-0 left-0 right-0 w-full h-[340px] rounded-none border-t-2 border-primary/40 border-l-0 border-r-0 border-b-0 max-w-full' : (isCollapsed ? 'w-full max-w-[calc(100vw-2rem)] sm:max-w-[420px] rounded-xl' : 'w-full max-w-[calc(100vw-2rem)] sm:max-w-[620px] h-[540px] max-h-[calc(100vh-6rem)] rounded-xl')">
       
       <!-- ─── HEADER / WINDOW BAR ─────────────────────────────────────── -->
       <div ref="handleRef" class="px-3 py-2 bg-surface-container dark:bg-surface-container-highest flex items-center justify-between cursor-move shrink-0 transition-all duration-200"
@@ -28,15 +28,15 @@
             <span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
           </div>
           <Terminal class="w-4 h-4 text-primary" />
-          <span class="font-bold text-xs tracking-wide text-on-surface flex items-center gap-1.5">
+          <span v-show="!isCollapsed" class="font-bold text-xs tracking-wide text-on-surface flex items-center gap-1.5">
             WaForge WebKit Studio
             <span class="text-[9px] px-1.5 py-0.2 bg-white/10 text-on-surface/90 rounded font-mono">v4.4 Nitro</span>
           </span>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2" @pointerdown.stop>
           <!-- Project/Service Selector Dropdown -->
-          <select v-model="selectedProject" class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 rounded px-2 py-0.5 text-[10px] text-primary font-mono outline-none focus:border-primary cursor-pointer">
+          <select v-show="!isCollapsed" v-model="selectedProject" class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 rounded px-2 py-0.5 text-[10px] text-primary font-mono outline-none focus:border-primary cursor-pointer shrink-0">
             <option value="ALL">📦 [Tutti i Progetti / Servizi]</option>
             <option value="WaForge">🎨 WaForge Dashboard (Nuxt/Nitro)</option>
             <option value="WuzAPI">💬 WuzAPI Engine (Go / WhatsMeow)</option>
@@ -452,7 +452,8 @@ async function reportToCrikket(err: any) {
         level: 'error',
         environment: {
           project: selectedProject.value,
-          levels: dockerLogLevels.value
+          levels: dockerLogLevels.value,
+          url: typeof window !== 'undefined' ? window.location.href : 'Unknown'
         }
       }
     })
