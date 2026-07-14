@@ -3,8 +3,10 @@
     <!-- Theme Toggle -->
     <div class="absolute top-6 right-6 z-20">
       <button @click="toggleColorMode" class="p-3 bg-surface-container-highest/10 backdrop-blur-md border border-black/5 dark:border-white/10 rounded-full hover:bg-surface-container-highest/20 transition-all shadow-lg text-on-surface group">
-        <Sun v-if="colorMode.value === 'dark'" class="w-5 h-5 text-on-surface-variant group-hover:text-on-surface transition-colors" />
-        <Moon v-else class="w-5 h-5 text-on-surface-variant group-hover:text-on-surface transition-colors" />
+        <ClientOnly>
+          <Sun v-if="colorMode.value === 'dark'" class="w-5 h-5 text-on-surface-variant group-hover:text-on-surface transition-colors" />
+          <Moon v-else class="w-5 h-5 text-on-surface-variant group-hover:text-on-surface transition-colors" />
+        </ClientOnly>
       </button>
     </div>
 

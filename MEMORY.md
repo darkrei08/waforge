@@ -397,3 +397,13 @@ Creata e applicata architettura modulare universale Wizard-AI (wizard-ai-init) s
 ## [Session State Snapshot] - 2026-07-13 02:29:32
 Eseguito audit di sicurezza universale su waforge, Wizard-AI, nuxt-mcp-agent-starter e nuxt-cockpit-agent-starter; standardizzati path, secrets, e imposto cybersecurity e strix in Loop 3
 
+## [Session State Snapshot] - 2026-07-14 23:46:00
+### Session Summary - Astro Landing Page & Single Entry Point Integration
+1. **Astro Landing Page (WaForge Frontend)**:
+   - Sviluppata la landing page in `apps/frontend` utilizzando Astro 5 e TailwindCSS v4.
+   - Creata un'architettura Dark Mode premium con componenti `Header`, `Hero`, `Features` e `Footer`.
+   - Compilazione eseguita con successo (`npm run build`).
+
+2. **Single Entry Point (Traefik Routing)**:
+   - Modificate le regole di routing di Traefik in `docker-compose.yml` per mappare `waforge-frontend` sulla root (`${DOMAIN:-localhost}` e `www.`) e spostare il backend Nuxt (`waforge`) sul sottodominio `app.` (`app.${DOMAIN:-localhost}`).
+   - Aggiornati i link in Astro (`Header.astro`, `Hero.astro`) per puntare correttamente al sottodominio `app.localhost` (variabile d'ambiente `PUBLIC_DASHBOARD_URL`).

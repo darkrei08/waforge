@@ -1,0 +1,51 @@
+---
+// Header.astro
+// Default URL for the Nuxt Dashboard where Auth lives. 
+// In production, this can be passed via environment variables (e.g. import.meta.env.PUBLIC_DASHBOARD_URL)
+const dashboardUrl = import.meta.env.PUBLIC_DASHBOARD_URL || 'http://app.localhost';
+---
+
+<header class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-md bg-background/70 border-b border-white/5" id="navbar">
+  <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="/" class="flex items-center gap-2 group">
+      <div class="w-10 h-10 bg-gradient-to-tr from-primary to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <span class="text-xl font-bold tracking-tight text-white">WaForge</span>
+    </a>
+
+    <!-- Desktop Nav -->
+    <nav class="hidden md:flex items-center gap-8">
+      <a href="#features" class="text-sm font-medium text-text-muted hover:text-white transition-colors">Funzionalità</a>
+      <a href="#crm" class="text-sm font-medium text-text-muted hover:text-white transition-colors">CRM & Automazione</a>
+      <a href="#pricing" class="text-sm font-medium text-text-muted hover:text-white transition-colors">Prezzi</a>
+    </nav>
+
+    <!-- Auth Buttons (Linking to Nuxt Dashboard) -->
+    <div class="flex items-center gap-4">
+      <a href={`${dashboardUrl}/login`} class="text-sm font-medium text-white hover:text-primary transition-colors hidden sm:block">
+        Accedi
+      </a>
+      <a href={`${dashboardUrl}/register`} class="px-5 py-2.5 text-sm font-semibold text-white bg-primary hover:bg-primary-dark rounded-xl transition-all shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:shadow-[0_0_25px_rgba(37,211,102,0.5)]">
+        Inizia Ora
+      </a>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Add background opacity on scroll
+  window.addEventListener('scroll', () => {
+    const navbar = document.getElementById('navbar');
+    if (window.scrollY > 20) {
+      navbar?.classList.add('bg-background/90', 'shadow-lg');
+      navbar?.classList.remove('bg-background/70');
+    } else {
+      navbar?.classList.remove('bg-background/90', 'shadow-lg');
+      navbar?.classList.add('bg-background/70');
+    }
+  });
+</script>

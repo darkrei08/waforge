@@ -14,7 +14,7 @@ services:
       - wa-net
     labels:
       traefik.enable: "${TRAEFIK_ENABLE:-false}"
-      traefik.http.routers.waforge-frontend.rule: "Host(`www.${DOMAIN:-localhost}`)"
+      traefik.http.routers.waforge-frontend.rule: "Host(`${DOMAIN:-localhost}`) || Host(`www.${DOMAIN:-localhost}`)"
       traefik.http.routers.waforge-frontend.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
       traefik.http.routers.waforge-frontend.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
       traefik.http.services.waforge-frontend.loadbalancer.server.port: "4321"
@@ -198,7 +198,7 @@ services:
       - wa-net
     labels:
       traefik.enable: "${TRAEFIK_ENABLE:-false}"
-      traefik.http.routers.waforge.rule: "Host(`${DOMAIN:-localhost}`)"
+      traefik.http.routers.waforge.rule: "Host(`app.${DOMAIN:-localhost}`)"
       traefik.http.routers.waforge.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
       traefik.http.routers.waforge.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
       traefik.http.services.waforge.loadbalancer.server.port: "3000"
@@ -388,9 +388,9 @@ services:
       NEXT_PUBLIC_SITE_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}}
       PORT: 3151
     ports:
-      - "${CRIKKET_WEB_PORT:-3151}:3151"
+      - "${CRIKKET_WEB_PORT:-3151}:3001"
     expose:
-      - "3151"
+      - "3001"
     networks:
       - wa-net
     labels:

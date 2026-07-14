@@ -1,0 +1,59 @@
+---
+// Features.astro
+const features = [
+  {
+    title: "Gestione Contatti (CRM)",
+    description: "Organizza i tuoi contatti in rubriche avanzate con tag, etichette personalizzate e campi dinamici. Segui tutto lo storico chat per cliente.",
+    icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />`,
+    span: "col-span-1 md:col-span-2"
+  },
+  {
+    title: "Campagne Massive",
+    description: "Invia migliaia di messaggi senza rischio di ban. Usa Spintax per variare i testi e definisci delay tra un messaggio e l'altro.",
+    icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />`,
+    span: "col-span-1"
+  },
+  {
+    title: "Live Chat Multi-Agente",
+    description: "Un'unica inbox WhatsApp condivisa per tutto il team. Gestisci ticket, chat in tempo reale e assegna le conversazioni.",
+    icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />`,
+    span: "col-span-1"
+  },
+  {
+    title: "Modelli e Automazioni",
+    description: "Crea template di messaggi (Testo, Immagini, Documenti) riutilizzabili con variabili dinamiche come {{Nome}} o {{Azienda}}.",
+    icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />`,
+    span: "col-span-1 md:col-span-2"
+  }
+];
+---
+
+<section id="features" class="py-24 max-w-7xl mx-auto px-6 relative">
+  <!-- Decorative background -->
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[600px] bg-primary/5 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+  
+  <div class="text-center mb-16">
+    <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4">
+      Tutto ciò che serve per <span class="text-gradient-primary">scalare</span>
+    </h2>
+    <p class="text-text-muted text-lg max-w-2xl mx-auto">
+      Gestisci i tuoi clienti come mai prima d'ora con strumenti integrati e progettati per i team ad alte prestazioni.
+    </p>
+  </div>
+  
+  <!-- Bento Box Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {features.map((feature, i) => (
+      <div class={`glass-panel p-8 rounded-3xl border border-white/5 group hover:border-primary/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(37,211,102,0.1)] hover:-translate-y-1 ${feature.span}`}>
+        <div class="w-14 h-14 bg-surface-bright rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors border border-white/5 group-hover:border-primary/30">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white group-hover:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" set:html={feature.icon}>
+          </svg>
+        </div>
+        <h3 class="text-2xl font-semibold mb-3 text-white">{feature.title}</h3>
+        <p class="text-text-muted leading-relaxed">
+          {feature.description}
+        </p>
+      </div>
+    ))}
+  </div>
+</section>
