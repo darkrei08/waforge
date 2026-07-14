@@ -12,17 +12,28 @@ export default defineEventHandler(async (event) => {
     include: { team: { select: { name: true } } }
   })
 
-  // Poll engine for live status of each session
+  // Poll engine for live status of each session with graceful fallback
   const activeSessions = await Promise.all(
     sessions.map(async (session) => {
-      const liveStatus = await getEngineStatus(session.token)
+      let liveStatus = { connected: false, loggedIn: false, phone: session.phone }
+      try {
+        liveStatus = await getEngineStatus(session.token)
+      } catch (e) {
+        // Fallback to DB state if live status check encounters transient timeout/error
+        liveStatus = {
+          connected: session.status === 'connected',
+          loggedIn: Boolean(session.phone),
+          phone: session.phone
+        }
+      }
       
-      // Update DB if status changed
-      const newStatus = liveStatus.connected ? 'connected' : 'disconnected'
-      if (session.status !== newStatus || session.phone !== liveStatus.phone) {
+      const effectivePhone = liveStatus.phone || session.phone
+      // Update DB if status changed (and only overwrite phone if effectivePhone is truthy or explicitly cleared)
+      const newStatus = liveStatus.connected ? 'connected' : (session.status === 'connected' && effectivePhone ? 'connected' : 'disconnected')
+      if (session.status !== newStatus || session.phone !== effectivePhone) {
         await prisma.whatsAppSession.update({
           where: { id: session.id },
-          data: { status: newStatus, phone: liveStatus.phone }
+          data: { status: newStatus, phone: effectivePhone }
         })
       }
 
@@ -33,17 +44,17 @@ export default defineEventHandler(async (event) => {
         tags: session.tags,
         teamName: session.team?.name,
         status: newStatus,
-        phone: liveStatus.phone,
+        phone: effectivePhone,
         engine: ENGINE,
-        connected: liveStatus.connected,
-        loggedIn: liveStatus.loggedIn,
+        connected: newStatus === 'connected' || liveStatus.connected,
+        loggedIn: liveStatus.loggedIn || Boolean(effectivePhone),
         updatedAt: session.updatedAt
       }
     })
   )
 
-  // Filter out pending ghost sessions (no phone and disconnected)
-  const validSessions = activeSessions.filter(s => s.phone || s.connected)
+  // Filter out pending ghost sessions only when they have NO name, NO phone, and NO connection
+  const validSessions = activeSessions.filter(s => Boolean(s.phone || s.connected || s.status === 'connected' || s.name))
 
   return {
     success: true,

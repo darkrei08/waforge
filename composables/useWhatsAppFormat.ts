@@ -35,6 +35,8 @@ export function useWhatsAppFormat() {
       .replace(/_(.*?)_/g, '<em>$1</em>')
       .replace(/~(.*?)~/g, '<del>$1</del>')
       .replace(/^&gt; (.*$)/gm, '<blockquote class="border-l-4 border-white/20 pl-3 ml-1 my-1 italic text-on-surface-variant">$1</blockquote>')
+      .replace(/^[-•] (.*$)/gm, '<div class="flex items-start gap-1.5 ml-1 my-0.5"><span class="text-primary font-bold">•</span><span>$1</span></div>')
+      .replace(/^(\d+\.) (.*$)/gm, '<div class="flex items-start gap-1.5 ml-1 my-0.5"><span class="text-primary font-mono font-bold">$1</span><span>$2</span></div>')
   }
 
   const csvTemplateHeaders = [

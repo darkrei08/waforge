@@ -1,7 +1,7 @@
 <template>
   <div class="p-8 flex-1 flex flex-col w-full max-w-7xl mx-auto">
     <!-- Blocker Message -->
-    <div v-if="route.query.blocked && !waStore.connected" class="mb-6 p-4 bg-error/10 border border-error/20 rounded-xl flex items-center gap-3">
+    <div v-if="route.query.blocked && waStore.sessions.length === 0" class="mb-6 p-4 bg-error/10 border border-error/20 rounded-xl flex items-center gap-3">
       <AlertCircle class="w-6 h-6 text-error flex-shrink-0" />
       <div>
         <h4 class="text-error font-semibold text-sm">Accesso bloccato</h4>
@@ -37,53 +37,55 @@
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div v-for="session in waStore.sessions" :key="session.id" 
-           class="bg-surface-container/50 backdrop-blur-md border rounded-2xl p-6 shadow-lg relative group transition-colors"
+           class="bg-surface-container/50 backdrop-blur-md border rounded-2xl p-6 shadow-lg relative group transition-colors flex flex-col justify-between h-full"
            :class="session.connected ? 'border-primary/20' : 'border-error/20'">
         
-        <div class="flex items-start justify-between mb-4">
-          <div class="flex items-center gap-3">
-            <div class="p-2.5 rounded-xl flex items-center justify-center" :class="session.connected ? 'bg-primary/10 text-primary' : 'bg-error/10 text-error'">
-              <Smartphone class="w-6 h-6" />
+        <div class="flex flex-col flex-1">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="p-2.5 rounded-xl flex items-center justify-center" :class="session.connected ? 'bg-primary/10 text-primary' : 'bg-error/10 text-error'">
+                <Smartphone class="w-6 h-6" />
+              </div>
+              <div>
+                <h4 class="font-bold text-on-surface">{{ session.name || session.phone ? (session.name ? session.name : '+' + session.phone) : 'In attesa...' }}</h4>
+                <p v-if="session.name && session.phone" class="text-xs text-on-surface-variant font-medium">+{{ session.phone }}</p>
+                <p class="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">{{ session.engine }}</p>
+              </div>
             </div>
-            <div>
-              <h4 class="font-bold text-on-surface">{{ session.name || session.phone ? (session.name ? session.name : '+' + session.phone) : 'In attesa...' }}</h4>
-              <p v-if="session.name && session.phone" class="text-xs text-on-surface-variant font-medium">+{{ session.phone }}</p>
-              <p class="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">{{ session.engine }}</p>
+            
+            <div class="flex flex-col items-end gap-2">
+              <div class="w-3 h-3 rounded-full shadow-sm" :class="session.connected ? 'bg-primary shadow-primary/50' : 'bg-error shadow-error/50'"></div>
+              <button @click="openEditModal(session)" class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Modifica Dispositivo">
+                <Pencil class="w-4 h-4" />
+              </button>
             </div>
           </div>
-          
-          <div class="flex flex-col items-end gap-2">
-            <div class="w-3 h-3 rounded-full shadow-sm" :class="session.connected ? 'bg-primary shadow-primary/50' : 'bg-error shadow-error/50'"></div>
-            <button @click="openEditModal(session)" class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Modifica Dispositivo">
-              <Pencil class="w-4 h-4" />
-            </button>
-          </div>
-        </div>
 
-        <div v-if="session.tags" class="flex flex-wrap gap-1.5 mb-4">
-          <span v-for="tag in session.tags.split(',')" :key="tag" class="px-2 py-0.5 text-[10px] font-bold bg-black/10 dark:bg-white/10 text-on-surface-variant rounded-md uppercase">
-            {{ tag.trim() }}
-          </span>
-        </div>
-
-        <div class="space-y-2 mb-6">
-          <div class="flex justify-between text-sm">
-            <span class="text-on-surface-variant">Stato:</span>
-            <span class="font-semibold" :class="session.connected ? 'text-primary' : 'text-error'">
-              {{ session.connected ? 'Connesso' : 'Disconnesso' }}
+          <div v-if="session.tags" class="flex flex-wrap gap-1.5 mb-4">
+            <span v-for="tag in session.tags.split(',')" :key="tag" class="px-2 py-0.5 text-[10px] font-bold bg-black/10 dark:bg-white/10 text-on-surface-variant rounded-md uppercase">
+              {{ tag.trim() }}
             </span>
           </div>
-          <div v-if="session.teamName" class="flex justify-between text-sm">
-            <span class="text-on-surface-variant">Team:</span>
-            <span class="text-on-surface font-medium">{{ session.teamName }}</span>
-          </div>
-          <div class="flex justify-between text-sm">
-            <span class="text-on-surface-variant">Ultimo sync:</span>
-            <span class="text-on-surface">{{ new Date(session.updatedAt).toLocaleTimeString() }}</span>
+
+          <div class="space-y-2 mb-6">
+            <div class="flex justify-between text-sm">
+              <span class="text-on-surface-variant">Stato:</span>
+              <span class="font-semibold" :class="session.connected ? 'text-primary' : 'text-error'">
+                {{ session.connected ? 'Connesso' : 'Disconnesso' }}
+              </span>
+            </div>
+            <div v-if="session.teamName" class="flex justify-between text-sm">
+              <span class="text-on-surface-variant">Team:</span>
+              <span class="text-on-surface font-medium">{{ session.teamName }}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-on-surface-variant">Ultimo sync:</span>
+              <span class="text-on-surface">{{ new Date(session.updatedAt).toLocaleTimeString() }}</span>
+            </div>
           </div>
         </div>
 
-        <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-2 mt-auto">
           <button v-if="session.connected && session.phone" @click="sendTestMessage(session.id)" class="w-full py-2.5 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 rounded-xl font-medium transition-colors flex items-center justify-center gap-2" title="Invia un messaggio di test a questo numero">
             <Send class="w-4 h-4" />
             Test Messaggio

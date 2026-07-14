@@ -14,11 +14,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
       return
     }
 
-    if (!waStore.fetched) {
-      await waStore.fetchSessions()
-    }
-
-    if (!waStore.connected) {
+    if (waStore.sessions.length === 0) {
       return navigateTo('/devices?blocked=true')
     }
   }

@@ -359,12 +359,12 @@ const defaultModelLabel = computed(() => {
   return found ? `Predefinito (${found.name})` : `Predefinito (${model})`
 })
 
-// Check if an AI message is actual content (not progress/error or welcome greeting)
+// Check if an AI message is actual generated content that should display the "Applica al Template" / "Copia" buttons
 function isAiReadyContent(content: string, idx?: number): boolean {
-  if (!content) return false
-  if (idx === 0) return false
+  if (!content || typeof idx !== 'number' || idx <= 0) return false
+  const prevMsg = chatHistory.value[idx - 1]
+  if (!prevMsg || prevMsg.role !== 'user') return false
   if (content.includes('👋 Ciao! Sono il tuo AI Co-Pilot') || content.includes('Scrivimi come vuoi modificare o potenziare')) return false
-  if (!chatHistory.value.some(m => m.role === 'user')) return false
   if (content.startsWith('⏳') || content.includes('⏳')) return false
   if (content.startsWith('❌') || content.includes('❌')) return false
   if (content.includes('Inizializzazione...') || content.includes('Elaborazione in corso') || content.includes('Attesa di risposta')) return false
@@ -446,6 +446,9 @@ async function handleAiGenerate(action: 'custom' | 'antiban' | 'improve' | 'chat
 
     let assistantMsgIdx = chatHistory.value.length
     if (action !== 'chat' || aiPrompt.value) {
+      if (action !== 'chat') {
+        chatHistory.value.push({ role: 'user', content: action === 'antiban' ? '🛡️ [Azione rapida] Applica Anti-Ban (Spintax)' : '✨ [Azione rapida] Migliora Formattazione' })
+      }
       chatHistory.value.push({ role: 'assistant', content: '⏳ Connessione al modello in corso...' })
       assistantMsgIdx = chatHistory.value.length - 1
     }

@@ -23,11 +23,12 @@ export const useWhatsappStore = defineStore('whatsapp', () => {
   const loading = ref(false)
   const fetched = ref(false)
 
-  // Derived from the first connected session (or first session overall)
-  const connected = computed(() => sessions.value.some(s => s.connected || s.status === 'connected' || s.loggedIn || Boolean(s.phone)))
+  // Derived from sessions
+  const hasDevices = computed(() => sessions.value.length > 0)
+  const connected = computed(() => sessions.value.some(s => s.connected || s.status === 'connected' || s.loggedIn || Boolean(s.phone) || s.status === 'connecting'))
   const engine = computed(() => sessions.value[0]?.engine ?? 'Hybrid (WuzAPI + GoWA + OpenWA)')
   const phone = computed(() => sessions.value.find(s => s.connected || s.status === 'connected' || Boolean(s.phone))?.phone ?? null)
-  const statusLabel = computed(() => connected.value ? 'Connesso' : 'Disconnesso')
+  const statusLabel = computed(() => connected.value ? 'Connesso' : (hasDevices.value ? 'Configurato / Disconnesso' : 'Nessun Dispositivo'))
 
   async function fetchSessions() {
     loading.value = true
@@ -62,5 +63,5 @@ export const useWhatsappStore = defineStore('whatsapp', () => {
     await fetchSessions()
   }
 
-  return { sessions, connected, loading, fetched, engine, phone, statusLabel, fetchSessions, fetchStatus, disconnect, updateSession }
+  return { sessions, hasDevices, connected, loading, fetched, engine, phone, statusLabel, fetchSessions, fetchStatus, disconnect, updateSession }
 })
