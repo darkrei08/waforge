@@ -62,6 +62,9 @@
 - **GDPR Consent Management:** Native opt-in/opt-out tracking to strictly enforce privacy policies and stop unsolicited messages automatically.
 - **AI-Powered Copywriting:** Generate spintax variants and optimize message content automatically through LLM integration.
 - **Bulk Operations & Real-Time Stats:** Perform bulk selections, deletions, and monitor campaign progression (read/delivered statuses) live via Webhooks.
+- **🔌 Cockpit Tools Proxy Support:** Native integration with [Cockpit Tools](https://github.com/jlcodes99/cockpit-tools) for automatic discovery and shared use of AI accounts, optimizing costs and API limits.
+- **🧠 Smart MCP Routing (Agent Tools):** MCP (Model Context Protocol) services and the Cockpit proxy are two independent architectural layers. To prevent token "drain" (sending the entire tool documentation to the LLM on every single message) and reduce latency, WaForge activates MCP servers **only when needed**.
+  - **How to force activation?** The engine loads MCP processes only if you use specific keywords in your prompt (e.g., *"Use **tools** to read this file"*, or including words like *strument*, *mcp*) or if the base tool is vital. This triggers the filter bypass and runs MCP alongside the Cockpit proxy, guaranteeing maximum performance.
 
 ---
 

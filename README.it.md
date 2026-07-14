@@ -58,6 +58,8 @@
 - **🚀 Wizard Campaign**: Creazione e gestione di campagne massive con un workflow step-by-step intuitivo.
 - **✨ Assistente AI & Anti-Ban Integrato**: Utilizza modelli LLM (OpenAI, Anthropic) per generare varianti Spintax dei tuoi messaggi e applicare strategie anti-ban avanzate in tempo reale.
 - **🔌 Supporto Cockpit Tools Proxy**: Integrazione nativa con [Cockpit Tools](https://github.com/jlcodes99/cockpit-tools) per il rilevamento automatico e l'uso condiviso degli account AI, ottimizzando costi e limiti API.
+- **🧠 Smart MCP Routing (Agent Tools):** I servizi MCP (Model Context Protocol) e il proxy Cockpit sono due livelli architetturali indipendenti. Per evitare il "risucchio" di token (inviare all'LLM l'intera documentazione dei tool ad ogni messaggio) e abbattere la latenza, WaForge attiva i server MCP **solo all'occorrenza**. 
+  - **Come forzare l'attivazione?** L'engine carica i processi MCP solo se usi keyword specifiche nel prompt (es. *«Usa i **tool** per leggere questo file»*, oppure includendo le parole *strument*, *mcp*) o se il tool di base è vitale. Questo innesca il bypass del filtro e affianca l'MCP al proxy Cockpit, garantendo il massimo delle performance.
 - **📱 Gestione Dispositivi (Multidevice)**: Collega e gestisci sessioni WhatsApp tramite QR code (Multi-Device supportato).
 - **Anteprima Spintax Dinamica:** Genera e verifica le variazioni dello spintax (es. `{Ciao|Salve}`) in tempo reale direttamente dall'editor.
 - **Progresso in Tempo Reale (SSE):** Monitora lo stato di consegna delle campagne istantaneamente via Server-Sent Events (SSE) minimizzando il carico del server.

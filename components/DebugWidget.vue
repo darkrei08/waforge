@@ -2,7 +2,7 @@
   <div class="waforge-webkit-devtools font-sans select-none text-on-surface">
     <!-- Floating toggle button when closed -->
     <button v-if="!isOpen" @click="isOpen = true" 
-            class="fixed bottom-4 right-4 z-[10000] px-4 py-2.5 bg-[#1f1f1f]/95 backdrop-blur-xl border border-primary/40 rounded-full shadow-[0_0_25px_rgba(37,211,102,0.35)] flex items-center gap-2 hover:scale-105 transition-all text-primary font-bold text-xs cursor-pointer group">
+            class="fixed bottom-4 right-4 z-[10000] px-4 py-2.5 bg-surface-container dark:bg-surface-container-highest/95 backdrop-blur-xl border border-primary/40 rounded-full shadow-[0_0_25px_rgba(37,211,102,0.35)] flex items-center gap-2 hover:scale-105 transition-all text-primary font-bold text-xs cursor-pointer group">
       <Terminal class="w-4 h-4 animate-pulse text-primary group-hover:rotate-12 transition-transform" />
       <span>WebKit DevTools</span>
       <span v-if="capturedErrors.length > 0" class="px-1.5 py-0.2 bg-error text-on-error rounded-full text-[10px] font-black animate-bounce">
@@ -13,14 +13,14 @@
 
     <!-- Main WebKit DevTools Window (Floating or Docked to Bottom) -->
     <div v-if="isOpen" ref="widgetRef" :style="isDockedBottom ? {} : style" 
-         class="fixed z-[9999] bg-[#141414]/95 backdrop-blur-2xl border border-white/15 shadow-2xl flex flex-col transition-all duration-200"
+         class="fixed z-[9999] bg-surface-container dark:bg-surface-container-highest/95 backdrop-blur-2xl border border-outline/20 shadow-2xl flex flex-col transition-all duration-200"
          :class="isDockedBottom ? 'bottom-0 left-0 right-0 w-full h-[340px] rounded-none border-t-2 border-primary/40 border-l-0 border-r-0 border-b-0 max-w-full' : (isCollapsed ? 'w-full max-w-[420px] rounded-xl' : 'w-full max-w-[620px] h-[540px] max-h-[85vh] rounded-xl')">
       
       <!-- ─── HEADER / WINDOW BAR ─────────────────────────────────────── -->
-      <div ref="handleRef" class="px-3 py-2 bg-[#1f1f1f] flex items-center justify-between cursor-move shrink-0 transition-all duration-200"
+      <div ref="handleRef" class="px-3 py-2 bg-surface-container dark:bg-surface-container-highest flex items-center justify-between cursor-move shrink-0 transition-all duration-200"
            :class="[
              isDockedBottom ? 'cursor-default' : (isCollapsed ? 'rounded-xl' : 'rounded-t-xl'),
-             isCollapsed ? '' : 'border-b border-white/10'
+             isCollapsed ? '' : 'border-b border-outline/20'
            ]"
            @dblclick="isDockedBottom ? null : (isCollapsed = !isCollapsed)">
         <div class="flex items-center gap-2.5">
@@ -28,15 +28,15 @@
             <span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
           </div>
           <Terminal class="w-4 h-4 text-primary" />
-          <span class="font-bold text-xs tracking-wide text-white flex items-center gap-1.5">
+          <span class="font-bold text-xs tracking-wide text-on-surface flex items-center gap-1.5">
             WaForge WebKit Studio
-            <span class="text-[9px] px-1.5 py-0.2 bg-white/10 text-gray-300 rounded font-mono">v4.4 Nitro</span>
+            <span class="text-[9px] px-1.5 py-0.2 bg-white/10 text-on-surface/90 rounded font-mono">v4.4 Nitro</span>
           </span>
         </div>
 
         <div class="flex items-center gap-2">
           <!-- Project/Service Selector Dropdown -->
-          <select v-model="selectedProject" class="bg-black/60 border border-white/15 rounded px-2 py-0.5 text-[10px] text-primary font-mono outline-none focus:border-primary cursor-pointer">
+          <select v-model="selectedProject" class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 rounded px-2 py-0.5 text-[10px] text-primary font-mono outline-none focus:border-primary cursor-pointer">
             <option value="ALL">📦 [Tutti i Progetti / Servizi]</option>
             <option value="WaForge">🎨 WaForge Dashboard (Nuxt/Nitro)</option>
             <option value="WuzAPI">💬 WuzAPI Engine (Go / WhatsMeow)</option>
@@ -48,14 +48,14 @@
 
           <!-- Dock to Bottom Toggle -->
           <button @click="isDockedBottom = !isDockedBottom; isCollapsed = false" 
-                  class="p-1 text-gray-400 hover:text-white rounded hover:bg-white/10 transition-colors"
+                  class="p-1 text-on-surface-variant hover:text-on-surface rounded hover:bg-white/10 transition-colors"
                   :title="isDockedBottom ? 'Sgancia come Finestra Flottante' : 'Aggancia in basso (DevTools style)'">
             <Maximize2 v-if="!isDockedBottom" class="w-3.5 h-3.5" />
             <Minimize2 v-else class="w-3.5 h-3.5 text-primary" />
           </button>
 
           <!-- Collapse Window (Only when floating) -->
-          <button v-if="!isDockedBottom" @click="isCollapsed = !isCollapsed" class="p-1 text-gray-400 hover:text-white rounded hover:bg-white/10 transition-colors">
+          <button v-if="!isDockedBottom" @click="isCollapsed = !isCollapsed" class="p-1 text-on-surface-variant hover:text-on-surface rounded hover:bg-white/10 transition-colors">
             <ChevronDown class="w-3.5 h-3.5 transition-transform" :class="isCollapsed ? 'rotate-180' : ''" />
           </button>
 
@@ -67,15 +67,15 @@
       </div>
 
       <!-- ─── BODY (ONLY IF NOT COLLAPSED) ────────────────────────────── -->
-      <div v-show="!isCollapsed" class="flex-1 flex flex-col overflow-hidden bg-[#0d0d0d]">
+      <div v-show="!isCollapsed" class="flex-1 flex flex-col overflow-hidden bg-surface-container dark:bg-surface-container-highest">
         
         <!-- WebKit TABS TOOLBAR -->
-        <div class="flex items-center justify-between border-b border-white/10 bg-[#141414] px-2 pt-1 shrink-0">
+        <div class="flex items-center justify-between border-b border-outline/20 bg-surface-container dark:bg-surface-container-highest px-2 pt-1 shrink-0">
           <div class="flex gap-1">
             <button v-for="tab in tabs" :key="tab.id"
                     @click="activeTab = tab.id"
                     class="px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 rounded-t-lg transition-colors border-t border-l border-r"
-                    :class="activeTab === tab.id ? 'bg-[#1e1e1e] text-primary border-white/15 border-b-transparent -mb-px pb-2' : 'text-gray-400 border-transparent hover:text-gray-200 hover:bg-white/5'">
+                    :class="activeTab === tab.id ? 'bg-surface-container-high dark:bg-surface-container-lowest text-primary border-outline/20 border-b-transparent -mb-px pb-2' : 'text-on-surface-variant border-transparent hover:text-on-surface/90 hover:bg-white/5'">
               <component :is="tab.icon" class="w-3.5 h-3.5" :class="tab.id === 'errors' && capturedErrors.length > 0 ? 'text-error animate-bounce' : ''" />
               <span>{{ tab.label }}</span>
               <span v-if="tab.id === 'errors' && capturedErrors.length > 0" class="px-1 py-0.2 bg-error/20 text-error rounded text-[9px] font-bold">
@@ -90,25 +90,25 @@
           <!-- Quick Actions & Search -->
           <div class="flex items-center gap-2 pr-2">
             <div class="relative flex items-center">
-              <Search class="w-3 h-3 text-gray-500 absolute left-2 pointer-events-none" />
+              <Search class="w-3 h-3 text-on-surface-variant absolute left-2 pointer-events-none" />
               <input v-model="searchQuery" type="text" placeholder="Filtra log o errori..." 
-                     class="bg-black/60 border border-white/15 rounded-full pl-6 pr-2 py-0.5 text-[10px] text-gray-300 w-36 outline-none focus:border-primary transition-all" />
-              <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-2 text-gray-500 hover:text-white text-[9px]">✕</button>
+                     class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 rounded-full pl-6 pr-2 py-0.5 text-[10px] text-on-surface/90 w-36 outline-none focus:border-primary transition-all" />
+              <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-2 text-on-surface-variant hover:text-on-surface text-[9px]">✕</button>
             </div>
-            <button @click="clearCurrentTab" class="p-1 text-gray-400 hover:text-error rounded hover:bg-white/5 transition-colors" title="Pulisci log della scheda corrente">
+            <button @click="clearCurrentTab" class="p-1 text-on-surface-variant hover:text-error rounded hover:bg-white/5 transition-colors" title="Pulisci log della scheda corrente">
               <Trash2 class="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
         <!-- ACTIVE DOCKER CONFIG (.ENV) LEVEL BADGES -->
-        <div class="bg-[#181818] border-b border-white/5 px-3 py-1 text-[10px] text-gray-400 flex items-center justify-between gap-2 shrink-0 font-mono">
+        <div class="bg-surface-container dark:bg-surface-container-highest border-b border-outline/20 px-3 py-1 text-[10px] text-on-surface-variant flex items-center justify-between gap-2 shrink-0 font-mono">
           <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar no-wrap">
             <span class="text-primary font-bold shrink-0">⚙️ ENV LOG LEVELS:</span>
-            <span class="bg-black/50 border border-white/10 px-1.5 py-0.2 rounded shrink-0">WaForge: <b class="text-cyan-400 uppercase">{{ dockerLogLevels.waforge }}</b></span>
-            <span class="bg-black/50 border border-white/10 px-1.5 py-0.2 rounded shrink-0">WuzAPI: <b class="text-green-400 uppercase">{{ dockerLogLevels.wuzapi }}</b></span>
-            <span class="bg-black/50 border border-white/10 px-1.5 py-0.2 rounded shrink-0">Cockpit: <b class="text-purple-400 uppercase">{{ dockerLogLevels.cockpit }}</b></span>
-            <span class="bg-black/50 border border-white/10 px-1.5 py-0.2 rounded shrink-0">MCP: <b class="text-yellow-400 uppercase">{{ dockerLogLevels.mcp }}</b></span>
+            <span class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 px-1.5 py-0.2 rounded shrink-0">WaForge: <b class="text-cyan-400 uppercase">{{ dockerLogLevels.waforge }}</b></span>
+            <span class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 px-1.5 py-0.2 rounded shrink-0">WuzAPI: <b class="text-green-400 uppercase">{{ dockerLogLevels.wuzapi }}</b></span>
+            <span class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 px-1.5 py-0.2 rounded shrink-0">Cockpit: <b class="text-purple-400 uppercase">{{ dockerLogLevels.cockpit }}</b></span>
+            <span class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 px-1.5 py-0.2 rounded shrink-0">MCP: <b class="text-yellow-400 uppercase">{{ dockerLogLevels.mcp }}</b></span>
           </div>
           <div class="flex items-center gap-1 shrink-0">
             <span class="w-2 h-2 rounded-full" :class="isPolling ? 'bg-green-500 animate-pulse' : 'bg-gray-600'"></span>
@@ -119,12 +119,12 @@
         <!-- ─── TAB 1: CONSOLE LOGS (Multi-Project/Service) ──────────────── -->
         <div v-if="activeTab === 'logs'" class="flex-1 flex flex-col overflow-hidden">
           <!-- Level Filter Pills -->
-          <div class="flex items-center gap-1 bg-[#1a1a1a] px-3 py-1 border-b border-white/5 shrink-0">
-            <span class="text-[10px] text-gray-500 font-semibold mr-1">Filtro Livello:</span>
+          <div class="flex items-center gap-1 bg-surface-container dark:bg-surface-container-highest px-3 py-1 border-b border-outline/20 shrink-0">
+            <span class="text-[10px] text-on-surface-variant font-semibold mr-1">Filtro Livello:</span>
             <button v-for="lvl in ['ALL', 'verbose', 'info', 'warn', 'error']" :key="lvl"
                     @click="selectedLevelFilter = lvl"
                     class="px-2 py-0.5 text-[9px] font-bold rounded uppercase transition-colors"
-                    :class="selectedLevelFilter === lvl ? 'bg-primary text-on-primary shadow-[0_0_8px_rgba(37,211,102,0.4)]' : 'text-gray-400 bg-white/5 hover:text-white hover:bg-white/10'">
+                    :class="selectedLevelFilter === lvl ? 'bg-primary text-on-primary shadow-[0_0_8px_rgba(37,211,102,0.4)]' : 'text-on-surface-variant bg-white/5 hover:text-on-surface hover:bg-white/10'">
               {{ lvl === 'ALL' ? 'Tutto (Verbose)' : lvl }}
             </button>
             <div class="ml-auto flex items-center gap-2">
@@ -136,12 +136,12 @@
 
           <!-- Logs Stream -->
           <div class="flex-1 overflow-y-auto p-2 font-mono text-[11px] space-y-1 custom-scrollbar">
-            <div v-if="filteredConsoleLogs.length === 0" class="text-gray-500 italic text-center py-10">
+            <div v-if="filteredConsoleLogs.length === 0" class="text-on-surface-variant italic text-center py-10">
               Nessun log corrisponde ai criteri del filtro (Progetto: {{ selectedProject }}, Livello: {{ selectedLevelFilter }})
             </div>
             <div v-for="(log, idx) in filteredConsoleLogs" :key="idx"
-                 class="px-2 py-1 rounded border border-transparent hover:border-white/10 hover:bg-white/[0.03] transition-colors flex items-start gap-2 group">
-              <span class="text-gray-500 shrink-0 text-[10px]">[{{ log.time }}]</span>
+                 class="px-2 py-1 rounded border border-transparent hover:border-outline/20 hover:bg-white/[0.03] transition-colors flex items-start gap-2 group">
+              <span class="text-on-surface-variant shrink-0 text-[10px]">[{{ log.time }}]</span>
               
               <!-- Project Source Badge -->
               <span class="px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider shrink-0"
@@ -156,7 +156,7 @@
               </span>
 
               <!-- Message -->
-              <span class="flex-1 break-words" :class="log.level === 'error' ? 'text-red-400 font-medium' : (log.level === 'warn' ? 'text-yellow-300' : (log.level === 'verbose' ? 'text-cyan-300' : 'text-gray-200'))">
+              <span class="flex-1 break-words" :class="log.level === 'error' ? 'text-red-400 font-medium' : (log.level === 'warn' ? 'text-yellow-300' : (log.level === 'verbose' ? 'text-cyan-300' : 'text-on-surface/90'))">
                 {{ log.msg }}
               </span>
             </div>
@@ -164,26 +164,26 @@
         </div>
 
         <!-- ─── TAB 2: USER INTERACTIONS (WebKit Breadcrumbs) ────────────── -->
-        <div v-if="activeTab === 'interactions'" class="flex-1 flex flex-col overflow-hidden bg-[#0a0a0a]">
-          <div class="bg-[#1a1a1a] px-3 py-1.5 border-b border-white/5 text-[10px] text-gray-400 flex justify-between items-center shrink-0 font-mono">
+        <div v-if="activeTab === 'interactions'" class="flex-1 flex flex-col overflow-hidden bg-surface-container dark:bg-surface-container-highest">
+          <div class="bg-surface-container dark:bg-surface-container-highest px-3 py-1.5 border-b border-outline/20 text-[10px] text-on-surface-variant flex justify-between items-center shrink-0 font-mono">
             <span>🔍 Monitoraggio Interazioni in Tempo Reale (Click, Form, Router, Webhook)</span>
             <span class="text-primary font-bold">{{ userInteractions.length }} eventi registrati</span>
           </div>
 
           <div class="flex-1 overflow-y-auto p-2 font-mono text-[11px] space-y-1.5 custom-scrollbar">
-            <div v-if="filteredInteractions.length === 0" class="text-gray-500 italic text-center py-10">
+            <div v-if="filteredInteractions.length === 0" class="text-on-surface-variant italic text-center py-10">
               Nessuna interazione o click registrato di recente nel browser. Fai clic su un pulsante o cambia pagina per catturarla!
             </div>
             <div v-for="(item, idx) in filteredInteractions" :key="idx"
-                 class="p-2 rounded bg-white/[0.02] border border-white/5 hover:border-primary/40 flex items-start gap-2.5 transition-colors">
-              <span class="text-gray-500 text-[10px] shrink-0">[{{ item.time }}]</span>
+                 class="p-2 rounded bg-white/[0.02] border border-outline/20 hover:border-primary/40 flex items-start gap-2.5 transition-colors">
+              <span class="text-on-surface-variant text-[10px] shrink-0">[{{ item.time }}]</span>
               <span class="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase shrink-0"
                     :class="item.type === 'click' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : (item.type === 'navigation' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-green-500/20 text-green-400 border border-green-500/30')">
                 {{ item.type }}
               </span>
-              <div class="flex-1 text-gray-200">
+              <div class="flex-1 text-on-surface/90">
                 <div class="font-bold text-primary">{{ item.target }}</div>
-                <div v-if="item.details" class="text-[10px] text-gray-400 mt-0.5">{{ item.details }}</div>
+                <div v-if="item.details" class="text-[10px] text-on-surface-variant mt-0.5">{{ item.details }}</div>
               </div>
             </div>
           </div>
@@ -200,6 +200,9 @@
               <a href="http://localhost:3151" target="_blank" class="px-2 py-0.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded border border-purple-500/30 transition-colors flex items-center gap-1 font-bold">
                 🐞 Dashboard Crikket (Porta 3151)
               </a>
+              <button v-if="capturedErrors.length > 0" @click="copyAllErrors()" class="px-2 py-0.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded border border-blue-500/30 transition-colors flex items-center gap-1" title="Copia tutti gli errori negli appunti">
+                <Copy class="w-3 h-3" /> Copia Tutti
+              </button>
               <button v-if="capturedErrors.length > 0" @click="capturedErrors = []" class="px-2 py-0.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded border border-red-500/30 transition-colors">
                 Pulisci
               </button>
@@ -207,10 +210,10 @@
           </div>
 
           <div class="flex-1 overflow-y-auto p-2 font-mono text-[11px] space-y-2 custom-scrollbar">
-            <div v-if="filteredErrors.length === 0" class="flex flex-col items-center justify-center py-12 text-gray-500">
+            <div v-if="filteredErrors.length === 0" class="flex flex-col items-center justify-center py-12 text-on-surface-variant">
               <CheckCircle2 class="w-8 h-8 text-green-500 mb-2" />
               <span class="text-green-400 font-bold">Nessun errore runtime o eccezione rilevata!</span>
-              <span class="text-[10px] text-gray-500">Tutti i componenti Vue e le chiamate API rispondono correttamente.</span>
+              <span class="text-[10px] text-on-surface-variant">Tutti i componenti Vue e le chiamate API rispondono correttamente.</span>
               <div class="mt-4 flex gap-2">
                 <button @click="triggerTestError" class="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded border border-red-500/30 text-[10px]">
                   ⚡ Simula Errore per Test Crikket
@@ -224,13 +227,16 @@
                 <span class="text-[10px] text-red-400/80">[{{ err.time }}]</span>
                 <div class="flex items-center gap-1.5">
                   <span class="px-1.5 py-0.2 bg-red-500/30 text-red-300 text-[9px] font-bold rounded uppercase">{{ err.type }}</span>
+                  <button @click="copyError(err)" class="px-2 py-0.2 bg-gray-500/20 hover:bg-gray-500/30 text-on-surface/90 text-[9px] font-bold rounded border border-gray-500/30 transition-colors flex items-center gap-1" title="Copia negli appunti">
+                    <Copy class="w-2.5 h-2.5" /> Copia
+                  </button>
                   <button @click="reportToCrikket(err)" class="px-2 py-0.2 bg-primary/20 hover:bg-primary/30 text-primary text-[9px] font-bold rounded border border-primary/30 transition-colors">
                     📤 Memorizza in Crikket per AI
                   </button>
                 </div>
               </div>
               <div class="text-red-300 font-bold break-words">{{ err.message }}</div>
-              <div v-if="err.source || err.stack" class="bg-black/60 p-2 rounded border border-red-500/20 text-[10px] text-gray-400 overflow-x-auto whitespace-pre-wrap font-mono">
+              <div v-if="err.source || err.stack" class="bg-surface dark:bg-surface-container-lowest/80 p-2 rounded border border-red-500/20 text-[10px] text-on-surface-variant overflow-x-auto whitespace-pre-wrap font-mono">
                 {{ err.stack || err.source }}
               </div>
             </div>
@@ -238,33 +244,33 @@
         </div>
 
         <!-- ─── TAB 4: NETWORK INSPECTOR ─────────────────────────────────── -->
-        <div v-if="activeTab === 'network'" class="flex-1 flex flex-col overflow-hidden bg-[#0a0a0a]">
-          <div class="bg-[#1a1a1a] px-3 py-1.5 border-b border-white/5 text-[10px] text-gray-400 flex justify-between items-center shrink-0 font-mono">
+        <div v-if="activeTab === 'network'" class="flex-1 flex flex-col overflow-hidden bg-surface-container dark:bg-surface-container-highest">
+          <div class="bg-surface-container dark:bg-surface-container-highest px-3 py-1.5 border-b border-outline/20 text-[10px] text-on-surface-variant flex justify-between items-center shrink-0 font-mono">
             <span>🌐 Chiamate HTTP Intercettate ($fetch / API / WhatsApp / Nitro)</span>
             <span class="text-primary font-bold">{{ networkRequests.length }} richieste</span>
           </div>
 
           <div class="flex-1 overflow-y-auto p-2 font-mono text-[11px] space-y-1 custom-scrollbar">
-            <div v-for="req in networkRequests" :key="req.id" class="p-2 rounded bg-white/[0.02] border border-white/5 flex items-center justify-between text-[11px]">
+            <div v-for="req in networkRequests" :key="req.id" class="p-2 rounded bg-white/[0.02] border border-outline/20 flex items-center justify-between text-[11px]">
               <div class="flex items-center gap-2 truncate flex-1 mr-2">
                 <span class="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase shrink-0"
                       :class="req.method === 'GET' ? 'bg-green-500/20 text-green-400' : (req.method === 'POST' ? 'bg-blue-500/20 text-blue-400' : 'bg-yellow-500/20 text-yellow-400')">
                   {{ req.method }}
                 </span>
-                <span class="text-gray-200 truncate">{{ req.url }}</span>
+                <span class="text-on-surface/90 truncate">{{ req.url }}</span>
               </div>
               <div class="flex items-center gap-2 shrink-0">
-                <span :class="req.status >= 400 ? 'text-red-400 font-bold' : 'text-gray-400'">{{ req.status }}</span>
-                <span class="text-gray-500 text-[10px]">{{ req.duration || '24ms' }}</span>
+                <span :class="req.status >= 400 ? 'text-red-400 font-bold' : 'text-on-surface-variant'">{{ req.status }}</span>
+                <span class="text-on-surface-variant text-[10px]">{{ req.duration || '24ms' }}</span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- ─── TAB 5: PINIA STORE / STATE INSPECTOR ─────────────────────── -->
-        <div v-if="activeTab === 'state'" class="flex-1 bg-[#0a0a0a] p-3 overflow-y-auto font-mono text-[11px] text-blue-300 custom-scrollbar">
-          <div class="text-[10px] text-gray-500 mb-2">// Stato globale intercettato in tempo reale (Store Auth, Campagne, Cockpit)</div>
-          <pre class="whitespace-pre-wrap bg-black/60 p-3 rounded border border-white/10 text-cyan-300">{{ stateSnapshot }}</pre>
+        <div v-if="activeTab === 'state'" class="flex-1 bg-surface-container dark:bg-surface-container-highest p-3 overflow-y-auto font-mono text-[11px] text-blue-300 custom-scrollbar">
+          <div class="text-[10px] text-on-surface-variant mb-2">// Stato globale intercettato in tempo reale (Store Auth, Campagne, Cockpit)</div>
+          <pre class="whitespace-pre-wrap bg-surface dark:bg-surface-container-lowest/80 p-3 rounded border border-outline/20 text-cyan-300">{{ stateSnapshot }}</pre>
         </div>
 
       </div>
@@ -274,7 +280,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { Terminal, Activity, ShieldAlert, Network, Layers, Search, Trash2, Maximize2, Minimize2, ChevronDown, X, CheckCircle2 } from 'lucide-vue-next'
+import { Terminal, Activity, ShieldAlert, Network, Layers, Search, Trash2, Maximize2, Minimize2, ChevronDown, X, CheckCircle2, Copy } from 'lucide-vue-next'
 import { useDraggable, useWindowSize } from '@vueuse/core'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
@@ -463,6 +469,36 @@ async function reportToCrikket(err: any) {
   }
 }
 
+async function copyError(err: any) {
+  const text = `[${err.type}] ${err.message}\nSorgente: ${err.source || 'N/A'}\nTraccia: ${err.stack || 'N/A'}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    logs.value.unshift({
+      time: new Date().toLocaleTimeString(),
+      msg: `📋 Copiato negli appunti: [${err.type}] ${err.message}`,
+      level: 'verbose',
+      source: 'WaForge'
+    });
+  } catch (e) {
+    console.error('Errore copia negli appunti:', e);
+  }
+}
+
+async function copyAllErrors() {
+  if (capturedErrors.value.length === 0) return;
+  const text = capturedErrors.value.map((err, idx) => `[Errore ${idx + 1}] [${err.type}] ${err.message}\nSorgente: ${err.source || 'N/A'}\nTraccia: ${err.stack || 'N/A'}\n`).join('\n---\n');
+  try {
+    await navigator.clipboard.writeText(text);
+    logs.value.unshift({
+      time: new Date().toLocaleTimeString(),
+      msg: `📋 Copiati negli appunti tutti i ${capturedErrors.value.length} errori registrati.`,
+      level: 'verbose',
+      source: 'WaForge'
+    });
+  } catch (e) {
+    console.error('Errore copia globale negli appunti:', e);
+  }
+}
 
 // ─── Lifecycle & Global Event Interceptors ───────────────────────────────────
 let logInterval: any = null
