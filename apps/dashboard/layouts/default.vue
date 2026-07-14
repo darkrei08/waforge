@@ -59,33 +59,29 @@
               <LayoutDashboard class="w-5 h-5" />
               <span class="text-sm">{{ t('nav.home') }}</span>
             </NuxtLink>
+            <NuxtLink :to="localePath('/devices')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
+              <Smartphone class="w-5 h-5" />
+              <span class="text-sm">{{ t('nav.devices') }}</span>
+              <span v-if="!waStore.connected" class="ml-auto w-2 h-2 rounded-full bg-amber-500 animate-pulse" title="Dispositivo WA non connesso"></span>
+            </NuxtLink>
             
-            <template v-if="waStore.connected">
-              <NuxtLink :to="localePath('/contacts')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
-                <Users class="w-5 h-5" />
-                <span class="text-sm">{{ t('nav.contacts') }}</span>
-              </NuxtLink>
-              <NuxtLink :to="localePath('/campaigns')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
-                <Megaphone class="w-5 h-5" />
-                <span class="text-sm">{{ t('nav.campaigns') }}</span>
-              </NuxtLink>
-              <NuxtLink :to="localePath('/templates')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
-                <MessageSquareText class="w-5 h-5" />
-                <span class="text-sm">{{ t('nav.templates') }}</span>
-              </NuxtLink>
-              <NuxtLink :to="localePath('/chat')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
-                <MessageCircle class="w-5 h-5" />
-                <span class="text-sm">Workspace AI</span>
-              </NuxtLink>
-            </template>
-            <template v-else>
-              <a class="flex items-center justify-between p-3 rounded-xl transition-colors opacity-50 cursor-not-allowed">
-                <div class="flex items-center gap-3">
-                  <Lock class="w-5 h-5" />
-                  <span class="text-sm">Workspace (Locked)</span>
-                </div>
-              </a>
-            </template>
+            <NuxtLink :to="localePath('/contacts')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
+              <Users class="w-5 h-5" />
+              <span class="text-sm">{{ t('nav.contacts') }}</span>
+            </NuxtLink>
+            <NuxtLink :to="localePath('/campaigns')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
+              <Megaphone class="w-5 h-5" />
+              <span class="text-sm">{{ t('nav.campaigns') }}</span>
+            </NuxtLink>
+            <NuxtLink :to="localePath('/templates')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
+              <MessageSquareText class="w-5 h-5" />
+              <span class="text-sm">{{ t('nav.templates') }}</span>
+            </NuxtLink>
+            <NuxtLink :to="localePath('/chat')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
+              <MessageCircle class="w-5 h-5" />
+              <span class="text-sm">Workspace AI</span>
+              <span v-if="!waStore.connected" class="ml-auto w-2 h-2 rounded-full bg-amber-500" title="Dispositivo WA non connesso"></span>
+            </NuxtLink>
           </nav>
         </div>
 
@@ -141,7 +137,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, provide } from 'vue'
-import { LayoutDashboard, Users, Megaphone, Settings, Activity, Sun, Moon, LogOut, MessageSquareText, MessageCircle, Lock, CheckCircle2, AlertCircle, Info, X, PanelLeft } from 'lucide-vue-next'
+import { LayoutDashboard, Users, Megaphone, Settings, Activity, Sun, Moon, LogOut, MessageSquareText, MessageCircle, Lock, CheckCircle2, AlertCircle, Info, X, PanelLeft, Smartphone } from 'lucide-vue-next'
 import { useI18n, useLocalePath } from '#i18n'
 import { useColorMode } from '#imports'
 import { useAuthStore } from '~/stores/auth'

@@ -3,8 +3,8 @@ import { prisma } from '~/server/utils/prisma'
 import { z } from 'zod'
 
 const BulkGroupSchema = z.object({
-  contactIds: z.array(z.string().cuid()).min(1),
-  groupId: z.string().cuid(),
+  contactIds: z.array(z.string().min(1)).min(1),
+  groupId: z.string().min(1),
   action: z.enum(['add', 'remove'])
 })
 
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   })
 
   if (!group || group.teamId !== teamId) {
-    return createError({ statusCode: 404, message: 'Group not found' })
+    throw createError({ statusCode: 404, message: 'Group not found' })
   }
 
   try {
@@ -44,6 +44,6 @@ export default defineEventHandler(async (event) => {
 
     return { success: true }
   } catch (error: any) {
-    return createError({ statusCode: 500, message: error.message })
+    throw createError({ statusCode: 500, message: error.message })
   }
 })

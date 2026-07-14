@@ -23,16 +23,13 @@
           <Loader2 v-if="isVerifying" class="w-4 h-4 inline mr-1 animate-spin" />
           <CheckCircle2 v-else class="w-4 h-4 inline mr-1" /> Verifica Numeri
         </button>
-        <button @click="showCsvInfo = true"
-                class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-on-surface text-sm font-semibold rounded-lg border border-white/10 transition-all" title="Info formato CSV">
+        <button @click="showCsvInfo = true" class="btn-secondary text-sm" title="Info formato CSV">
           <Info class="w-4 h-4 inline mr-1" /> Info CSV
         </button>
-        <button @click="handleExport"
-                class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-on-surface text-sm font-semibold rounded-lg border border-white/10 transition-all">
+        <button @click="handleExport" class="btn-secondary text-sm">
           <Download class="w-4 h-4 inline mr-1" /> {{ t('contacts.export_csv') }}
         </button>
-        <button @click="openImportModal()"
-                class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-on-surface text-sm font-semibold rounded-lg border border-white/10 transition-all">
+        <button @click="openImportModal()" class="btn-secondary text-sm">
           <Upload class="w-4 h-4 inline mr-1" /> {{ t('contacts.import_csv') }}
         </button>
       </div>
@@ -253,9 +250,8 @@
             {{ t('contacts.import_result', { imported: importResult.imported, skipped: importResult.skipped, errors: importResult.errors?.length || 0 }) }}
           </div>
           <div class="flex justify-end gap-3 mt-4">
-            <button @click="showImport = false" class="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors" :disabled="isImporting">{{ t('contacts.btn_cancel') }}</button>
-            <button @click="handleImport" :disabled="!csvText.trim() || isImporting"
-                    class="px-4 py-2 bg-primary text-on-primary font-semibold rounded-lg hover:bg-primary-fixed-dim transition-all disabled:opacity-30 flex items-center gap-2">
+            <button @click="showImport = false" class="btn-secondary text-sm" :disabled="isImporting">{{ t('contacts.btn_cancel') }}</button>
+            <button @click="handleImport" :disabled="!csvText.trim() || isImporting" class="btn-primary">
               <Loader2 v-if="isImporting" class="w-4 h-4 animate-spin" />
               {{ t('contacts.btn_import') }}
             </button>

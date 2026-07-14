@@ -2,26 +2,25 @@
   <div class="p-8 space-y-6 animate-fade-in">
     <div class="flex items-center justify-between">
       <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ t('nav.templates') }}</h1>
-      <button @click="openWizard()"
-              class="px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:shadow-[0_0_25px_rgba(37,211,102,0.5)] transition-all flex items-center gap-2">
+      <button @click="openWizard()" class="btn-primary">
         <Plus class="w-5 h-5" /> {{ t('templates.new') }}
       </button>
     </div>
 
     <!-- Templates List -->
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <div v-if="store.loading" v-for="i in 3" :key="i" class="bg-surface-container/40 border border-white/10 rounded-2xl p-6">
+      <div v-if="store.loading" v-for="i in 3" :key="i" class="card-surface">
         <div class="h-5 bg-white/5 rounded w-1/3 animate-pulse mb-3"></div>
         <div class="h-16 bg-white/5 rounded w-full animate-pulse"></div>
       </div>
 
       <div v-else v-for="tmpl in store.templates" :key="tmpl.id"
-           class="bg-surface-container/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-all flex flex-col justify-between">
+           class="card-surface hover:border-white/20 flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between mb-2">
             <h3 class="font-semibold text-on-surface text-lg">{{ tmpl.name }}</h3>
             <div class="flex gap-2">
-              <button @click="openWizard(tmpl)" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-on-surface transition-colors">
+              <button @click="openWizard(tmpl)" class="btn-ghost">
                 <Edit2 class="w-4 h-4" />
               </button>
               <button @click="handleDelete(tmpl.id)" class="p-2 rounded-lg bg-error/10 hover:bg-error/20 text-error transition-colors">
@@ -93,38 +92,31 @@
               <div class="p-4 rounded-2xl bg-black/20 border border-white/5 space-y-3 shrink-0">
                 <div class="flex items-center justify-between">
                   <label class="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Tipo Media (Opzionale)</label>
-                  <div v-if="formData.mediaType !== 'text'" class="flex items-center gap-2 text-xs">
-                    <button @click="uploadMode = 'url'" :class="uploadMode === 'url' ? 'text-primary font-semibold' : 'text-on-surface-variant'" class="hover:text-primary transition-colors">🌐 URL Link</button>
-                    <span class="text-white/20">|</span>
-                    <button @click="uploadMode = 'file'" :class="uploadMode === 'file' ? 'text-primary font-semibold' : 'text-on-surface-variant'" class="hover:text-primary transition-colors">📁 Carica File</button>
-                  </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <select v-model="formData.mediaType" class="p-3 bg-black/40 border border-white/10 rounded-xl text-on-surface text-sm focus:border-primary/60 outline-none">
                     <option value="text">📄 Nessun Media (Solo Testo)</option>
                     <option value="image">🖼️ Immagine</option>
                     <option value="video">🎥 Video</option>
-                    <option value="document">📎 Documento</option>
+                    <option value="document">📎 Documento / PDF</option>
                     <option value="audio">🎵 Audio</option>
                   </select>
 
-                  <div v-if="formData.mediaType !== 'text'" class="sm:col-span-2">
-                    <div v-if="uploadMode === 'url'">
-                      <input v-model="formData.mediaUrl" type="url" placeholder="https://esempio.com/file.jpg"
-                             class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-on-surface text-sm focus:border-primary/60 outline-none" />
-                    </div>
-                    <div v-else>
-                      <label class="relative flex items-center justify-center w-full p-3 bg-black/40 border border-dashed border-white/20 hover:border-primary/50 rounded-xl cursor-pointer transition-colors" :class="{ 'opacity-50 pointer-events-none': isUploading }">
-                        <input type="file" class="hidden" @change="handleFileUpload" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" />
-                        <div class="flex items-center gap-2 text-sm text-on-surface-variant">
-                          <Loader2 v-if="isUploading" class="w-4 h-4 animate-spin text-primary" />
-                          <Upload v-else class="w-4 h-4 text-primary" />
-                          <span v-if="isUploading">Caricamento in corso...</span>
-                          <span v-else-if="formData.mediaUrl" class="text-primary truncate max-w-[220px] font-medium">File: {{ formData.mediaUrl.split('/').pop() }}</span>
-                          <span v-else>Clicca o trascina un file per caricarlo (Max 5MB)</span>
-                        </div>
+                  <div v-if="formData.mediaType !== 'text'" class="sm:col-span-2 flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                      <input v-model="formData.mediaUrl" type="text" :placeholder="mediaPlaceholder"
+                             class="flex-1 p-3 bg-black/40 border border-white/10 rounded-xl text-on-surface text-sm focus:border-primary/60 outline-none transition-colors" />
+                      <label class="btn-secondary px-4 py-3 cursor-pointer shrink-0 flex items-center gap-2 text-xs font-semibold rounded-xl" :class="{ 'opacity-50 pointer-events-none': isUploading }" title="Carica file dal computer">
+                        <input type="file" class="hidden" @change="handleFileUpload" :accept="mediaAccept" />
+                        <Loader2 v-if="isUploading" class="w-4 h-4 animate-spin text-primary" />
+                        <Upload v-else class="w-4 h-4 text-primary" />
+                        <span>{{ isUploading ? 'Caricamento...' : 'Carica File' }}</span>
                       </label>
                     </div>
+                    <p v-if="formData.mediaUrl" class="text-[11px] text-on-surface-variant truncate">
+                      Media attuale: <span class="text-primary font-medium">{{ formData.mediaUrl }}</span>
+                    </p>
+                    <p v-else class="text-[11px] text-on-surface-variant">{{ mediaPrompt }}</p>
                   </div>
                 </div>
               </div>
@@ -158,7 +150,18 @@
                     </button>
                   </div>
                   <div class="flex-1 p-4 bg-[#0a0c10]/80 border border-white/10 rounded-2xl overflow-y-auto scrollbar-thin flex flex-col justify-between">
-                    <div v-if="formData.body" class="text-sm text-on-surface whitespace-pre-wrap leading-relaxed select-text" v-html="spintaxPreview"></div>
+                    <div v-if="formData.body">
+                      <div v-if="formData.mediaUrl && formData.mediaType !== 'text'" class="mb-3 rounded-xl overflow-hidden border border-white/10 bg-black/40">
+                        <img v-if="formData.mediaType === 'image'" :src="formData.mediaUrl" class="w-full max-h-48 object-cover rounded-t-xl" />
+                        <video v-else-if="formData.mediaType === 'video'" :src="formData.mediaUrl" controls class="w-full max-h-48 rounded-t-xl"></video>
+                        <audio v-else-if="formData.mediaType === 'audio'" :src="formData.mediaUrl" controls class="w-full p-2"></audio>
+                        <div v-else class="p-3 flex items-center gap-2 text-xs font-semibold text-primary bg-primary/10 rounded-xl">
+                          <span>📎 Documento / File allegato:</span>
+                          <span class="truncate">{{ formData.mediaUrl.split('/').pop() }}</span>
+                        </div>
+                      </div>
+                      <div class="text-sm text-on-surface whitespace-pre-wrap leading-relaxed select-text" v-html="spintaxPreview"></div>
+                    </div>
                     <div v-else class="text-xs text-on-surface-variant/40 italic flex items-center justify-center h-full">
                       Inizia a digitare o chiedi all'AI Co-Pilot per vedere l'anteprima in tempo reale...
                     </div>
@@ -175,9 +178,8 @@
               <div class="pt-4 border-t border-white/10 flex items-center justify-between shrink-0">
                 <span class="text-xs text-on-surface-variant">I template con Spintax riducono del 94% il rischio di segnalazione spam.</span>
                 <div class="flex gap-3">
-                  <button @click="showWizard = false" class="px-5 py-2.5 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors rounded-xl hover:bg-white/5">{{ t('templates.btn_cancel') }}</button>
-                  <button @click="handleSave" :disabled="!formData.name || !formData.body || isSaving"
-                          class="px-6 py-2.5 bg-primary text-on-primary font-bold text-sm rounded-xl hover:bg-primary-fixed-dim hover:shadow-[0_0_20px_rgba(37,211,102,0.4)] transition-all disabled:opacity-30 flex items-center gap-2">
+                  <button @click="showWizard = false" class="btn-secondary text-sm">{{ t('templates.btn_cancel') }}</button>
+                  <button @click="handleSave" :disabled="!formData.name || !formData.body || isSaving" class="btn-primary">
                     <Loader2 v-if="isSaving" class="w-4 h-4 animate-spin" />
                     <span>{{ t('templates.btn_save') }}</span>
                   </button>
@@ -298,7 +300,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, inject } from 'vue'
+import { ref, computed, onMounted, inject, watch } from 'vue'
 import { Plus, Edit2, Trash2, Info, Upload, Loader2, Sparkles, Send } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useTemplatesStore, type Template } from '~/stores/templates'
@@ -356,6 +358,42 @@ const isSaving = ref(false)
 const isUploading = ref(false)
 const uploadMode = ref<'url' | 'file'>('url')
 const formData = ref({ id: '', name: '', description: '', body: '', mediaUrl: '', mediaType: 'text' })
+
+const mediaPlaceholder = computed(() => {
+  switch (formData.value.mediaType) {
+    case 'image': return 'https://esempio.com/banner.jpg (JPG, PNG, WEBP)'
+    case 'video': return 'https://esempio.com/promo.mp4 (MP4, WEBM)'
+    case 'audio': return 'https://esempio.com/nota.mp3 (MP3, OGG)'
+    case 'document': return 'https://esempio.com/catalogo.pdf (PDF, DOCX)'
+    default: return 'https://esempio.com/file.jpg'
+  }
+})
+
+const mediaAccept = computed(() => {
+  switch (formData.value.mediaType) {
+    case 'image': return 'image/*'
+    case 'video': return 'video/*'
+    case 'audio': return 'audio/*'
+    case 'document': return '.pdf,.doc,.docx,.xls,.xlsx,.zip'
+    default: return 'image/*,video/*,audio/*,.pdf,.doc,.docx'
+  }
+})
+
+const mediaPrompt = computed(() => {
+  switch (formData.value.mediaType) {
+    case 'image': return "Clicca o trascina un'immagine (JPG, PNG, WEBP - Max 5MB)"
+    case 'video': return 'Clicca o trascina un video (MP4, WEBM - Max 16MB)'
+    case 'audio': return 'Clicca o trascina un file audio (MP3, OGG - Max 10MB)'
+    case 'document': return 'Clicca o trascina un documento (PDF, DOCX, XLSX - Max 10MB)'
+    default: return 'Clicca o trascina un file per caricarlo (Max 5MB)'
+  }
+})
+
+watch(() => formData.value.mediaType, (newVal) => {
+  if (newVal === 'text') {
+    formData.value.mediaUrl = ''
+  }
+})
 
 const showAiAssistant = ref(false)
 const showAiPanel = ref(true)

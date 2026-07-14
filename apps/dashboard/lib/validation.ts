@@ -46,7 +46,7 @@ export const CreateContactSchema = z.object({
   company: safeString(100).optional(),
   notes:   safeString(500).optional(),
   customFields: z.record(safeString(200)).optional(),
-  groupIds: z.array(z.string().cuid()).optional(),
+  groupIds: z.array(z.string().min(1)).optional(),
   consentStatus: z.enum(['PENDING', 'GRANTED', 'DENIED']).optional(),
   source: safeString(50).optional(),
   labels: z.array(z.string()).optional(),
@@ -63,7 +63,7 @@ export const BulkImportSchema = z.object({
     .string()
     .max(5_000_000, 'CSV file too large (max 5MB)')  // prevent DoS
     .min(1, 'Empty CSV'),
-  groupId: z.string().cuid('Invalid Group ID').optional(),
+  groupId: z.string().min(1).optional().or(z.literal('')),
 })
 
 // ── Template schemas ──────────────────────────────────────────────────────────
@@ -91,10 +91,10 @@ export const UpdateTemplateSchema = CreateTemplateSchema.partial()
 
 export const CreateCampaignSchema = z.object({
   name:       safeString(100),
-  templateId: z.string().cuid('Invalid template ID'),
+  templateId: z.string().min(1, 'Invalid template ID'),
   contactIds: z.union([
     z.literal('ALL'),
-    z.array(z.string().regex(/^(GROUP:)?[a-z0-9]{25}$/i, 'Invalid ID format')).min(1, 'Select at least 1 contact').max(10000),
+    z.array(z.string().min(1, 'Invalid ID format')).min(1, 'Select at least 1 contact').max(10000),
   ]).default('ALL'),
   delayMin: z.number().int().min(5).max(300).default(15),   // min 5s anti-ban
   delayMax: z.number().int().min(10).max(600).default(45),
@@ -108,13 +108,13 @@ export const PaginationSchema = z.object({
   page:   z.coerce.number().int().min(1).default(1),
   limit:  z.coerce.number().int().min(1).max(50000).default(50),
   search: z.string().trim().max(100).optional(),
-  groupId: z.string().cuid().optional(),
+  groupId: z.string().min(1).optional().or(z.literal('')),
 })
 
 // ── Bulk delete schema ────────────────────────────────────────────────────────
 
 export const BulkDeleteSchema = z.object({
-  ids: z.array(z.string().cuid()).min(1).max(1000, 'Max 1000 IDs per request'),
+  ids: z.array(z.string().min(1)).min(1).max(1000, 'Max 1000 IDs per request'),
 })
 
 // ── Settings schema ───────────────────────────────────────────────────────────

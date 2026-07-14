@@ -84,9 +84,9 @@ export function parseCSV(text: string): ParseResult {
     const rawRow: Record<string, string> = {}
     headers.forEach((h, idx) => { rawRow[h] = (cells[idx] || '').trim().replace(/^"|"$/g, '') })
 
-    const name = getCol(cells, 'Name') || getCol(cells, 'nome') || getCol(cells, 'nominativo')
+    const name = getCol(cells, 'Name') || getCol(cells, 'nome') || getCol(cells, 'nominativo') || getCol(cells, 'contatto') || getCol(cells, 'azienda') || 'Senza Nome'
     const prefix = getCol(cells, 'Prefix') || getCol(cells, 'prefisso') || '+39'
-    const phone = getCol(cells, 'Phone') || getCol(cells, 'telefono') || getCol(cells, 'numero')
+    const phone = getCol(cells, 'Phone') || getCol(cells, 'telefono') || getCol(cells, 'numero') || getCol(cells, 'cellulare') || getCol(cells, 'mobile') || getCol(cells, 'cell') || getCol(cells, 'telefono 1') || getCol(cells, 'phone 1') || getCol(cells, 'cellulare 1')
 
     if (!phone) {
       errors.push({ row: i + 1, reason: `Numero telefono mancante` })

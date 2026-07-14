@@ -1,9 +1,37 @@
 <template>
   <div class="p-8 space-y-8 animate-fade-in">
     <!-- Header -->
-    <div>
-      <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ t('nav.home') }}</h1>
-      <p class="text-on-surface-variant mt-1">{{ t('dashboard.status') }}: WhatsApp {{ waStore.statusLabel }}</p>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ t('nav.home') }}</h1>
+        <p class="text-on-surface-variant mt-1">{{ t('dashboard.status') }}: WhatsApp {{ waStore.statusLabel }}</p>
+      </div>
+      <NuxtLink v-if="!waStore.connected" :to="localePath('/connect')"
+                class="px-5 py-2.5 bg-primary hover:bg-primary-fixed-dim text-surface font-semibold rounded-xl shadow-[0_0_20px_rgba(37,211,102,0.35)] transition-all flex items-center gap-2 self-start sm:self-auto animate-bounce-subtle">
+        <Smartphone class="w-5 h-5" />
+        <span>Connetti Dispositivo (Scansiona QR)</span>
+      </NuxtLink>
+    </div>
+
+    <!-- Quick Alert if not connected -->
+    <div v-if="!waStore.connected && !waStore.loading" class="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 font-bold">
+          ⚠️
+        </div>
+        <div>
+          <h3 class="font-bold text-on-surface text-sm">Dispositivo WhatsApp Non Connesso</h3>
+          <p class="text-xs text-on-surface-variant mt-0.5">Senza un dispositivo attivo i messaggi delle rubriche e delle campagne non potranno essere inviati.</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 shrink-0">
+        <NuxtLink :to="localePath('/devices')" class="px-4 py-2 text-xs font-semibold bg-white/5 hover:bg-white/10 text-on-surface rounded-xl border border-white/10 transition-colors">
+          Gestisci Dispositivi
+        </NuxtLink>
+        <NuxtLink :to="localePath('/connect')" class="px-4 py-2 text-xs font-semibold bg-primary hover:bg-primary-fixed-dim text-surface rounded-xl transition-colors">
+          Connetti Ora
+        </NuxtLink>
+      </div>
     </div>
 
     <!-- KPI Cards -->
@@ -46,7 +74,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Users, Megaphone, Send, TrendingUp } from 'lucide-vue-next'
+import { Users, Megaphone, Send, TrendingUp, Smartphone } from 'lucide-vue-next'
 import { useI18n } from '#i18n'
 import { useWhatsappStore } from '~/stores/whatsapp'
 

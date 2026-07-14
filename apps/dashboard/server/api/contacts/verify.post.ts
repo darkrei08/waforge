@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { zodReadBody } from '~/server/utils/validation'
 
 const VerifySchema = z.object({
-  contactIds: z.array(z.string().cuid()).optional(), // Se assente, verifica tutti quelli con isOnWhatsApp: null
+  contactIds: z.array(z.string().min(1)).optional(), // Se assente, verifica tutti quelli con isOnWhatsApp: null
 })
 
 export default defineEventHandler(async (event) => {

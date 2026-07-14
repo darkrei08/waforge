@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     })
     
     if (existing) {
-      return createError({ statusCode: 409, message: 'Esiste già una rubrica con questo nome.' })
+      throw createError({ statusCode: 409, message: 'Esiste già una rubrica con questo nome.' })
     }
 
     const group = await prisma.contactGroup.create({
@@ -39,8 +39,8 @@ export default defineEventHandler(async (event) => {
     return { success: true, data: group }
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return createError({ statusCode: 400, message: error.errors[0].message })
+      throw createError({ statusCode: 400, message: error.errors[0].message })
     }
-    return createError({ statusCode: 500, message: error.message })
+    throw createError({ statusCode: 500, message: error.message })
   }
 })

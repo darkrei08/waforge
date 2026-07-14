@@ -183,6 +183,7 @@ services:
     volumes:
       - waforge_uploads:/app/data/uploads
       - ~/.antigravity_cockpit:/home/nuxtjs/.antigravity_cockpit:ro
+      - ~/.pi/account-switcher:/home/nuxtjs/.pi/account-switcher:ro
     depends_on:
       db:
         condition: service_healthy

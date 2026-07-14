@@ -162,7 +162,8 @@ const qrCodeData = ref<string | null>(null)
 const showSuccess = ref(false)
 const wasConnected = ref(false)
 
-const tokenId = ref('')
+const route = useRoute()
+const tokenId = ref((route.query.tokenId as string) || '')
 const localConnected = ref(false)
 const localPhone = ref('')
 const localEngine = ref('')
@@ -298,11 +299,6 @@ onMounted(() => {
 onUnmounted(() => {
   if (pollInterval) clearInterval(pollInterval)
   stopCountdown()
-  
-  // Clean up pending session if it was not connected
-  if (tokenId.value && !localConnected.value) {
-    $fetch('/api/whatsapp/disconnect', { method: 'POST', body: { tokenId: tokenId.value } }).catch(() => {})
-  }
 })
 </script>
 

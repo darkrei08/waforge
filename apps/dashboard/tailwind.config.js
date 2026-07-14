@@ -18,8 +18,8 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        sans: ['Lora', 'system-ui', '-apple-system', 'sans-serif'],
-        heading: ['Poppins', 'sans-serif'],
+        sans: ['Inter', 'Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        heading: ['Plus Jakarta Sans', 'Poppins', 'sans-serif'],
       },
       colors: {
         // Surface hierarchy

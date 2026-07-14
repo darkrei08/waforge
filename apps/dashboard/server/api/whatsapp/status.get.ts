@@ -24,12 +24,14 @@ export default defineEventHandler(async (event) => {
 
   const status = await getEngineStatus(token)
 
-  // Update session status in DB if needed
-  const newStatus = status.connected ? 'connected' : 'disconnected'
-  if (session.status !== newStatus || session.phone !== status.phone) {
+  // Update session status in DB if needed (do not overwrite connecting state while scanning QR)
+  const isConnectedNow = status.connected || status.loggedIn || Boolean(status.phone)
+  const newStatus = isConnectedNow ? 'connected' : (session.status === 'connecting' ? 'connecting' : 'disconnected')
+  const effectivePhone = status.phone || session.phone
+  if (session.status !== newStatus || session.phone !== effectivePhone) {
     await prisma.whatsAppSession.update({
       where: { id: session.id },
-      data: { status: newStatus, phone: status.phone }
+      data: { status: newStatus, phone: effectivePhone }
     })
   }
 

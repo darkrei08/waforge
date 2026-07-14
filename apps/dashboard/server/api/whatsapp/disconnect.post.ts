@@ -14,9 +14,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'sessionId is required' })
   }
 
-  // Verify session belongs to team
+  // Verify session belongs to team (search by id OR token)
   const session = await prisma.whatsAppSession.findFirst({
-    where: { id: sessionId, teamId: authUser.teamId }
+    where: {
+      OR: [
+        { id: sessionId },
+        { token: sessionId }
+      ],
+      teamId: authUser.teamId
+    }
   })
 
   if (!session) {

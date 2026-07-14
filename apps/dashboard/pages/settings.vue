@@ -129,19 +129,33 @@
                 API Status: Cockpit Tools
               </p>
               <p class="text-xs text-on-surface-variant mt-1">
-                {{ store.cockpitAvailable ? 'Cockpit Daemon rilevato correttamente.' : 'Cockpit non rilevato sulla macchina locale.' }}
+                {{ store.cockpitAvailable ? 'Cockpit Daemon rilevato correttamente e file accounts.json connesso.' : 'Cockpit non rilevato o file accounts.json non accessibile sulla macchina.' }}
               </p>
             </div>
-            <button v-if="store.cockpitAvailable" @click="store.llmSettings.useCockpit = !store.llmSettings.useCockpit"
-                    class="w-12 h-7 rounded-full transition-colors relative shrink-0"
-                    :class="store.llmSettings.useCockpit ? 'bg-primary' : 'bg-white/20'">
-              <div class="w-5 h-5 bg-white rounded-full absolute top-1 transition-transform"
-                   :class="store.llmSettings.useCockpit ? 'translate-x-6' : 'translate-x-1'"></div>
-            </button>
+            <div class="flex items-center gap-3">
+              <button @click="refreshCockpit" :disabled="refreshingCockpit"
+                      class="text-xs bg-white/5 hover:bg-white/10 text-on-surface-variant hover:text-on-surface px-3 py-1.5 rounded-lg transition-colors border border-white/10 flex items-center gap-1.5 shrink-0">
+                <span v-if="refreshingCockpit" class="animate-spin">⟳</span>
+                <span v-else>🔄</span>
+                Verifica Cockpit
+              </button>
+              <button v-if="store.cockpitAvailable" @click="store.llmSettings.useCockpit = !store.llmSettings.useCockpit"
+                      class="w-12 h-7 rounded-full transition-colors relative shrink-0"
+                      :class="store.llmSettings.useCockpit ? 'bg-primary' : 'bg-white/20'"
+                      title="Abilita/Disabilita l'uso del Proxy Cockpit">
+                <div class="w-5 h-5 bg-white rounded-full absolute top-1 transition-transform"
+                     :class="store.llmSettings.useCockpit ? 'translate-x-6' : 'translate-x-1'"></div>
+              </button>
+            </div>
           </div>
 
-          <div v-if="!store.cockpitAvailable" class="bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
-            <p class="text-xs text-red-200">Per utilizzare Cockpit Tools come proxy LLM, assicurati che il demone sia in esecuzione e che il file `~/.antigravity_cockpit/accounts.json` sia accessibile.</p>
+          <div v-if="!store.cockpitAvailable" class="bg-red-500/10 border border-red-500/20 p-3.5 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <p class="text-xs text-red-200 leading-relaxed">Per utilizzare Cockpit Tools come proxy LLM per la generazione e l'anti-ban, assicurati che il demone Cockpit sia in esecuzione e che la cartella <code class="bg-black/30 px-1.5 py-0.5 rounded text-white font-mono">~/.antigravity_cockpit/accounts.json</code> sia accessibile dal servizio web.</p>
+            <button @click="refreshCockpit" :disabled="refreshingCockpit"
+                    class="px-3.5 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-200 font-semibold text-xs rounded-lg border border-red-500/30 transition-colors shrink-0 flex items-center gap-1.5">
+              <span v-if="refreshingCockpit" class="animate-spin">⟳</span>
+              <span>Riprova Connessione</span>
+            </button>
           </div>
 
           <div v-else>
@@ -149,12 +163,7 @@
             <div class="mt-4">
               <div class="flex items-center justify-between mb-3">
                 <label class="block text-sm text-on-surface-variant font-medium">Seleziona Account Attivo per WaForge</label>
-                <button @click="refreshCockpit" :disabled="refreshingCockpit"
-                        class="text-xs bg-white/5 hover:bg-white/10 text-on-surface-variant px-3 py-1.5 rounded-lg transition-colors border border-white/10 flex items-center gap-1.5">
-                  <span v-if="refreshingCockpit" class="animate-spin">⟳</span>
-                  <span v-else>🔄</span>
-                  Verifica Cockpit
-                </button>
+                <span class="text-xs text-primary font-semibold">✅ {{ cockpitStatus.accounts.length }} Account Trovati</span>
               </div>
               
               <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -461,7 +470,15 @@ async function refreshCockpit() {
   refreshingCockpit.value = true
   try {
     await store.checkCockpit()
-    addToast('Stato Cockpit Tools aggiornato', 'success')
+    cockpitStatus.value = {
+      available: store.cockpitAvailable,
+      accounts: store.cockpitAccounts
+    }
+    if (store.cockpitAvailable) {
+      addToast(`Cockpit Connesso: ${store.cockpitAccounts.length} account rilevati`, 'success')
+    } else {
+      addToast('Cockpit non rilevato o file accounts.json non accessibile', 'error')
+    }
   } catch (err) {
     addToast('Impossibile verificare Cockpit Tools', 'error')
   } finally {
@@ -532,9 +549,10 @@ async function saveSettings() {
 onMounted(async () => {
   store.fetchSettings()
   try {
-    const res = await $fetch('/api/settings/cockpit')
-    if (res && res.data) {
-      cockpitStatus.value = res.data
+    await store.checkCockpit()
+    cockpitStatus.value = {
+      available: store.cockpitAvailable,
+      accounts: store.cockpitAccounts
     }
   } catch (e) {
     console.error("Cockpit Tools check failed", e)

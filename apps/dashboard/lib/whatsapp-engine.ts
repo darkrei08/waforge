@@ -170,26 +170,30 @@ async function getEngineStatusSingle(token: string, target: 'wuzapi' | 'gowa' | 
     const data = await apiCall(cfg.status, token, 'GET', undefined, true, target)
 
     if (target === 'wuzapi') {
-      return {
-        connected: data.data?.Connected ?? false,
-        loggedIn: data.data?.LoggedIn ?? false,
-        phone: data.data?.Jid?.split('@')[0],
-        engine: 'WuzAPI',
-      }
-    } else if (target === 'gowa') {
-      return {
-        connected: data.results?.is_connected ?? data.Connected ?? false,
-        loggedIn: data.results?.is_logged_in ?? data.LoggedIn ?? false,
-        phone: data.results?.jid?.split('@')[0] ?? data.Jid?.split('@')[0],
-        engine: 'go-whatsapp-web-multidevice',
-      }
-    } else {
-      const isConnected = data.status === 'CONNECTED' || data.status === 'AUTHENTICATED' || data.connected === true
-      const isLoggedIn = data.status === 'CONNECTED' || data.status === 'AUTHENTICATED' || data.loggedIn === true
+      const isConnected = Boolean(data?.data?.Connected || data?.data?.connected || data?.Connected || data?.connected || data?.data?.LoggedIn || data?.data?.logged_in)
+      const isLoggedIn = Boolean(data?.data?.LoggedIn || data?.data?.logged_in || data?.LoggedIn || data?.logged_in || isConnected)
       return {
         connected: isConnected,
         loggedIn: isLoggedIn,
-        phone: data.phone?.split('@')[0] ?? data.id?.split('@')[0] ?? null,
+        phone: data?.data?.Jid?.split('@')[0] || data?.data?.jid?.split('@')[0] || data?.Jid?.split('@')[0] || undefined,
+        engine: 'WuzAPI',
+      }
+    } else if (target === 'gowa') {
+      const isConnected = Boolean(data?.results?.is_connected || data?.results?.connected || data?.Connected || data?.connected || data?.results?.is_logged_in || data?.results?.logged_in || data?.LoggedIn || data?.logged_in)
+      const isLoggedIn = Boolean(data?.results?.is_logged_in || data?.results?.logged_in || data?.LoggedIn || data?.logged_in || isConnected)
+      return {
+        connected: isConnected,
+        loggedIn: isLoggedIn,
+        phone: data?.results?.jid?.split('@')[0] || data?.results?.phone?.split('@')[0] || data?.Jid?.split('@')[0] || data?.phone?.split('@')[0] || undefined,
+        engine: 'go-whatsapp-web-multidevice',
+      }
+    } else {
+      const isConnected = data?.status === 'CONNECTED' || data?.status === 'AUTHENTICATED' || data?.connected === true || data?.loggedIn === true
+      const isLoggedIn = data?.status === 'CONNECTED' || data?.status === 'AUTHENTICATED' || data?.loggedIn === true || isConnected
+      return {
+        connected: isConnected,
+        loggedIn: isLoggedIn,
+        phone: data?.phone?.split('@')[0] ?? data?.id?.split('@')[0] ?? null,
         engine: 'OpenWA',
       }
     }

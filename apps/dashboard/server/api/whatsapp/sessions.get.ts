@@ -28,8 +28,9 @@ export default defineEventHandler(async (event) => {
       }
       
       const effectivePhone = liveStatus.phone || session.phone
-      // Update DB if status changed (and only overwrite phone if effectivePhone is truthy or explicitly cleared)
-      const newStatus = liveStatus.connected ? 'connected' : (session.status === 'connected' && effectivePhone ? 'connected' : 'disconnected')
+      // Update DB if status changed (preserve 'connecting' status while user scans QR code)
+      const isConnected = liveStatus.connected || liveStatus.loggedIn || Boolean(effectivePhone)
+      const newStatus = isConnected ? 'connected' : (session.status === 'connecting' ? 'connecting' : (session.status === 'connected' && effectivePhone ? 'connected' : 'disconnected'))
       if (session.status !== newStatus || session.phone !== effectivePhone) {
         await prisma.whatsAppSession.update({
           where: { id: session.id },
@@ -39,6 +40,7 @@ export default defineEventHandler(async (event) => {
 
       return {
         id: session.id,
+        token: session.token,
         name: session.name,
         description: session.description,
         tags: session.tags,
@@ -46,15 +48,15 @@ export default defineEventHandler(async (event) => {
         status: newStatus,
         phone: effectivePhone,
         engine: ENGINE,
-        connected: newStatus === 'connected' || liveStatus.connected,
+        connected: newStatus === 'connected' || liveStatus.connected || liveStatus.loggedIn,
         loggedIn: liveStatus.loggedIn || Boolean(effectivePhone),
         updatedAt: session.updatedAt
       }
     })
   )
 
-  // Filter out pending ghost sessions only when they have NO name, NO phone, and NO connection
-  const validSessions = activeSessions.filter(s => Boolean(s.phone || s.connected || s.status === 'connected' || s.name))
+  // Include active sessions and connecting sessions so users can monitor and connect devices without blocking
+  const validSessions = activeSessions.filter(s => Boolean(s.phone || s.connected || s.status === 'connected' || s.status === 'connecting' || s.name || s.token))
 
   return {
     success: true,

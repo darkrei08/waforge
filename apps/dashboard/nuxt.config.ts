@@ -30,8 +30,9 @@ export default defineNuxtConfig({
 
   googleFonts: {
     families: {
-      Poppins: [400, 600, 700],
-      Lora: [400, 500]
+      Inter: [400, 500, 600, 700],
+      'Plus+Jakarta+Sans': [400, 500, 600, 700],
+      Poppins: [400, 500, 600, 700]
     }
   },
 

@@ -37,25 +37,25 @@
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div v-for="session in waStore.sessions" :key="session.id" 
-           class="bg-surface-container/50 backdrop-blur-md border rounded-2xl p-6 shadow-lg relative group transition-colors flex flex-col justify-between h-full"
-           :class="session.connected ? 'border-primary/20' : 'border-error/20'">
+           class="card-surface relative group flex flex-col justify-between h-full border transition-colors"
+           :class="session.connected ? 'border-primary/30' : (session.status === 'connecting' ? 'border-amber-500/30' : 'border-error/30')">
         
         <div class="flex flex-col flex-1">
           <div class="flex items-start justify-between mb-4">
             <div class="flex items-center gap-3">
-              <div class="p-2.5 rounded-xl flex items-center justify-center" :class="session.connected ? 'bg-primary/10 text-primary' : 'bg-error/10 text-error'">
+              <div class="p-2.5 rounded-xl flex items-center justify-center" :class="session.connected ? 'bg-primary/10 text-primary' : (session.status === 'connecting' ? 'bg-amber-500/10 text-amber-400' : 'bg-error/10 text-error')">
                 <Smartphone class="w-6 h-6" />
               </div>
               <div>
-                <h4 class="font-bold text-on-surface">{{ session.name || session.phone ? (session.name ? session.name : '+' + session.phone) : 'In attesa...' }}</h4>
+                <h4 class="font-bold text-on-surface">{{ session.name || session.phone ? (session.name ? session.name : '+' + session.phone) : (session.status === 'connecting' ? 'In attesa di scansione QR...' : 'Dispositivo non configurato') }}</h4>
                 <p v-if="session.name && session.phone" class="text-xs text-on-surface-variant font-medium">+{{ session.phone }}</p>
                 <p class="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">{{ session.engine }}</p>
               </div>
             </div>
             
             <div class="flex flex-col items-end gap-2">
-              <div class="w-3 h-3 rounded-full shadow-sm" :class="session.connected ? 'bg-primary shadow-primary/50' : 'bg-error shadow-error/50'"></div>
-              <button @click="openEditModal(session)" class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Modifica Dispositivo">
+              <div class="w-3 h-3 rounded-full shadow-sm" :class="session.connected ? 'bg-primary shadow-primary/50' : (session.status === 'connecting' ? 'bg-amber-400 shadow-amber-400/50 animate-pulse' : 'bg-error shadow-error/50')"></div>
+              <button @click="openEditModal(session)" class="btn-ghost p-1.5 text-on-surface-variant hover:text-primary" title="Modifica Dispositivo">
                 <Pencil class="w-4 h-4" />
               </button>
             </div>
@@ -70,8 +70,8 @@
           <div class="space-y-2 mb-6">
             <div class="flex justify-between text-sm">
               <span class="text-on-surface-variant">Stato:</span>
-              <span class="font-semibold" :class="session.connected ? 'text-primary' : 'text-error'">
-                {{ session.connected ? 'Connesso' : 'Disconnesso' }}
+              <span class="font-semibold" :class="session.connected ? 'text-primary' : (session.status === 'connecting' ? 'text-amber-400' : 'text-error')">
+                {{ session.connected ? 'Connesso' : (session.status === 'connecting' ? 'In scansione / QR Attivo' : 'Disconnesso') }}
               </span>
             </div>
             <div v-if="session.teamName" class="flex justify-between text-sm">
@@ -90,7 +90,11 @@
             <Send class="w-4 h-4" />
             Test Messaggio
           </button>
-          <button @click="disconnectSession(session.id)" class="w-full py-2.5 border border-error/30 text-error hover:bg-error/10 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+          <NuxtLink v-if="!session.connected && session.status === 'connecting'" :to="localePath('/connect?tokenId=' + (session.token || session.id))" class="w-full py-2.5 bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+            <QrCode class="w-4 h-4" />
+            Apri QR Code
+          </NuxtLink>
+          <button @click="disconnectSession(session.token || session.id)" class="w-full py-2.5 border border-error/30 text-error hover:bg-error/10 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
             <LogOut class="w-4 h-4" />
             Disconnetti
           </button>

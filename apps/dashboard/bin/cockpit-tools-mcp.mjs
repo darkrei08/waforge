@@ -22,11 +22,16 @@ const server = new Server(
  * Utility per leggere la cartella Cockpit o interrogare il proxy HTTP
  */
 function getCockpitPaths() {
-  const homeDir = os.homedir()
-  let cockpitDir = path.join(homeDir, '.antigravity_cockpit')
-  if (!fs.existsSync(cockpitDir) && fs.existsSync('/home/nuxtjs/.antigravity_cockpit')) {
-    cockpitDir = '/home/nuxtjs/.antigravity_cockpit'
-  }
+  const candidateDirs = [
+    process.env.COCKPIT_DIR || path.join(os.homedir(), '.antigravity_cockpit'),
+    process.env.COCKPIT_ACCOUNTS_DIR || path.join(os.homedir(), '.pi', 'account-switcher'),
+    '/home/nuxtjs/.antigravity_cockpit',
+    '/home/nuxtjs/.pi/account-switcher',
+    '/home/node/.antigravity_cockpit',
+    '/root/.antigravity_cockpit',
+    '/root/.pi/account-switcher'
+  ].filter(Boolean)
+  const cockpitDir = candidateDirs.find(dir => fs.existsSync(path.join(dir, 'accounts.json'))) || candidateDirs[0]
   return {
     cockpitDir,
     accountsFile: path.join(cockpitDir, 'accounts.json'),

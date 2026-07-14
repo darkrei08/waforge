@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   const groupId = getRouterParam(event, 'id')
 
   if (!groupId) {
-    return createError({ statusCode: 400, message: 'Group ID is required' })
+    throw createError({ statusCode: 400, message: 'Group ID is required' })
   }
 
   try {
@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     })
 
     if (!group || group.teamId !== teamId) {
-      return createError({ statusCode: 404, message: 'Group not found' })
+      throw createError({ statusCode: 404, message: 'Group not found' })
     }
 
     await prisma.contactGroup.delete({
@@ -24,6 +24,6 @@ export default defineEventHandler(async (event) => {
 
     return { success: true, message: 'Group deleted successfully' }
   } catch (error: any) {
-    return createError({ statusCode: 500, message: error.message })
+    throw createError({ statusCode: 500, message: error.message })
   }
 })

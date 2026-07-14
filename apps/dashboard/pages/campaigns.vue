@@ -7,8 +7,7 @@
                 class="px-4 py-2.5 bg-error/20 hover:bg-error/30 text-error text-sm font-semibold rounded-lg border border-error/30 transition-all">
           <Trash2 class="w-4 h-4 inline mr-1" /> Elimina Selezionate ({{ store.selected.size }})
         </button>
-        <button @click="openWizard()"
-                class="px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:shadow-[0_0_25px_rgba(37,211,102,0.5)] transition-all flex items-center gap-2">
+        <button @click="openWizard()" class="btn-primary">
           <Plus class="w-5 h-5" /> {{ t('campaigns.new') }}
         </button>
       </div>
