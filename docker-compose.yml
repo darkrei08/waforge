@@ -339,6 +339,9 @@ services:
     pull_policy: always
     depends_on:
       - crikket-server
+    extra_hosts:
+      - "localhost:host-gateway"
+      - "127.0.0.1:host-gateway"
     environment:
       NEXT_PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}}
       NEXT_PUBLIC_APP_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}}

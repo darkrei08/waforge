@@ -104,15 +104,17 @@ export default defineNuxtPlugin((nuxtApp) => {
           status,
           duration
         })
-        window.__waforge_debug_errors__?.unshift({
-          time: new Date().toLocaleTimeString(),
-          type: `HTTP ${status} Error`,
-          message: `Richiesta fallita: ${urlStr}`,
-          stack: JSON.stringify(response?._data || response?.statusText || 'Network Error'),
-          source: 'Nitro API / $fetch'
-        })
+        if (!(urlStr.includes('/api/debug/logs') && status === 401)) {
+          window.__waforge_debug_errors__?.unshift({
+            time: new Date().toLocaleTimeString(),
+            type: `HTTP ${status} Error`,
+            message: `Richiesta fallita: ${urlStr}`,
+            stack: JSON.stringify(response?._data || response?.statusText || 'Network Error'),
+            source: 'Nitro API / $fetch'
+          })
+          window.dispatchEvent(new CustomEvent('waforge-debug-error-update'))
+        }
         window.dispatchEvent(new CustomEvent('waforge-debug-network-update'))
-        window.dispatchEvent(new CustomEvent('waforge-debug-error-update'))
       }
     }) as typeof $fetch
   }
@@ -136,14 +138,16 @@ export default defineNuxtPlugin((nuxtApp) => {
         duration
       })
       if (!response.ok) {
-        window.__waforge_debug_errors__?.unshift({
-          time: new Date().toLocaleTimeString(),
-          type: `Fetch HTTP ${response.status}`,
-          message: `Streaming/Fetch API fallita: ${urlStr}`,
-          stack: `Status: ${response.status} ${response.statusText}`,
-          source: 'Native fetch()'
-        })
-        window.dispatchEvent(new CustomEvent('waforge-debug-error-update'))
+        if (!(urlStr.includes('/api/debug/logs') && response.status === 401)) {
+          window.__waforge_debug_errors__?.unshift({
+            time: new Date().toLocaleTimeString(),
+            type: `Fetch HTTP ${response.status}`,
+            message: `Streaming/Fetch API fallita: ${urlStr}`,
+            stack: `Status: ${response.status} ${response.statusText}`,
+            source: 'Native fetch()'
+          })
+          window.dispatchEvent(new CustomEvent('waforge-debug-error-update'))
+        }
       }
       if (window.__waforge_debug_network__ && window.__waforge_debug_network__.length > 100) {
         window.__waforge_debug_network__.pop()
