@@ -2,7 +2,7 @@ FROM oven/bun:1 as base
 WORKDIR /app
 
 # Install dependencies
-COPY package.json .
+COPY package.json bun.lock ./
 COPY apps/frontend/package.json apps/frontend/
 RUN bun install
 
