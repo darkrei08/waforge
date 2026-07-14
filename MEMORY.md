@@ -407,3 +407,7 @@ Eseguito audit di sicurezza universale su waforge, Wizard-AI, nuxt-mcp-agent-sta
 2. **Single Entry Point (Traefik Routing)**:
    - Modificate le regole di routing di Traefik in `docker-compose.yml` per mappare `waforge-frontend` sulla root (`${DOMAIN:-localhost}` e `www.`) e spostare il backend Nuxt (`waforge`) sul sottodominio `app.` (`app.${DOMAIN:-localhost}`).
    - Aggiornati i link in Astro (`Header.astro`, `Hero.astro`) per puntare correttamente al sottodominio `app.localhost` (variabile d'ambiente `PUBLIC_DASHBOARD_URL`).
+
+3. **Docker Build Bugfix (`bun install`)**:
+   - Risolto l'errore in fase di build dell'immagine `waforge-backend` e `waforge-frontend` dove `bun install` falliva non riuscendo a risolvere la versione esatta di `prisma@5.22.0`.
+   - Modificati `apps/backend/Dockerfile` e `apps/frontend/Dockerfile` copiando esplicitamente il file di lock (`COPY package.json bun.lock ./`) prima dell'installazione delle dipendenze, permettendo la corretta risoluzione dal workspace root. Build e startup passati al 100%.
