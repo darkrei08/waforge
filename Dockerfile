@@ -12,7 +12,7 @@ RUN bun install --ignore-scripts
 
 COPY . .
 RUN bun run postinstall
-RUN bunx prisma generate
+RUN npx prisma generate
 # Run nuxt build via Node to prevent Bun fs async I/O race condition (ENOENT on rollup server bundles)
 RUN npx nuxt build
 
