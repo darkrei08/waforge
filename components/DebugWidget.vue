@@ -8,7 +8,7 @@
       <span v-if="capturedErrors.length > 0" class="px-1.5 py-0.2 bg-error text-on-error rounded-full text-[10px] font-black animate-bounce">
         {{ capturedErrors.length }}
       </span>
-      <span v-else class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+      <span v-else class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
     </button>
 
     <!-- Main WebKit DevTools Window (Floating or Docked to Bottom) -->
@@ -105,10 +105,10 @@
         <div class="bg-surface-container dark:bg-surface-container-highest border-b border-outline/20 px-3 py-1 text-[10px] text-on-surface-variant flex items-center justify-between gap-2 shrink-0 font-mono">
           <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar no-wrap">
             <span class="text-primary font-bold shrink-0">⚙️ ENV LOG LEVELS:</span>
-            <span class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 px-1.5 py-0.2 rounded shrink-0">WaForge: <b class="text-cyan-400 uppercase">{{ dockerLogLevels.waforge }}</b></span>
-            <span class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 px-1.5 py-0.2 rounded shrink-0">WuzAPI: <b class="text-green-400 uppercase">{{ dockerLogLevels.wuzapi }}</b></span>
-            <span class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 px-1.5 py-0.2 rounded shrink-0">Cockpit: <b class="text-purple-400 uppercase">{{ dockerLogLevels.cockpit }}</b></span>
-            <span class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 px-1.5 py-0.2 rounded shrink-0">MCP: <b class="text-yellow-400 uppercase">{{ dockerLogLevels.mcp }}</b></span>
+            <span class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 px-1.5 py-0.2 rounded shrink-0">WaForge: <b class="text-on-surface uppercase">{{ dockerLogLevels.waforge }}</b></span>
+            <span class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 px-1.5 py-0.2 rounded shrink-0">WuzAPI: <b class="text-primary uppercase">{{ dockerLogLevels.wuzapi }}</b></span>
+            <span class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 px-1.5 py-0.2 rounded shrink-0">Cockpit: <b class="text-tertiary uppercase">{{ dockerLogLevels.cockpit }}</b></span>
+            <span class="bg-surface dark:bg-surface-container-lowest/80 border border-outline/20 px-1.5 py-0.2 rounded shrink-0">MCP: <b class="text-secondary uppercase">{{ dockerLogLevels.mcp }}</b></span>
           </div>
           <div class="flex items-center gap-1 shrink-0">
             <span class="w-2 h-2 rounded-full" :class="isPolling ? 'bg-green-500 animate-pulse' : 'bg-gray-600'"></span>
@@ -151,12 +151,12 @@
 
               <!-- Level Badge -->
               <span class="px-1 py-0.2 rounded text-[8px] uppercase font-bold shrink-0"
-                    :class="log.level === 'error' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : (log.level === 'warn' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : (log.level === 'verbose' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-green-500/20 text-green-400 border border-green-500/30'))">
+                    :class="log.level === 'error' ? 'bg-error-container/30 text-error border border-error/30' : (log.level === 'warn' ? 'bg-tertiary-container/30 text-tertiary border border-tertiary/30' : (log.level === 'verbose' ? 'bg-secondary-container/30 text-secondary border border-secondary/30' : 'bg-primary-container/30 text-primary border border-primary/30'))">
                 {{ log.level || 'info' }}
               </span>
 
               <!-- Message -->
-              <span class="flex-1 break-words" :class="log.level === 'error' ? 'text-red-400 font-medium' : (log.level === 'warn' ? 'text-yellow-300' : (log.level === 'verbose' ? 'text-cyan-300' : 'text-on-surface/90'))">
+              <span class="flex-1 break-words" :class="log.level === 'error' ? 'text-error font-medium' : (log.level === 'warn' ? 'text-tertiary' : (log.level === 'verbose' ? 'text-secondary' : 'text-on-surface/90'))">
                 {{ log.msg }}
               </span>
             </div>
@@ -178,7 +178,7 @@
                  class="p-2 rounded bg-white/[0.02] border border-outline/20 hover:border-primary/40 flex items-start gap-2.5 transition-colors">
               <span class="text-on-surface-variant text-[10px] shrink-0">[{{ item.time }}]</span>
               <span class="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase shrink-0"
-                    :class="item.type === 'click' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : (item.type === 'navigation' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-green-500/20 text-green-400 border border-green-500/30')">
+                    :class="item.type === 'click' ? 'bg-secondary-container/30 text-secondary border border-secondary/30' : (item.type === 'navigation' ? 'bg-tertiary-container/30 text-tertiary border border-tertiary/30' : 'bg-primary-container/30 text-primary border border-primary/30')">
                 {{ item.type }}
               </span>
               <div class="flex-1 text-on-surface/90">
@@ -190,20 +190,20 @@
         </div>
 
         <!-- ─── TAB 3: RUNTIME ERRORS & EXCEPTIONS AUDIT ─────────────────── -->
-        <div v-if="activeTab === 'errors'" class="flex-1 flex flex-col overflow-hidden bg-[#0f0808]">
-          <div class="bg-red-950/40 border-b border-red-500/30 px-3 py-1.5 text-[10px] text-red-300 flex justify-between items-center shrink-0 font-mono">
+        <div v-if="activeTab === 'errors'" class="flex-1 flex flex-col overflow-hidden bg-surface-container dark:bg-surface-container-highest">
+          <div class="bg-error-container/20 border-b border-error/30 px-3 py-1.5 text-[10px] text-error flex justify-between items-center shrink-0 font-mono">
             <span class="font-bold flex items-center gap-1.5">
               <ShieldAlert class="w-3.5 h-3.5 text-error animate-pulse" />
               Audit Errori e Eccezioni JS / Nuxt / Vue
             </span>
             <div class="flex items-center gap-2">
-              <a href="http://localhost:3151" target="_blank" class="px-2 py-0.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded border border-purple-500/30 transition-colors flex items-center gap-1 font-bold">
+              <a href="http://localhost:3151" target="_blank" class="px-2 py-0.5 bg-tertiary-container/30 hover:bg-tertiary-container/40 text-tertiary rounded border border-tertiary/30 transition-colors flex items-center gap-1 font-bold">
                 🐞 Dashboard Crikket (Porta 3151)
               </a>
-              <button v-if="capturedErrors.length > 0" @click="copyAllErrors()" class="px-2 py-0.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded border border-blue-500/30 transition-colors flex items-center gap-1" title="Copia tutti gli errori negli appunti">
+              <button v-if="capturedErrors.length > 0" @click="copyAllErrors()" class="px-2 py-0.5 bg-secondary-container/30 hover:bg-secondary-container/40 text-secondary rounded border border-secondary/30 transition-colors flex items-center gap-1" title="Copia tutti gli errori negli appunti">
                 <Copy class="w-3 h-3" /> Copia Tutti
               </button>
-              <button v-if="capturedErrors.length > 0" @click="capturedErrors = []" class="px-2 py-0.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded border border-red-500/30 transition-colors">
+              <button v-if="capturedErrors.length > 0" @click="capturedErrors = []" class="px-2 py-0.5 bg-error-container/30 hover:bg-error-container/40 text-error rounded border border-error/30 transition-colors">
                 Pulisci
               </button>
             </div>
@@ -211,32 +211,32 @@
 
           <div class="flex-1 overflow-y-auto p-2 font-mono text-[11px] space-y-2 custom-scrollbar">
             <div v-if="filteredErrors.length === 0" class="flex flex-col items-center justify-center py-12 text-on-surface-variant">
-              <CheckCircle2 class="w-8 h-8 text-green-500 mb-2" />
-              <span class="text-green-400 font-bold">Nessun errore runtime o eccezione rilevata!</span>
+              <CheckCircle2 class="w-8 h-8 text-primary mb-2" />
+              <span class="text-primary font-bold">Nessun errore runtime o eccezione rilevata!</span>
               <span class="text-[10px] text-on-surface-variant">Tutti i componenti Vue e le chiamate API rispondono correttamente.</span>
               <div class="mt-4 flex gap-2">
-                <button @click="triggerTestError" class="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded border border-red-500/30 text-[10px]">
+                <button @click="triggerTestError" class="px-3 py-1 bg-error-container/30 hover:bg-error-container/40 text-error rounded border border-error/30 text-[10px]">
                   ⚡ Simula Errore per Test Crikket
                 </button>
               </div>
             </div>
             
             <div v-for="(err, idx) in filteredErrors" :key="idx"
-                 class="p-2.5 rounded bg-red-950/20 border border-red-500/40 space-y-1.5">
+                 class="p-2.5 rounded bg-error-container/10 border border-error/40 space-y-1.5">
               <div class="flex items-center justify-between">
-                <span class="text-[10px] text-red-400/80">[{{ err.time }}]</span>
+                <span class="text-[10px] text-error/80">[{{ err.time }}]</span>
                 <div class="flex items-center gap-1.5">
-                  <span class="px-1.5 py-0.2 bg-red-500/30 text-red-300 text-[9px] font-bold rounded uppercase">{{ err.type }}</span>
-                  <button @click="copyError(err)" class="px-2 py-0.2 bg-gray-500/20 hover:bg-gray-500/30 text-on-surface/90 text-[9px] font-bold rounded border border-gray-500/30 transition-colors flex items-center gap-1" title="Copia negli appunti">
+                  <span class="px-1.5 py-0.2 bg-error-container/40 text-error text-[9px] font-bold rounded uppercase">{{ err.type }}</span>
+                  <button @click="copyError(err)" class="px-2 py-0.2 bg-surface-container/50 hover:bg-surface-container-highest text-on-surface/90 text-[9px] font-bold rounded border border-outline/30 transition-colors flex items-center gap-1" title="Copia negli appunti">
                     <Copy class="w-2.5 h-2.5" /> Copia
                   </button>
-                  <button @click="reportToCrikket(err)" class="px-2 py-0.2 bg-primary/20 hover:bg-primary/30 text-primary text-[9px] font-bold rounded border border-primary/30 transition-colors">
+                  <button @click="reportToCrikket(err)" class="px-2 py-0.2 bg-primary-container/40 hover:bg-primary-container/60 text-primary text-[9px] font-bold rounded border border-primary/30 transition-colors">
                     📤 Memorizza in Crikket per AI
                   </button>
                 </div>
               </div>
-              <div class="text-red-300 font-bold break-words">{{ err.message }}</div>
-              <div v-if="err.source || err.stack" class="bg-surface dark:bg-surface-container-lowest/80 p-2 rounded border border-red-500/20 text-[10px] text-on-surface-variant overflow-x-auto whitespace-pre-wrap font-mono">
+              <div class="text-error font-bold break-words">{{ err.message }}</div>
+              <div v-if="err.source || err.stack" class="bg-surface dark:bg-surface-container-lowest/80 p-2 rounded border border-error/20 text-[10px] text-on-surface-variant overflow-x-auto whitespace-pre-wrap font-mono">
                 {{ err.stack || err.source }}
               </div>
             </div>
@@ -254,13 +254,13 @@
             <div v-for="req in networkRequests" :key="req.id" class="p-2 rounded bg-white/[0.02] border border-outline/20 flex items-center justify-between text-[11px]">
               <div class="flex items-center gap-2 truncate flex-1 mr-2">
                 <span class="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase shrink-0"
-                      :class="req.method === 'GET' ? 'bg-green-500/20 text-green-400' : (req.method === 'POST' ? 'bg-blue-500/20 text-blue-400' : 'bg-yellow-500/20 text-yellow-400')">
+                      :class="req.method === 'GET' ? 'bg-primary-container/30 text-primary' : (req.method === 'POST' ? 'bg-secondary-container/30 text-secondary' : 'bg-tertiary-container/30 text-tertiary')">
                   {{ req.method }}
                 </span>
                 <span class="text-on-surface/90 truncate">{{ req.url }}</span>
               </div>
               <div class="flex items-center gap-2 shrink-0">
-                <span :class="req.status >= 400 ? 'text-red-400 font-bold' : 'text-on-surface-variant'">{{ req.status }}</span>
+                <span :class="req.status >= 400 ? 'text-error font-bold' : 'text-on-surface-variant'">{{ req.status }}</span>
                 <span class="text-on-surface-variant text-[10px]">{{ req.duration || '24ms' }}</span>
               </div>
             </div>
@@ -268,9 +268,9 @@
         </div>
 
         <!-- ─── TAB 5: PINIA STORE / STATE INSPECTOR ─────────────────────── -->
-        <div v-if="activeTab === 'state'" class="flex-1 bg-surface-container dark:bg-surface-container-highest p-3 overflow-y-auto font-mono text-[11px] text-blue-300 custom-scrollbar">
+        <div v-if="activeTab === 'state'" class="flex-1 bg-surface-container dark:bg-surface-container-highest p-3 overflow-y-auto font-mono text-[11px] text-secondary custom-scrollbar">
           <div class="text-[10px] text-on-surface-variant mb-2">// Stato globale intercettato in tempo reale (Store Auth, Campagne, Cockpit)</div>
-          <pre class="whitespace-pre-wrap bg-surface dark:bg-surface-container-lowest/80 p-3 rounded border border-outline/20 text-cyan-300">{{ stateSnapshot }}</pre>
+          <pre class="whitespace-pre-wrap bg-surface dark:bg-surface-container-lowest/80 p-3 rounded border border-outline/20 text-secondary">{{ stateSnapshot }}</pre>
         </div>
 
       </div>
@@ -370,12 +370,12 @@ const filteredConsoleLogs = computed(() => {
 
 function getProjectBadgeClass(source?: string) {
   switch (source) {
-    case 'WuzAPI': return 'bg-green-500/20 text-green-400 border border-green-500/40'
-    case 'Cockpit': return 'bg-purple-500/20 text-purple-400 border border-purple-500/40'
-    case 'MCP': return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40'
-    case 'GoWA': return 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/40'
-    case 'OpenWA': return 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
-    default: return 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
+    case 'WuzAPI': return 'bg-primary-container/30 text-primary border border-primary/40'
+    case 'Cockpit': return 'bg-tertiary-container/30 text-tertiary border border-tertiary/40'
+    case 'MCP': return 'bg-secondary-container/30 text-secondary border border-secondary/40'
+    case 'GoWA': return 'bg-primary-container/20 text-primary border border-primary/30'
+    case 'OpenWA': return 'bg-tertiary-container/20 text-tertiary border border-tertiary/30'
+    default: return 'bg-surface-container-high text-on-surface border border-outline/40'
   }
 }
 

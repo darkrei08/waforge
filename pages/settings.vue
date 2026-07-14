@@ -1,14 +1,14 @@
 <template>
-  <div class="p-8 space-y-8 animate-fade-in">
+  <div class="p-8 space-y-8 animate-fade-in w-full">
     <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ t('nav.settings') }}</h1>
 
-    <div class="max-w-2xl space-y-6">
+    <div class="w-full max-w-5xl space-y-8">
       <!-- WhatsApp Engine -->
       <div class="bg-surface-container/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
         <h2 class="text-lg font-semibold text-on-surface mb-4 flex items-center gap-2">
           <Wifi class="w-5 h-5 text-primary" /> {{ t('settings.engine_title') }}
         </h2>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <button v-for="eng in store.settings.supportedEngines" :key="eng"
                   @click="store.settings.whatsappEngine = eng as any"
                   class="p-4 rounded-xl border text-left transition-all"
@@ -26,7 +26,7 @@
         <h2 class="text-lg font-semibold text-on-surface mb-4 flex items-center gap-2">
           <Clock class="w-5 h-5 text-secondary" /> {{ t('settings.rate_title') }}
         </h2>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div>
             <label class="text-sm text-on-surface-variant font-medium">{{ t('settings.delay_min') }}</label>
             <input v-model.number="store.settings.delayMin" type="number" min="5" max="300"
@@ -37,11 +37,11 @@
             <input v-model.number="store.settings.delayMax" type="number" min="10" max="600"
                    class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
           </div>
-        </div>
-        <div class="mt-4">
-          <label class="text-sm text-on-surface-variant font-medium">{{ t('settings.max_per_hour') }}</label>
-          <input v-model.number="store.settings.maxMessagesPerHour" type="number" min="1" max="1000"
-                 class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+          <div>
+            <label class="text-sm text-on-surface-variant font-medium">{{ t('settings.max_per_hour') }}</label>
+            <input v-model.number="store.settings.maxMessagesPerHour" type="number" min="1" max="1000"
+                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+          </div>
         </div>
       </div>
 
@@ -69,7 +69,7 @@
         <h2 class="text-lg font-semibold text-on-surface mb-4 flex items-center gap-2">
           <Palette class="w-5 h-5 text-secondary" /> Brand & UI Customization
         </h2>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
           <div>
             <label class="text-sm text-on-surface-variant font-medium">Primary Color</label>
             <div class="flex items-center gap-2 mt-1">
@@ -157,7 +157,7 @@
                 </button>
               </div>
               
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 <div v-for="acc in cockpitStatus.accounts" :key="acc.id" 
                      @click="store.llmSettings.cockpitAccountId = acc.id"
                      class="relative p-5 rounded-xl border transition-all cursor-pointer flex flex-col gap-4"
@@ -176,7 +176,7 @@
                   </div>
 
                   <!-- Quote Grid -->
-                  <div class="grid grid-cols-2 gap-5 mt-1">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-3">
                     <!-- Colonna Claude -->
                     <div class="space-y-3">
                       <h5 class="text-xs font-bold text-on-surface-variant">Claude</h5>
