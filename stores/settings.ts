@@ -143,6 +143,13 @@ export const useSettingsStore = defineStore('settings', () => {
       catalogLoading.value = false
     }
   }
+
+  async function checkCockpit() {
+    const res = await $fetch<{ data: { available: boolean, accounts: any[] } }>('/api/settings/cockpit')
+    cockpitAvailable.value = res.data?.available || false
+    cockpitAccounts.value = res.data?.accounts || []
+  }
+
   function hexToRgb(hex: string) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
     return result ? `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : null
@@ -171,5 +178,5 @@ export const useSettingsStore = defineStore('settings', () => {
     root.style.setProperty('--motion-duration', `${duration}ms`)
   }
 
-  return { settings, brandSettings, llmSettings, cockpitAccounts, cockpitAvailable, dynamicModels, catalogSources, catalogLoading, loading, saved, fetchSettings, saveSettings, fetchModelCatalog, applyBrandSettingsToDOM }
+  return { settings, brandSettings, llmSettings, cockpitAccounts, cockpitAvailable, dynamicModels, catalogSources, catalogLoading, loading, saved, fetchSettings, saveSettings, fetchModelCatalog, applyBrandSettingsToDOM, checkCockpit }
 })
