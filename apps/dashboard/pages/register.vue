@@ -170,7 +170,11 @@ const handleRegister = async () => {
     })
 
     if (response && response.success) {
-      await authStore.fetchUser()
+      if (response.user) {
+        authStore.user = response.user
+      } else {
+        await authStore.fetchUser()
+      }
       await navigateTo('/', { replace: true })
     } else {
       error.value = response?.message || 'Impossibile creare l\'account'

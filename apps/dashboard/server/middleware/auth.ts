@@ -2,7 +2,7 @@ import { verifyJWT } from '../utils/jwt'
 import { getCookie, getHeader } from 'h3'
 
 export default defineEventHandler(async (event) => {
-  const publicRoutes = ['/api/auth/login', '/api/auth/register', '/api/webhook']
+  const publicRoutes = ['/api/auth/login', '/api/auth/register', '/api/auth/invite', '/api/auth/oauth', '/api/auth/logout', '/api/webhook']
   if (publicRoutes.some(route => event.path.startsWith(route))) return
 
   // Applica l'auth solo alle chiamate API

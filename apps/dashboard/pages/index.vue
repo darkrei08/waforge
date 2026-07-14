@@ -75,10 +75,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Users, Megaphone, Send, TrendingUp, Smartphone } from 'lucide-vue-next'
-import { useI18n } from '#i18n'
+import { useI18n, useLocalePath } from '#imports'
 import { useWhatsappStore } from '~/stores/whatsapp'
 
 const { t } = useI18n()
+const localePath = useLocalePath()
 const waStore = useWhatsappStore()
 
 const stats = ref<any>(null)
