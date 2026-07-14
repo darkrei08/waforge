@@ -25,6 +25,23 @@
 - **Data Leakage:** Nessuna query backend deve omettere la clausola `where: { teamId: user.teamId }`.
 - **Workflow:** Pianificare (Plan), Eseguire, Verificare prima di confermare.
 
+## [Session State Snapshot] - 2026-07-14 21:35:00
+### Session Summary - WaForge Container Permissions, Chat UI/UX & Wizard-AI Release
+
+1. **Docker Container Permissions (`waforge_uploads` volume)**:
+   - Risolto errore 500 EACCES per l'upload media limitando i permessi all'utente `nuxtjs`.
+   - Introdotto il pattern `entrypoint.sh` con `su-exec`: lo script esegue `chown -R nuxtjs:nuxtjs /app/data` da root prima di passare i processi in esecuzione all'utente limitato (Drop Privileges). Questo garantisce massima sicurezza ed evita conflitti nei volumi montati nativamente dal server host.
+
+2. **UI/UX & Audio Permissions (`chat.vue`, `ChatInputCapsule.vue`)**:
+   - Gestito il blocco `navigator.mediaDevices` che provocava crash silenziosi dell'interfaccia quando l'app non veniva servita su protocolli HTTPS. È stato implementato un Fallback visuale (Toaster).
+   - Ristrutturato il componente d'ingresso della Chat UI. Sostituito form grezzo con `ChatInputCapsule` integrando gli slot dinamici (`prefix` e `attachment`). Le logiche flexbox e l'overflow hidden/auto risolvono lo sfasamento tra background, messaggi testuali e container, incapsulando correttamente input.
+
+3. **Integrazione Backend docker-compose.yml (`mcp-agent` & `cockpit-agent`)**:
+   - Fixati i path build orfani nel file `docker-compose.yml` (`nuxt-mcp-agent-starter`), per cui ora gli agent container sono basati sull'estrazione diretta delle immagini precompilate (latest) da GitHub Container Registry, bypassando il check di context build obsoleto.
+
+4. **Wizard-AI Pubblicato (v0.49.4)**:
+   - Rilascio di Wizard-AI-CLI configurato tramite token Auth, completando push version v0.49.4 e commit di allineamento branch git.
+
 ## [Session State Snapshot] - 2026-07-13 01:41:00
 ### Session Summary - Frontier 2026 Model Catalog, Prompt Registry & Dynamic Chat Override
 

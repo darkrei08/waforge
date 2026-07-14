@@ -5,9 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.15.1] - 2026-07-13
+## [2.15.2] - 2026-07-14
 
 ### Fixed
+- **UI Chat & Formattazione**: Risolto il problema di sovrapposizione tra i messaggi testuali e l'input in `/chat` incapsulando il form in `ChatInputCapsule.vue` e correggendo le altezze flexbox.
+- **Microfono HTTP Crash**: Aggiunto controllo preventivo su `navigator.mediaDevices` nella UI con fallback (Toaster UI) per evitare crash silenziosi quando l'app non è servita via HTTPS o localhost.
+- **Upload Media EACCES (Docker)**: Introdotto il drop-privileges tramite `entrypoint.sh` e `su-exec` nel container Docker. Risolve in via definitiva l'errore `500 Server Error` causato da conflitti di permessi sui volumi host per gli allegati multimediali mantenendo lo user limitato `nuxtjs`.
+- **Infrastruttura Docker (`docker-compose`)**: Aggiornati i percorsi `build` degli agenti MCP per recuperare le immagini precompilate senza fallire quando il source locale non è presente.
+
+## [2.15.1] - 2026-07-13
 - **UI & Legenda Formattazione**: Rimossa la duplicazione della legenda WhatsApp (variabili e formattazione grassetto/corsivo) nei file `campaigns.vue` e `templates.vue`, unificata tramite il componente `WhatsAppFormattingLegend.vue`.
 - **Dispositivi Fantasma (Ghost Devices)**: Risolto il problema in `/devices` in cui un tentativo di connessione interrotto senza scansionare il QR code lasciava un dispositivo perennemente visibile ("In attesa..."). Le sessioni vuote ora vengono filtrate e pulite automaticamente nel database dal cron `retention.ts` ogni ora.
 - **Denominazione Progetto Standardizzata**: Tutti i riferimenti legacy (Center Pro, One Forge Pro, WA Sender Pro) nel codice, documentazione, `MEMORY.md` e nel report sono stati aggiornati alla denominazione standard ufficiale **WaForge**.
