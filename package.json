@@ -1,63 +1,13 @@
 {
-  "name": "waforge",
-  "version": "2.15.7",
-  "private": false,
-  "engines": {
-    "node": ">=22.0.0",
-    "bun": ">=1.1.0"
-  },
+  "name": "waforge-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "nuxt dev",
-    "build": "nuxt build",
-    "preview": "nuxt preview",
-    "start": "node .output/server/index.mjs",
-    "lint": "eslint .",
-    "postinstall": "nuxt prepare && prisma generate",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:bun": "bun test",
-    "test:e2e": "playwright test",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push",
-    "db:studio": "prisma studio",
-    "admin:reset-password": "bun run bin/reset-admin-password.ts"
-  },
-  "dependencies": {
-    "@aejkatappaja/phantom-ui": "latest",
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "@prisma/client": "5.22.0",
-    "@vueuse/core": "^14.3.0",
-    "bcryptjs": "^2.4.3",
-    "bullmq": "^5.79.1",
-    "ioredis": "^5.11.1",
-    "jose": "^5.3.0",
-    "libphonenumber-js": "^1.13.7",
-    "mime": "^4.1.0",
-    "nodemailer": "^9.0.1",
-    "nuxt": "^4.4.8",
-    "vue": "^3.5.38",
-    "vue-router": "^5.1.0",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
-    "@nuxt/eslint": "^1.4.1",
-    "@nuxtjs/color-mode": "^4.0.1",
-    "@nuxtjs/i18n": "^10.4.0",
-    "@nuxtjs/tailwindcss": "^6.14.0",
-    "@pinia/nuxt": "^0.11.3",
-    "@playwright/test": "^1.45.0",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^20",
-    "@types/nodemailer": "^8.0.1",
-    "eslint": "^9",
-    "lucide-vue-next": "^1.0.0",
-    "pinia": "^3.0.4",
-    "postcss": "^8",
-    "prisma": "5.22.0",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5",
-    "vitest": "^4.1.10",
-    "vue-tsc": "^3.3.7"
+    "dev": "bun --cwd apps/dashboard dev & bun --cwd apps/frontend dev & bun --cwd apps/backend dev",
+    "build": "bun --cwd apps/dashboard build && bun --cwd apps/frontend build",
+    "install:all": "bun install"
   }
 }

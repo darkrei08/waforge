@@ -1,4 +1,45 @@
 services:
+  # ─── 1. WaForge Frontend (Astro 5 Landing) ──────────────────────────────────
+  waforge-frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    container_name: waforge-frontend
+    restart: unless-stopped
+    ports:
+      - "4321:4321"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+    networks:
+      - wa-net
+    labels:
+      traefik.enable: "${TRAEFIK_ENABLE:-false}"
+      traefik.http.routers.waforge-frontend.rule: "Host(`www.${DOMAIN:-localhost}`)"
+      traefik.http.routers.waforge-frontend.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
+      traefik.http.routers.waforge-frontend.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
+      traefik.http.services.waforge-frontend.loadbalancer.server.port: "4321"
+
+  # ─── 2. WaForge Backend (Elysia Webhooks) ───────────────────────────────────
+  waforge-backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: waforge-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-waforge}?schema=public
+    networks:
+      - wa-net
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   # ─── WuzAPI — WhatsApp Engine (Go + whatsmeow) ───────────────────────────
   wuzapi:
     image: asternic/wuzapi:latest
@@ -12,8 +53,8 @@ services:
     env_file:
       - .env
     environment:
-      - WUZAPI_GLOBAL_ENCRYPTION_KEY=${WUZAPI_GLOBAL_ENCRYPTION_KEY}
-      - WUZAPI_GLOBAL_HMAC_KEY=${WUZAPI_GLOBAL_HMAC_KEY}
+      WUZAPI_GLOBAL_ENCRYPTION_KEY: ${WUZAPI_GLOBAL_ENCRYPTION_KEY}
+      WUZAPI_GLOBAL_HMAC_KEY: ${WUZAPI_GLOBAL_HMAC_KEY}
     volumes:
       - wuzapi_data:/app/dbdata
     networks:
@@ -34,7 +75,7 @@ services:
       - rest
       - --basic-auth=admin:${GOWA_TOKEN:-secret-token}
       - --port=3000
-      - --webhook=http://waforge-app:3000/api/webhook/gowa
+      - --webhook=http://waforge-backend:3000/webhook/gowa
       - --webhook-secret=${GOWA_APP_SECRET:-my-secret-key}
     volumes:
       - gowa_data:/app/storages
@@ -57,9 +98,9 @@ services:
     expose:
       - "2785"
     environment:
-      - PORT=2785
-      - API_KEY=${OPENWA_API_KEY:-owa_k1_secret}
-      - WEBHOOK_URL=http://waforge-app:3000/api/webhook/openwa
+      PORT: 2785
+      API_KEY: ${OPENWA_API_KEY:-owa_k1_secret}
+      WEBHOOK_URL: http://waforge-backend:3000/webhook/openwa
     volumes:
       - openwa_data:/app/sessions
     networks:
@@ -72,7 +113,7 @@ services:
   waforge:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: apps/dashboard/Dockerfile
     image: ghcr.io/darkrei08/waforge:latest
     container_name: waforge-app
     restart: unless-stopped
@@ -82,62 +123,61 @@ services:
       - "3000"
     environment:
       # --- App Configuration ---
-      - NODE_ENV=${NODE_ENV:-production}
-      - NUXT_PUBLIC_APP_URL=${NUXT_PUBLIC_APP_URL:-http://localhost:3000}
-      - APP_SECRET=${APP_SECRET:-change-me}
-      - NUXT_PUBLIC_ENABLE_DEBUG_WIDGET=${ENABLE_DEBUG_WIDGET:-true}
-      - LOG_LEVEL=${LOG_LEVEL_WAFORGE:-verbose}
-      - LOG_LEVEL_WAFORGE=${LOG_LEVEL_WAFORGE:-verbose}
-      - LOG_LEVEL_WUZAPI=${LOG_LEVEL_WUZAPI:-info}
-      - LOG_LEVEL_GOWA=${LOG_LEVEL_GOWA:-info}
-      - LOG_LEVEL_OPENWA=${LOG_LEVEL_OPENWA:-info}
-      - LOG_LEVEL_COCKPIT=${LOG_LEVEL_COCKPIT:-info}
-      - LOG_LEVEL_MCP=${LOG_LEVEL_MCP:-info}
-      - CRIKKET_SERVER_URL=http://crikket-server:3000
-
+      NODE_ENV: ${NODE_ENV:-production}
+      NUXT_PUBLIC_APP_URL: ${NUXT_PUBLIC_APP_URL:-http://localhost:3000}
+      APP_SECRET: ${APP_SECRET:-change-me}
+      NUXT_PUBLIC_ENABLE_DEBUG_WIDGET: ${ENABLE_DEBUG_WIDGET:-true}
+      LOG_LEVEL: ${LOG_LEVEL_WAFORGE:-verbose}
+      LOG_LEVEL_WAFORGE: ${LOG_LEVEL_WAFORGE:-verbose}
+      LOG_LEVEL_WUZAPI: ${LOG_LEVEL_WUZAPI:-info}
+      LOG_LEVEL_GOWA: ${LOG_LEVEL_GOWA:-info}
+      LOG_LEVEL_OPENWA: ${LOG_LEVEL_OPENWA:-info}
+      LOG_LEVEL_COCKPIT: ${LOG_LEVEL_COCKPIT:-info}
+      LOG_LEVEL_MCP: ${LOG_LEVEL_MCP:-info}
+      CRIKKET_SERVER_URL: http://crikket-server:3000
 
       # --- Database & Storage (BullMQ + PostgreSQL) ---
-      - REDIS_URL=redis://redis:6379
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-waforge}?schema=public
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-waforge}?schema=public
 
       # --- WhatsApp Engine Strategy ---
       # Options: 'wuzapi' | 'gowa' | 'openwa' | 'hybrid' (Multi-Engine Load Balancing & Failover)
-      - WHATSAPP_ENGINE=${WHATSAPP_ENGINE:-hybrid}
+      WHATSAPP_ENGINE: ${WHATSAPP_ENGINE:-hybrid}
 
       # --- WuzAPI Backend (Go / WhatsMeow) ---
-      - WUZAPI_URL=${WUZAPI_URL:-http://wuzapi:8080}
-      - WUZAPI_TOKEN=${WUZAPI_TOKEN:-secret-token}
+      WUZAPI_URL: ${WUZAPI_URL:-http://wuzapi:8080}
+      WUZAPI_TOKEN: ${WUZAPI_TOKEN:-secret-token}
 
       # --- GoWA Backend (aldinokemal / WhatsMeow) ---
-      - GOWA_URL=${GOWA_URL:-http://gowa:3000}
-      - GOWA_TOKEN=${GOWA_TOKEN:-secret-token}
-      - GOWA_APP_SECRET=${GOWA_APP_SECRET:-my-secret-key}
+      GOWA_URL: ${GOWA_URL:-http://gowa:3000}
+      GOWA_TOKEN: ${GOWA_TOKEN:-secret-token}
+      GOWA_APP_SECRET: ${GOWA_APP_SECRET:-my-secret-key}
 
       # --- OpenWA Backend (Node.js / Baileys) ---
-      - OPENWA_URL=${OPENWA_URL:-http://openwa:2785/api}
-      - OPENWA_API_KEY=${OPENWA_API_KEY:-owa_k1_secret}
+      OPENWA_URL: ${OPENWA_URL:-http://openwa:2785/api}
+      OPENWA_API_KEY: ${OPENWA_API_KEY:-owa_k1_secret}
 
       # --- Campaign Defaults, Rate Limiting & Anti-Ban ---
-      - CAMPAIGN_DELAY_MIN=${CAMPAIGN_DELAY_MIN:-15}
-      - CAMPAIGN_DELAY_MAX=${CAMPAIGN_DELAY_MAX:-45}
-      - MAX_MESSAGES_PER_HOUR=${MAX_MESSAGES_PER_HOUR:-100}
-      - SPINTAX_ENABLED=${SPINTAX_ENABLED:-true}
+      CAMPAIGN_DELAY_MIN: ${CAMPAIGN_DELAY_MIN:-15}
+      CAMPAIGN_DELAY_MAX: ${CAMPAIGN_DELAY_MAX:-45}
+      MAX_MESSAGES_PER_HOUR: ${MAX_MESSAGES_PER_HOUR:-100}
+      SPINTAX_ENABLED: ${SPINTAX_ENABLED:-true}
 
       # --- SMTP Notifications ---
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_PORT=${SMTP_PORT}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASS=${SMTP_PASS}
-      - SMTP_FROM_EMAIL=${SMTP_FROM_EMAIL}
-      - SMTP_FROM_NAME=${SMTP_FROM_NAME}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME}
 
       # --- OAuth & pi.dev Cockpit Bridge ---
-      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
-      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
-      - OAUTH_AUTHORIZE_URL=${OAUTH_AUTHORIZE_URL}
-      - OAUTH_TOKEN_URL=${OAUTH_TOKEN_URL}
-      - OAUTH_USERINFO_URL=${OAUTH_USERINFO_URL}
-      - COCKPIT_HOST_URL=http://host.docker.internal:19528
+      OAUTH_CLIENT_ID: ${OAUTH_CLIENT_ID}
+      OAUTH_CLIENT_SECRET: ${OAUTH_CLIENT_SECRET}
+      OAUTH_AUTHORIZE_URL: ${OAUTH_AUTHORIZE_URL}
+      OAUTH_TOKEN_URL: ${OAUTH_TOKEN_URL}
+      OAUTH_USERINFO_URL: ${OAUTH_USERINFO_URL}
+      COCKPIT_HOST_URL: http://host.docker.internal:19528
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -206,17 +246,17 @@ services:
   # ─── MCP Agent Starter ──────────────────────────────────────────────────────
   mcp-agent:
     build:
-      context: ../nuxt-mcp-agent-starter
+      context: nuxt-mcp-agent-starter
       dockerfile: Dockerfile
     image: ghcr.io/darkrei08/nuxt-mcp-agent-starter:latest
     container_name: waforge-mcp-agent
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3002:3000"
     expose:
       - "3000"
     environment:
-      - LOG_LEVEL=${LOG_LEVEL_MCP:-info}
+      LOG_LEVEL: ${LOG_LEVEL_MCP:-info}
     networks:
       - wa-net
     extra_hosts:
@@ -225,17 +265,17 @@ services:
   # ─── Cockpit Agent Starter ──────────────────────────────────────────────────
   cockpit-agent:
     build:
-      context: ../nuxt-cockpit-agent-starter
+      context: nuxt-cockpit-agent-starter
       dockerfile: Dockerfile
     image: ghcr.io/darkrei08/nuxt-cockpit-agent-starter:latest
     container_name: waforge-cockpit-agent
     restart: unless-stopped
     ports:
-      - "3002:3000"
+      - "3003:3000"
     expose:
       - "3000"
     environment:
-      - LOG_LEVEL=${LOG_LEVEL_COCKPIT:-info}
+      LOG_LEVEL: ${LOG_LEVEL_COCKPIT:-info}
     networks:
       - wa-net
     volumes:
@@ -346,11 +386,11 @@ services:
       NEXT_PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}}
       NEXT_PUBLIC_APP_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}}
       NEXT_PUBLIC_SITE_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}}
-      PORT: 3001
+      PORT: 3151
     ports:
-      - "${CRIKKET_WEB_PORT:-3151}:3001"
+      - "${CRIKKET_WEB_PORT:-3151}:3151"
     expose:
-      - "3001"
+      - "3151"
     networks:
       - wa-net
     labels:
@@ -359,8 +399,7 @@ services:
       traefik.http.routers.crikket-web.priority: "10"
       traefik.http.routers.crikket-web.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
       traefik.http.routers.crikket-web.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
-      traefik.http.services.crikket-web.loadbalancer.server.port: "3001"
-
+      traefik.http.services.crikket-web.loadbalancer.server.port: "3151"
 
 volumes:
   crikket_postgres_data:

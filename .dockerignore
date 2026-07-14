@@ -1,8 +1,8 @@
-node_modules
-.nuxt
-.output
-.env
-dist
+**/node_modules
+**/.nuxt
+**/.output
+**/.env
+**/dist
 npm-debug.log
 bun.lockb
 .git

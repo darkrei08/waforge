@@ -27,3 +27,15 @@ Qualsiasi nuovo componente visivo (Vue/Tailwind) DEVE seguire questi standard:
 ## Memoria di Sessione (Agent Persistence)
 - **Aggiornamento MEMORY.md**: Al termine di ogni implementazione, o task complesso, l'agente DEVE sempre aggiornare il file `MEMORY.md`. 
 - **Struttura obbligatoria**: Il file deve contenere un log strutturato ([Data] Titolo Task - Decisioni Architetturali - File Modificati). Usa sempre le skill di workflow ciclico (es. `workflow-production-cycle`), session manager e brainstorming. Questa memoria funge da contesto persistente per i futuri subagents.
+
+## AI Output Rendering Standard (WaForge / Vue)
+Quando si implementa un'interfaccia utente in Vue/Nuxt che deve mostrare testo generato da un LLM:
+1. NON utilizzare mai `v-html` direttamente su output non parsato o non sanitizzato.
+2. Utilizzare SEMPRE la triade: `marked` (per il parsing markdown), `highlight.js` (per i blocchi di codice), e `isomorphic-dompurify` (per prevenire XSS).
+3. Incapsulare il rendering in un componente isolato (es. `AiMessageBubble.vue`) dotato di un pulsante "Copia" integrato in basso.
+
+## Anthropic Design System & Chat-Centric UI (WaForge Dashboard)
+1. Layout: L'applicazione principale deve utilizzare un paradigma "Chat-Centric" (stile ChatGPT web). La barra laterale (Sidebar) deve essere a scomparsa e l'area centrale deve essere focalizzata sull'interazione AI.
+2. Tipografia (Anthropic Guidelines): Utilizzare sempre **Poppins** per le intestazioni (Headings) e **Lora** per il testo del corpo (Body).
+3. Animazioni: Implementare sempre transizioni fluide e micro-animazioni per l'espansione dei menu e l'apparizione dei messaggi (`animate-fade-in`).
+4. Input: I campi di testo principali per l'AI devono essere "Input Capsule" fluttuanti con pulsante di invio e supporto agli allegati.
