@@ -1,7 +1,11 @@
 # ─── Build Stage ──────────────────────────────────────────────────────────
-FROM oven/bun:1 AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
+
+# Install openssl and copy bun binary for superfast package installation
+RUN apk add --no-cache openssl bash
+COPY --from=oven/bun:1-alpine /usr/local/bin/bun /usr/local/bin/bun
 
 COPY package.json bun.lock ./
 RUN bun install --ignore-scripts
@@ -9,10 +13,11 @@ RUN bun install --ignore-scripts
 COPY . .
 RUN bun run postinstall
 RUN bunx prisma generate
-RUN bun run build
+# Run nuxt build via Node to prevent Bun fs async I/O race condition (ENOENT on rollup server bundles)
+RUN npx nuxt build
 
 # ─── Production Stage ─────────────────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 

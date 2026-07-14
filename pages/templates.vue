@@ -260,7 +260,7 @@
                   </div>
 
                   <!-- Assistant Action Pills (Apply & Copy) -->
-                  <div v-if="msg.role === 'assistant' && isAiReadyContent(msg.content)" class="flex items-center gap-2 mt-2 ml-1">
+                  <div v-if="msg.role === 'assistant' && isAiReadyContent(msg.content, i)" class="flex items-center gap-2 mt-2 ml-1">
                     <button @click="applyToBody(msg.content)" 
                             class="text-xs bg-primary text-on-primary font-bold px-3 py-1.5 rounded-xl hover:bg-primary-fixed-dim hover:shadow-[0_0_15px_rgba(37,211,102,0.4)] transition-all flex items-center gap-1.5 shadow-sm">
                       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -359,9 +359,12 @@ const defaultModelLabel = computed(() => {
   return found ? `Predefinito (${found.name})` : `Predefinito (${model})`
 })
 
-// Check if an AI message is actual content (not progress/error)
-function isAiReadyContent(content: string): boolean {
+// Check if an AI message is actual content (not progress/error or welcome greeting)
+function isAiReadyContent(content: string, idx?: number): boolean {
   if (!content) return false
+  if (idx === 0) return false
+  if (content.includes('👋 Ciao! Sono il tuo AI Co-Pilot') || content.includes('Scrivimi come vuoi modificare o potenziare')) return false
+  if (!chatHistory.value.some(m => m.role === 'user')) return false
   if (content.startsWith('⏳') || content.includes('⏳')) return false
   if (content.startsWith('❌') || content.includes('❌')) return false
   if (content.includes('Inizializzazione...') || content.includes('Elaborazione in corso') || content.includes('Attesa di risposta')) return false

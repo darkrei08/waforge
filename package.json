@@ -1,9 +1,9 @@
 {
   "name": "waforge",
-  "version": "2.15.4",
+  "version": "2.15.5",
   "private": false,
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=22.0.0",
     "bun": ">=1.1.0"
   },
   "scripts": {

@@ -1,7 +1,7 @@
 <template>
-  <div class="p-8 h-full flex flex-col">
+  <div class="p-8 flex-1 flex flex-col w-full max-w-7xl mx-auto">
     <!-- Blocker Message -->
-    <div v-if="route.query.blocked" class="mb-6 p-4 bg-error/10 border border-error/20 rounded-xl flex items-center gap-3">
+    <div v-if="route.query.blocked && !waStore.connected" class="mb-6 p-4 bg-error/10 border border-error/20 rounded-xl flex items-center gap-3">
       <AlertCircle class="w-6 h-6 text-error flex-shrink-0" />
       <div>
         <h4 class="text-error font-semibold text-sm">Accesso bloccato</h4>
@@ -140,7 +140,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, inject } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Smartphone, LogOut, Loader2, QrCode, AlertCircle, Pencil, X, Send } from 'lucide-vue-next'
 import { useI18n, useLocalePath } from '#i18n'
 import { useWhatsappStore } from '~/stores/whatsapp'
@@ -205,7 +205,13 @@ const sendTestMessage = async (sessionId: string) => {
   }
 }
 
-onMounted(() => {
-  waStore.fetchSessions()
+onMounted(async () => {
+  await waStore.fetchSessions()
+  if (waStore.connected && route.query.blocked) {
+    const router = useRouter()
+    const query = { ...route.query }
+    delete query.blocked
+    router.replace({ query })
+  }
 })
 </script>

@@ -24,9 +24,9 @@ export const useWhatsappStore = defineStore('whatsapp', () => {
   const fetched = ref(false)
 
   // Derived from the first connected session (or first session overall)
-  const connected = computed(() => sessions.value.some(s => s.connected))
+  const connected = computed(() => sessions.value.some(s => s.connected || s.status === 'connected' || s.loggedIn || Boolean(s.phone)))
   const engine = computed(() => sessions.value[0]?.engine ?? 'Hybrid (WuzAPI + GoWA + OpenWA)')
-  const phone = computed(() => sessions.value.find(s => s.connected)?.phone ?? null)
+  const phone = computed(() => sessions.value.find(s => s.connected || s.status === 'connected' || Boolean(s.phone))?.phone ?? null)
   const statusLabel = computed(() => connected.value ? 'Connesso' : 'Disconnesso')
 
   async function fetchSessions() {

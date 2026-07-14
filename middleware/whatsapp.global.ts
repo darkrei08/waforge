@@ -9,6 +9,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const isProtected = protectedRoutes.some(route => normalizedPath.startsWith(route))
 
   if (isProtected) {
+    // Evita blocchi e reindirizzamenti prematuri durante SSR / prima idratazione se le sessioni stanno sincronizzando
+    if (import.meta.server) {
+      return
+    }
+
     if (!waStore.fetched) {
       await waStore.fetchSessions()
     }

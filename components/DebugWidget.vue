@@ -14,7 +14,7 @@
     <!-- Main WebKit DevTools Window (Floating or Docked to Bottom) -->
     <div v-if="isOpen" ref="widgetRef" :style="isDockedBottom ? {} : style" 
          class="fixed z-[9999] bg-[#141414]/95 backdrop-blur-2xl border border-white/15 shadow-2xl flex flex-col transition-all duration-200"
-         :class="isDockedBottom ? 'bottom-0 left-0 right-0 w-full h-[340px] rounded-none border-t-2 border-primary/40 border-l-0 border-r-0 border-b-0' : (isCollapsed ? 'w-[420px] rounded-xl' : 'w-[620px] h-[540px] rounded-xl')">
+         :class="isDockedBottom ? 'bottom-0 left-0 right-0 w-full h-[340px] rounded-none border-t-2 border-primary/40 border-l-0 border-r-0 border-b-0 max-w-full' : (isCollapsed ? 'w-full max-w-[420px] rounded-xl' : 'w-full max-w-[620px] h-[540px] max-h-[85vh] rounded-xl')">
       
       <!-- ─── HEADER / WINDOW BAR ─────────────────────────────────────── -->
       <div ref="handleRef" class="px-3 py-2 bg-[#1f1f1f] flex items-center justify-between cursor-move shrink-0 transition-all duration-200"
@@ -394,11 +394,19 @@ const filteredErrors = computed(() => {
 })
 
 // ─── 4. Network Requests ─────────────────────────────────────────────────────
-const networkRequests = ref([
-  { id: 1, method: 'GET', url: '/api/auth/me', status: 200, duration: '18ms' },
-  { id: 2, method: 'GET', url: '/api/contacts?limit=50000', status: 200, duration: '64ms' },
-  { id: 3, method: 'GET', url: '/api/settings/cockpit', status: 200, duration: '32ms' }
-])
+const networkRequests = ref<any[]>([])
+
+function syncTelemetry() {
+  if (typeof window !== 'undefined') {
+    if ((window as any).__waforge_debug_network__) {
+      networkRequests.value = [...(window as any).__waforge_debug_network__]
+    }
+    if ((window as any).__waforge_debug_errors__) {
+      capturedErrors.value = [...(window as any).__waforge_debug_errors__, ...capturedErrors.value].slice(0, 100)
+      ;(window as any).__waforge_debug_errors__ = []
+    }
+  }
+}
 
 // ─── Quick Actions & Helpers ─────────────────────────────────────────────────
 function clearCurrentTab() {
@@ -479,7 +487,13 @@ const fetchServerLogs = async () => {
 
 onMounted(() => {
   fetchServerLogs()
-  logInterval = setInterval(fetchServerLogs, 2500)
+  logInterval = setInterval(() => {
+    fetchServerLogs()
+    syncTelemetry()
+  }, 2500)
+  syncTelemetry()
+  window.addEventListener('waforge-debug-network-update', syncTelemetry)
+  window.addEventListener('waforge-debug-error-update', syncTelemetry)
 
   // Intercept Global Clicks (UI Interactions)
   globalClickHandler = (e: MouseEvent) => {
@@ -544,6 +558,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (logInterval) clearInterval(logInterval)
+  window.removeEventListener('waforge-debug-network-update', syncTelemetry)
+  window.removeEventListener('waforge-debug-error-update', syncTelemetry)
   if (globalClickHandler) window.removeEventListener('click', globalClickHandler, true)
   if (windowErrorHandler) window.removeEventListener('error', windowErrorHandler)
   if (promiseRejectionHandler) window.removeEventListener('unhandledrejection', promiseRejectionHandler)
