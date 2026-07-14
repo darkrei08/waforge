@@ -346,12 +346,12 @@ services:
       DATABASE_URL: "postgresql://${CRIKKET_POSTGRES_USER:-crikket}:${CRIKKET_POSTGRES_PASSWORD:-crikket_secret}@crikket-postgres:5432/${CRIKKET_POSTGRES_DB:-crikket}"
       NODE_ENV: development
       PORT: 3000
-      PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}}
-      PUBLIC_WEB_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}}
+      PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_SERVER_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3150}}
+      PUBLIC_WEB_URL: ${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-crikket_super_secret_key_change_me}
-      BETTER_AUTH_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}}
-      BETTER_AUTH_TRUSTED_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
-      CORS_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
+      BETTER_AUTH_URL: ${CRIKKET_PUBLIC_SERVER_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3150}}
+      BETTER_AUTH_TRUSTED_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,http://192.168.87.223:3151,${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
+      CORS_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,http://192.168.87.223:3151,${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
       ENABLE_PAYMENTS: "false"
       STORAGE_BUCKET: "${CRIKKET_STORAGE_BUCKET:-mock-bucket}"
       STORAGE_ACCESS_KEY_ID: "${CRIKKET_STORAGE_ACCESS_KEY_ID:-mock-key}"
@@ -379,18 +379,50 @@ services:
     pull_policy: always
     depends_on:
       - crikket-server
-    extra_hosts:
-      - "localhost:host-gateway"
-      - "127.0.0.1:host-gateway"
     environment:
-      NEXT_PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_SERVER_URL:-http://localhost:3150}}
-      NEXT_PUBLIC_APP_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}}
-      NEXT_PUBLIC_SITE_URL: ${CRIKKET_PUBLIC_URL:-${CRIKKET_PUBLIC_WEB_URL:-http://localhost:3151}}
+      NEXT_PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_SERVER_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3150}}
+      NEXT_PUBLIC_APP_URL: ${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}}
+      NEXT_PUBLIC_SITE_URL: ${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}}
       PORT: 3151
     ports:
-      - "${CRIKKET_WEB_PORT:-3151}:3001"
+      - "${CRIKKET_WEB_PORT:-3151}:3151"
     expose:
-      - "3001"
+      - "3151"
+    command:
+      - "/bin/sh"
+      - "-c"
+      - |
+        bun -e '
+        Bun.listen({
+          port: 3150,
+          hostname: "0.0.0.0",
+          socket: {
+            async open(client) {
+              client.buf = [];
+              try {
+                const remote = await Bun.connect({
+                  hostname: "crikket-server",
+                  port: 3000,
+                  socket: {
+                    data(s, d) { client.write(d); },
+                    close() { client.end(); },
+                    error() { client.end(); }
+                  }
+                });
+                client.data = remote;
+                for (const chunk of client.buf) {
+                  remote.write(chunk);
+                }
+                client.buf = null;
+              } catch(e) { client.end(); }
+            },
+            data(client, d) { if (client.data) client.data.write(d); else if (client.buf) client.buf.push(d); },
+            close(client) { if (client.data) client.data.end(); },
+            error(client) { if (client.data) client.data.end(); }
+          }
+        });
+        ' &
+        exec bun run --cwd apps/web start -- --port 3151 --hostname 0.0.0.0
     networks:
       - wa-net
     labels:
