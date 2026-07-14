@@ -81,7 +81,7 @@ export const CreateTemplateSchema = z.object({
       'Invalid template syntax — use {{variable}} format only'
     ),
   description: safeString(255).optional(),
-  mediaUrl:    z.union([z.string().url('Invalid URL'), z.literal('')]).optional().nullable(),
+  mediaUrl:    z.union([z.string().url('Invalid URL'), z.string().startsWith('/'), z.literal('')]).optional().nullable(),
   mediaType:   z.enum(['text', 'image', 'video', 'document', 'audio']).default('text'),
 })
 

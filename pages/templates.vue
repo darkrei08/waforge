@@ -538,6 +538,10 @@ async function handleFileUpload(event: Event) {
       body: fd
     })
     formData.value.mediaUrl = res.data.url
+    if (file.type.startsWith('image/')) formData.value.mediaType = 'image'
+    else if (file.type.startsWith('video/')) formData.value.mediaType = 'video'
+    else if (file.type.startsWith('audio/')) formData.value.mediaType = 'audio'
+    else formData.value.mediaType = 'document'
     addToast('File caricato con successo', 'success')
   } catch (err: any) {
     addToast(err.data?.message || err.message || 'Errore durante il caricamento del file', 'error')
@@ -551,13 +555,21 @@ async function handleSave() {
   if (!formData.value.name || !formData.value.body) return
   isSaving.value = true
   
+  if (formData.value.mediaUrl && formData.value.mediaType === 'text') {
+    const ext = formData.value.mediaUrl.split('.').pop()?.toLowerCase() || ''
+    if (['jpg','jpeg','png','gif','webp'].includes(ext)) formData.value.mediaType = 'image'
+    else if (['mp4','mov','avi','webm'].includes(ext)) formData.value.mediaType = 'video'
+    else if (['mp3','ogg','wav'].includes(ext)) formData.value.mediaType = 'audio'
+    else if (['pdf','doc','docx','xls','xlsx','zip'].includes(ext)) formData.value.mediaType = 'document'
+  }
+
   try {
     if (isEditing.value && formData.value.id) {
       await store.updateTemplate(formData.value.id, {
         name: formData.value.name,
         body: formData.value.body,
         description: formData.value.description,
-        mediaUrl: formData.value.mediaType === 'text' ? null : formData.value.mediaUrl,
+        mediaUrl: formData.value.mediaUrl || null,
         mediaType: formData.value.mediaType
       })
       addToast('Template aggiornato con successo', 'success')
@@ -566,7 +578,7 @@ async function handleSave() {
         name: formData.value.name,
         body: formData.value.body,
         description: formData.value.description,
-        mediaUrl: formData.value.mediaType === 'text' ? null : formData.value.mediaUrl,
+        mediaUrl: formData.value.mediaUrl || null,
         mediaType: formData.value.mediaType
       })
       addToast('Template creato con successo', 'success')

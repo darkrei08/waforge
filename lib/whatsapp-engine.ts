@@ -414,6 +414,13 @@ export async function sendMessage(
   }
 }
 
+function resolveFullMediaUrl(url: string): string {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  const baseUrl = process.env.APP_URL || process.env.NUXT_PUBLIC_SITE_URL || 'http://host.docker.internal:3000'
+  return `${baseUrl.replace(/\/$/, '')}/${url.replace(/^\//, '')}`
+}
+
 export async function sendMedia(
   token: string,
   phone: string,
@@ -421,6 +428,7 @@ export async function sendMedia(
   fileUrl: string,
   caption?: string
 ): Promise<SendResult> {
+  const fullFileUrl = resolveFullMediaUrl(fileUrl)
   let cleanPhone = phone.replace(/[\+\s\-]/g, '')
   if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2)
   if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
@@ -440,13 +448,13 @@ export async function sendMedia(
 
         if (target === 'wuzapi') {
           endpoint = `/chat/send/${mediaType}`
-          body = { Phone: `${cleanPhone}@s.whatsapp.net`, Url: fileUrl, Caption: caption || '' }
+          body = { Phone: `${cleanPhone}@s.whatsapp.net`, Url: fullFileUrl, Caption: caption || '' }
         } else if (target === 'gowa') {
           endpoint = `/send/${mediaType}`
-          body = { phone: cleanPhone, [mediaType]: fileUrl, caption: caption || '' }
+          body = { phone: cleanPhone, [mediaType]: fullFileUrl, caption: caption || '' }
         } else {
           endpoint = `/messages/send-${mediaType === 'document' ? 'file' : mediaType}`
-          body = { chatId: `${cleanPhone}@c.us`, url: fileUrl, caption: caption || '' }
+          body = { chatId: `${cleanPhone}@c.us`, url: fullFileUrl, caption: caption || '' }
         }
 
         const data = await apiCall(endpoint, token, 'POST', body, true, target)
@@ -466,13 +474,13 @@ export async function sendMedia(
 
     if (target === 'wuzapi') {
       endpoint = `/chat/send/${mediaType}`
-      body = { Phone: `${cleanPhone}@s.whatsapp.net`, Url: fileUrl, Caption: caption || '' }
+      body = { Phone: `${cleanPhone}@s.whatsapp.net`, Url: fullFileUrl, Caption: caption || '' }
     } else if (target === 'gowa') {
       endpoint = `/send/${mediaType}`
-      body = { phone: cleanPhone, [mediaType]: fileUrl, caption: caption || '' }
+      body = { phone: cleanPhone, [mediaType]: fullFileUrl, caption: caption || '' }
     } else {
       endpoint = `/messages/send-${mediaType === 'document' ? 'file' : mediaType}`
-      body = { chatId: `${cleanPhone}@c.us`, url: fileUrl, caption: caption || '' }
+      body = { chatId: `${cleanPhone}@c.us`, url: fullFileUrl, caption: caption || '' }
     }
 
     const data = await apiCall(endpoint, token, 'POST', body, true, target)

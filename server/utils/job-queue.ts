@@ -180,14 +180,26 @@ export const campaignWorker = globalThis.__campaignWorker || new Worker('campaig
 
   // Chiamata all'Engine Multi-Tenant
   let result
-  if (campaign.template.mediaUrl && campaign.template.mediaType && campaign.template.mediaType !== 'text') {
+  let effectiveMediaType = campaign.template.mediaType || 'text'
+  if (campaign.template.mediaUrl && effectiveMediaType === 'text') {
+    const ext = campaign.template.mediaUrl.split('.').pop()?.toLowerCase() || ''
+    if (['jpg','jpeg','png','gif','webp'].includes(ext)) effectiveMediaType = 'image'
+    else if (['mp4','mov','avi','webm'].includes(ext)) effectiveMediaType = 'video'
+    else if (['mp3','ogg','wav'].includes(ext)) effectiveMediaType = 'audio'
+    else if (['pdf','doc','docx','xls','xlsx','zip'].includes(ext)) effectiveMediaType = 'document'
+  }
+
+  if (campaign.template.mediaUrl && effectiveMediaType !== 'text') {
     result = await sendMedia(
       session.token, 
       targetPhone, 
-      campaign.template.mediaType as any, 
+      effectiveMediaType as any, 
       campaign.template.mediaUrl, 
       body
     )
+  } else if (campaign.template.mediaUrl && effectiveMediaType === 'text') {
+    const textWithLink = `${body}\n\n🔗 ${campaign.template.mediaUrl}`
+    result = await sendMessage(session.token, targetPhone, textWithLink)
   } else {
     result = await sendMessage(session.token, targetPhone, body)
   }
