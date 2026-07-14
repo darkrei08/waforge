@@ -245,9 +245,9 @@ services:
 
   # ─── MCP Agent Starter ──────────────────────────────────────────────────────
   mcp-agent:
-    build:
-      context: nuxt-mcp-agent-starter
-      dockerfile: Dockerfile
+    # build:
+    #   context: nuxt-mcp-agent-starter
+    #   dockerfile: Dockerfile
     image: ghcr.io/darkrei08/nuxt-mcp-agent-starter:latest
     container_name: waforge-mcp-agent
     restart: unless-stopped
@@ -264,9 +264,9 @@ services:
 
   # ─── Cockpit Agent Starter ──────────────────────────────────────────────────
   cockpit-agent:
-    build:
-      context: nuxt-cockpit-agent-starter
-      dockerfile: Dockerfile
+    # build:
+    #   context: nuxt-cockpit-agent-starter
+    #   dockerfile: Dockerfile
     image: ghcr.io/darkrei08/nuxt-cockpit-agent-starter:latest
     container_name: waforge-cockpit-agent
     restart: unless-stopped

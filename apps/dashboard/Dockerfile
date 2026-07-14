@@ -36,7 +36,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Install openssl so Prisma can detect OpenSSL 3.x correctly instead of defaulting to 1.1.x
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl su-exec
 
 RUN addgroup --system --gid 1001 nuxtjs && \
     adduser --system --uid 1001 nuxtjs
@@ -61,13 +61,18 @@ COPY --from=builder /app/apps/dashboard/bin ./bin
 # Create data directory and ensure correct ownership for all files
 RUN mkdir -p /app/data && chown -R nuxtjs:nuxtjs /app
 
-USER nuxtjs
+# Copy entrypoint script
+COPY --from=builder /app/apps/dashboard/entrypoint.sh /entrypoint.sh
+
+# Do not switch user here; entrypoint.sh will drop privileges using su-exec
 
 EXPOSE 3000
 
 LABEL org.opencontainers.image.source="https://github.com/darkrei08/waforge"
 LABEL org.opencontainers.image.description="WaForge — Dashboard WhatsApp Mass Messaging"
 LABEL org.opencontainers.image.licenses="AGPL-3.0"
+
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Run migrations then start Nitro server
 # Resolve any previously failed migration (safe no-op on fresh installs)

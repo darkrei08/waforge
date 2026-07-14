@@ -3,10 +3,15 @@
     <div 
       class="flex items-end gap-2 p-2 rounded-[28px] bg-white dark:bg-[#1a1a19] shadow-[0_0_15px_rgba(0,0,0,0.05)] dark:shadow-[0_0_20px_rgba(0,0,0,0.3)] border border-black/5 dark:border-white/10 transition-shadow focus-within:shadow-[0_0_20px_rgba(37,211,102,0.15)] focus-within:border-primary/30"
     >
+      <!-- Prefix Slot -->
+      <slot name="prefix"></slot>
+
       <!-- Attachment Button -->
-      <button type="button" class="p-3 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors shrink-0 mb-0.5">
-        <Paperclip class="w-5 h-5" />
-      </button>
+      <slot name="attachment">
+        <button type="button" @click="$emit('attach')" class="p-3 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors shrink-0 mb-0.5">
+          <Paperclip class="w-5 h-5" />
+        </button>
+      </slot>
 
       <!-- Textarea -->
       <textarea
@@ -51,6 +56,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', val: string): void
   (e: 'send'): void
+  (e: 'attach'): void
 }>()
 
 const textareaRef = ref<HTMLTextAreaElement | null>(null)

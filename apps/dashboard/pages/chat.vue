@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full flex flex-col sm:flex-row overflow-hidden animate-fade-in p-4 sm:p-8 gap-6">
+  <div class="absolute inset-0 flex flex-col sm:flex-row overflow-hidden animate-fade-in p-4 sm:p-8 gap-6">
     
     <!-- Left Sidebar: Conversations List -->
     <div class="w-full sm:w-[350px] flex-shrink-0 flex flex-col bg-surface-container/40 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
@@ -95,7 +95,7 @@
         </div>
 
         <!-- Message Input Area -->
-        <div class="p-4 bg-surface-container/80 border-t border-white/10 flex flex-col gap-2">
+        <div class="p-4 bg-transparent flex flex-col gap-2 relative z-10 shrink-0">
           
           <!-- Interfaccia Registrazione Audio -->
           <div v-if="recording" class="flex items-center gap-4 bg-error/10 text-error p-3 rounded-xl border border-error/20">
@@ -112,36 +112,25 @@
             </button>
           </div>
 
-          <form v-else @submit.prevent="handleSend" class="flex items-end gap-2">
-            <!-- Tasto Allegato -->
-            <button type="button" @click="triggerFileInput" :disabled="sending || uploading"
-                    class="p-3 text-on-surface-variant hover:text-primary hover:bg-white/5 rounded-xl transition-all disabled:opacity-30 flex-shrink-0"
-                    title="Allega File">
-              <Paperclip class="w-5 h-5" />
-            </button>
-            
-            <!-- Tasto Microfono -->
-            <button type="button" @click="startRecording" :disabled="sending || uploading"
-                    class="p-3 text-on-surface-variant hover:text-error hover:bg-white/5 rounded-xl transition-all disabled:opacity-30 flex-shrink-0"
-                    title="Registra Messaggio Vocale">
-              <Mic class="w-5 h-5" />
-            </button>
-
-            <div class="flex-1 bg-black/30 border border-white/10 rounded-xl overflow-hidden focus-within:border-primary transition-colors flex items-center">
-              <textarea v-model="inputText" rows="1" 
-                        @keydown.enter.exact.prevent="handleSend"
-                        :placeholder="uploading ? t('chat.uploading_media', 'Caricamento media in corso...') : t('chat.input_placeholder')"
-                        :disabled="uploading"
-                        class="w-full max-h-32 p-3 bg-transparent text-sm text-on-surface outline-none resize-none overflow-y-auto block"
-                        ref="inputArea"></textarea>
-            </div>
-            
-            <button type="submit" :disabled="(!inputText.trim() && !uploading) || sending || uploading"
-                    class="p-3 bg-primary text-on-primary rounded-xl hover:shadow-[0_0_15px_rgba(37,211,102,0.4)] transition-all disabled:opacity-30 flex-shrink-0 flex items-center justify-center">
-              <Loader2 v-if="uploading" class="w-5 h-5 animate-spin" />
-              <SendIcon v-else class="w-5 h-5" />
-            </button>
-          </form>
+          <!-- ChatInputCapsule -->
+          <ChatInputCapsule
+            v-else
+            v-model="inputText"
+            :placeholder="uploading ? t('chat.uploading_media', 'Caricamento media in corso...') : t('chat.input_placeholder')"
+            :disabled="uploading || sending"
+            :loading="uploading || sending"
+            @send="handleSend"
+            @attach="triggerFileInput"
+          >
+            <!-- Prefix Slot: Microfono -->
+            <template #prefix>
+              <button type="button" @click="startRecording" :disabled="sending || uploading"
+                      class="p-3 rounded-full text-gray-400 hover:text-error hover:bg-black/5 dark:hover:bg-white/5 transition-colors shrink-0 mb-0.5"
+                      title="Registra Messaggio Vocale">
+                <Mic class="w-5 h-5" />
+              </button>
+            </template>
+          </ChatInputCapsule>
 
           <!-- Input File Nascosto -->
           <input type="file" ref="fileInput" class="hidden" @change="onFileSelected" />
@@ -280,6 +269,10 @@ async function uploadAndSendMedia(file: File | Blob, ext: string = '') {
 
 async function startRecording() {
   try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (addToast) addToast('Il browser blocca il microfono in HTTP. Usa localhost o abilita HTTPS.', 'error')
+      return
+    }
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
     mediaRecorder = new MediaRecorder(stream)
     audioChunks = []
