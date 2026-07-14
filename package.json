@@ -1,6 +1,6 @@
 {
   "name": "waforge",
-  "version": "2.15.6",
+  "version": "2.15.7",
   "private": false,
   "engines": {
     "node": ">=22.0.0",
