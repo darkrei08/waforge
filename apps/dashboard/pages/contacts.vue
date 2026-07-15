@@ -7,19 +7,19 @@
       </div>
       <div class="flex gap-3">
         <button v-if="store.hasSelection" @click="handleBulkDelete"
-                class="px-4 py-2.5 bg-error/20 hover:bg-error/30 text-error text-sm font-semibold rounded-lg border border-error/30 transition-all">
+                class="btn-error-outline">
           <Trash2 class="w-4 h-4 inline mr-1" /> {{ t('contacts.delete_selected', { count: store.selected.size }) }}
         </button>
         <button @click="showPrefixes = true"
-                class="px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-semibold rounded-lg border border-primary/20 transition-all" title="Prefissi Internazionali">
+                class="btn-primary-outline" title="Prefissi Internazionali">
           <Globe class="w-4 h-4 inline mr-1" /> Prefissi
         </button>
         <button @click="showGroupsPanel = true"
-                class="px-4 py-2.5 bg-secondary/10 hover:bg-secondary/20 text-secondary text-sm font-semibold rounded-lg border border-secondary/20 transition-all" title="Gestisci Rubriche">
+                class="btn-secondary-outline" title="Gestisci Rubriche">
           <Users class="w-4 h-4 inline mr-1" /> Rubriche
         </button>
         <button @click="handleVerify" :disabled="isVerifying"
-                class="px-4 py-2.5 bg-primary/20 hover:bg-primary/30 text-primary text-sm font-semibold rounded-lg border border-primary/30 transition-all">
+                class="btn-primary-outline">
           <Loader2 v-if="isVerifying" class="w-4 h-4 inline mr-1 animate-spin" />
           <CheckCircle2 v-else class="w-4 h-4 inline mr-1" /> Verifica Numeri
         </button>
@@ -41,7 +41,7 @@
       <div class="relative flex-1 max-w-md">
         <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
         <input v-model="store.search" @input="debouncedSearch" type="text" :placeholder="t('contacts.search_placeholder')"
-               class="w-full pl-10 pr-4 py-2.5 bg-surface-container border border-white/10 rounded-lg text-on-surface text-sm placeholder-on-surface-variant/50 focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all" />
+               class="input-surface-search" />
       </div>
       
       <!-- Rubrica Filter -->
@@ -59,29 +59,29 @@
     <!-- Dashboard Statistiche Verifica -->
     <div class="grid grid-cols-4 gap-4 mb-6">
       <div @click="activeFilter = 'all'" 
-           class="p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-center items-center gap-1"
-           :class="activeFilter === 'all' ? 'bg-primary/20 border-primary/50 text-primary' : 'bg-surface-container border-white/10 hover:border-white/20 text-on-surface'">
+           class="stat-card"
+           :class="activeFilter === 'all' ? 'active-primary' : ''">
         <Users class="w-6 h-6 mb-1 opacity-70" />
         <span class="text-xs font-semibold uppercase tracking-wider opacity-70">Totale</span>
         <span class="text-2xl font-bold">{{ store.contacts.length }}</span>
       </div>
       <div @click="activeFilter = 'pending'" 
-           class="p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-center items-center gap-1"
-           :class="activeFilter === 'pending' ? 'bg-white/20 border-white/50 text-white' : 'bg-surface-container border-white/10 hover:border-white/20 text-on-surface-variant'">
+           class="stat-card"
+           :class="activeFilter === 'pending' ? 'active-neutral' : 'text-on-surface-variant'">
         <HelpCircle class="w-6 h-6 mb-1 opacity-70" />
         <span class="text-xs font-semibold uppercase tracking-wider opacity-70">Da Verificare</span>
         <span class="text-2xl font-bold">{{ stats.pending }}</span>
       </div>
       <div @click="activeFilter = 'valid'" 
-           class="p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-center items-center gap-1"
-           :class="activeFilter === 'valid' ? 'bg-primary/20 border-primary/50 text-primary' : 'bg-surface-container border-white/10 hover:border-white/20 text-primary/70'">
+           class="stat-card"
+           :class="activeFilter === 'valid' ? 'active-primary' : 'text-primary/70'">
         <CheckCircle2 class="w-6 h-6 mb-1 opacity-70" />
         <span class="text-xs font-semibold uppercase tracking-wider opacity-70">Validi (WA)</span>
         <span class="text-2xl font-bold">{{ stats.valid }}</span>
       </div>
       <div @click="activeFilter = 'invalid'" 
-           class="p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-center items-center gap-1"
-           :class="activeFilter === 'invalid' ? 'bg-error/20 border-error/50 text-error' : 'bg-surface-container border-white/10 hover:border-white/20 text-error/70'">
+           class="stat-card"
+           :class="activeFilter === 'invalid' ? 'active-error' : 'text-error/70'">
         <XCircle class="w-6 h-6 mb-1 opacity-70" />
         <span class="text-xs font-semibold uppercase tracking-wider opacity-70">Inesistenti</span>
         <span class="text-2xl font-bold">{{ stats.invalid }}</span>
@@ -199,7 +199,7 @@
     <!-- CSV Import Modal -->
     <Teleport to="body">
       <div v-if="showImport" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showImport = false">
-        <div class="w-full max-w-lg bg-surface-container-high border border-white/10 rounded-2xl p-6 shadow-2xl animate-slide-in">
+        <div class="modal-panel">
           <h3 class="text-lg font-bold text-on-surface mb-4">{{ t('contacts.import_title') }}</h3>
           
           <div class="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-xl">
@@ -263,7 +263,7 @@
     <!-- CSV Info Modal -->
     <Teleport to="body">
       <div v-if="showCsvInfo" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showCsvInfo = false">
-        <div class="w-full max-w-lg bg-surface-container-high border border-white/10 rounded-2xl p-6 shadow-2xl animate-slide-in">
+        <div class="modal-panel">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
               <Info class="w-5 h-5 text-primary" /> Info Formato CSV
@@ -289,7 +289,7 @@
           </div>
           
           <div class="flex justify-end mt-6">
-            <button @click="downloadCsvTemplate" class="px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-lg hover:bg-primary-fixed-dim transition-all flex items-center gap-2">
+            <button @click="downloadCsvTemplate" class="btn-primary">
               <Download class="w-4 h-4" /> Scarica Template CSV
             </button>
           </div>

@@ -5,7 +5,7 @@
         <h2 class="text-3xl font-bold text-on-surface">{{ t('nav.team') }}</h2>
         <p class="text-on-surface-variant mt-1">Gestisci i dettagli del team e i suoi membri.</p>
       </div>
-      <button @click="showInviteModal = true" class="px-5 py-2.5 bg-primary hover:bg-primary-fixed-dim text-surface font-semibold rounded-lg transition-colors flex items-center gap-2 shrink-0">
+      <button @click="showInviteModal = true" class="btn-primary shrink-0">
         <UserPlus class="w-5 h-5" />
         Invita Utente
       </button>
@@ -18,19 +18,19 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-on-surface-variant mb-1">Nome del Team</label>
-            <input v-model="teamForm.name" type="text" required class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-4 py-2.5 focus:outline-none focus:border-primary transition-colors text-on-surface">
+            <input v-model="teamForm.name" type="text" required class="input-surface">
           </div>
           <div>
             <label class="block text-sm font-medium text-on-surface-variant mb-1">Tags (separati da virgola)</label>
-            <input v-model="teamForm.tags" type="text" placeholder="es. marketing, vendite" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-4 py-2.5 focus:outline-none focus:border-primary transition-colors text-on-surface">
+            <input v-model="teamForm.tags" type="text" placeholder="es. marketing, vendite" class="input-surface">
           </div>
           <div class="md:col-span-2">
             <label class="block text-sm font-medium text-on-surface-variant mb-1">Descrizione</label>
-            <textarea v-model="teamForm.description" rows="2" placeholder="Descrizione del team..." class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-4 py-2.5 focus:outline-none focus:border-primary transition-colors text-on-surface resize-none"></textarea>
+            <textarea v-model="teamForm.description" rows="2" placeholder="Descrizione del team..." class="input-surface resize-none"></textarea>
           </div>
         </div>
         <div class="flex justify-end mt-2">
-          <button type="submit" :disabled="updatingTeam" class="px-5 py-2.5 bg-surface-variant hover:bg-white/5 text-on-surface font-semibold rounded-lg transition-colors disabled:opacity-50 min-w-[120px]">
+          <button type="submit" :disabled="updatingTeam" class="btn-secondary min-w-[120px]">
             {{ updatingTeam ? 'Salvataggio...' : 'Salva' }}
           </button>
         </div>
@@ -93,12 +93,12 @@
               
               <div>
                 <label class="block text-sm font-medium text-on-surface-variant mb-1">Email</label>
-                <input v-model="inviteForm.email" required type="email" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-4 py-2.5 focus:outline-none focus:border-primary transition-colors text-on-surface">
+                <input v-model="inviteForm.email" required type="email" class="input-surface">
               </div>
 
               <div>
                 <label class="block text-sm font-medium text-on-surface-variant mb-1">Ruolo</label>
-                <select v-model="inviteForm.role" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-4 py-2.5 focus:outline-none focus:border-primary transition-colors text-on-surface">
+                <select v-model="inviteForm.role" class="input-surface">
                   <option value="AGENT">Agent</option>
                   <option value="ADMIN">Admin</option>
                 </select>
@@ -112,8 +112,8 @@
               </div>
 
               <div class="pt-4 flex gap-3 justify-end">
-                <button type="button" @click="showInviteModal = false" class="px-5 py-2.5 text-on-surface-variant hover:bg-white/5 rounded-lg transition-colors font-medium">Annulla</button>
-                <button type="submit" :disabled="inviting" class="px-5 py-2.5 bg-primary hover:bg-primary-fixed-dim text-surface rounded-lg transition-colors font-semibold flex items-center gap-2 disabled:opacity-50">
+                <button type="button" @click="showInviteModal = false" class="btn-ghost font-medium">Annulla</button>
+                <button type="submit" :disabled="inviting" class="btn-primary disabled:opacity-50">
                   <Loader2 v-if="inviting" class="w-4 h-4 animate-spin" />
                   Invia Invito
                 </button>

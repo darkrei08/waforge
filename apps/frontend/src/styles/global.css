@@ -65,3 +65,15 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+@layer components {
+  .btn-primary {
+    @apply w-full sm:w-auto px-8 py-4 text-base font-semibold text-white bg-primary hover:bg-primary-light hover:text-black rounded-xl transition-all shadow-[0_0_20px_rgba(37,211,102,0.2)] hover:shadow-[0_0_30px_rgba(37,211,102,0.5)] flex items-center justify-center gap-2 group;
+  }
+  .btn-secondary {
+    @apply w-full sm:w-auto px-8 py-4 text-base font-semibold text-white glass-panel hover:bg-white/10 rounded-xl transition-all flex items-center justify-center group;
+  }
+  .nav-link {
+    @apply text-sm font-medium text-text-muted hover:text-white transition-colors;
+  }
+}

@@ -2,6 +2,7 @@
 // Header.astro
 // Default URL for the Nuxt Dashboard where Auth lives. 
 // In production, this can be passed via environment variables (e.g. import.meta.env.PUBLIC_DASHBOARD_URL)
+import IconLogo from './icons/IconLogo.astro';
 const dashboardUrl = import.meta.env.PUBLIC_DASHBOARD_URL || 'http://localhost:3000';
 ---
 
@@ -10,18 +11,16 @@ const dashboardUrl = import.meta.env.PUBLIC_DASHBOARD_URL || 'http://localhost:3
     <!-- Logo -->
     <a href="/" class="flex items-center gap-2 group">
       <div class="w-10 h-10 bg-gradient-to-tr from-primary to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-all">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-        </svg>
+        <IconLogo />
       </div>
       <span class="text-xl font-bold tracking-tight text-white">WaForge</span>
     </a>
 
     <!-- Desktop Nav -->
     <nav class="hidden md:flex items-center gap-8">
-      <a href="#features" class="text-sm font-medium text-text-muted hover:text-white transition-colors">Funzionalità</a>
-      <a href="#crm" class="text-sm font-medium text-text-muted hover:text-white transition-colors">CRM & Automazione</a>
-      <a href="#pricing" class="text-sm font-medium text-text-muted hover:text-white transition-colors">Prezzi</a>
+      <a href="#features" class="nav-link">Funzionalità</a>
+      <a href="#crm" class="nav-link">CRM & Automazione</a>
+      <a href="#pricing" class="nav-link">Prezzi</a>
     </nav>
 
     <!-- Auth Buttons (Linking to Nuxt Dashboard) -->
@@ -29,7 +28,7 @@ const dashboardUrl = import.meta.env.PUBLIC_DASHBOARD_URL || 'http://localhost:3
       <a href={`${dashboardUrl}/login`} class="text-sm font-medium text-white hover:text-primary transition-colors hidden sm:block">
         Accedi
       </a>
-      <a href={`${dashboardUrl}/register`} class="px-5 py-2.5 text-sm font-semibold text-white bg-primary hover:bg-primary-dark rounded-xl transition-all shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:shadow-[0_0_25px_rgba(37,211,102,0.5)]">
+      <a href={`${dashboardUrl}/register`} class="btn-primary !px-5 !py-2.5 !text-sm">
         Inizia Ora
       </a>
     </div>

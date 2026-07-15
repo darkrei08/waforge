@@ -30,17 +30,17 @@
           <div>
             <label class="text-sm text-on-surface-variant font-medium">{{ t('settings.delay_min') }}</label>
             <input v-model.number="store.settings.delayMin" type="number" min="5" max="300"
-                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary focus:ring-2 focus:ring-primary/30 hover:border-white/20 outline-none transition-all" />
+                   class="input-surface mt-1" />
           </div>
           <div>
             <label class="text-sm text-on-surface-variant font-medium">{{ t('settings.delay_max') }}</label>
             <input v-model.number="store.settings.delayMax" type="number" min="10" max="600"
-                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary focus:ring-2 focus:ring-primary/30 hover:border-white/20 outline-none transition-all" />
+                   class="input-surface mt-1" />
           </div>
           <div>
             <label class="text-sm text-on-surface-variant font-medium">{{ t('settings.max_per_hour') }}</label>
             <input v-model.number="store.settings.maxMessagesPerHour" type="number" min="1" max="1000"
-                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary focus:ring-2 focus:ring-primary/30 hover:border-white/20 outline-none transition-all" />
+                   class="input-surface mt-1" />
           </div>
         </div>
       </div>
@@ -74,14 +74,14 @@
             <label class="text-sm text-on-surface-variant font-medium">Primary Color</label>
             <div class="flex items-center gap-2 mt-1">
               <input type="color" v-model="store.brandSettings.primaryColor" class="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent hover:scale-105 transition-transform" />
-              <input type="text" v-model="store.brandSettings.primaryColor" class="w-full p-2 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary focus:ring-2 focus:ring-primary/30 hover:border-white/20 outline-none transition-all" />
+              <input type="text" v-model="store.brandSettings.primaryColor" class="input-surface flex-1" />
             </div>
           </div>
           <div>
             <label class="text-sm text-on-surface-variant font-medium">Secondary Color</label>
             <div class="flex items-center gap-2 mt-1">
               <input type="color" v-model="store.brandSettings.secondaryColor" class="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent hover:scale-105 transition-transform" />
-              <input type="text" v-model="store.brandSettings.secondaryColor" class="w-full p-2 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-secondary focus:ring-2 focus:ring-secondary/30 hover:border-white/20 outline-none transition-all" />
+              <input type="text" v-model="store.brandSettings.secondaryColor" class="input-surface flex-1" />
             </div>
           </div>
           <div>
@@ -152,7 +152,7 @@
           <div v-if="!store.cockpitAvailable" class="bg-red-500/10 border border-red-500/20 p-3.5 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <p class="text-xs text-red-200 leading-relaxed">Per utilizzare Cockpit Tools come proxy LLM per la generazione e l'anti-ban, assicurati che il demone Cockpit sia in esecuzione e che la cartella <code class="bg-black/30 px-1.5 py-0.5 rounded text-white font-mono">~/.antigravity_cockpit/accounts.json</code> sia accessibile dal servizio web.</p>
             <button @click="refreshCockpit" :disabled="refreshingCockpit"
-                    class="px-3.5 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-200 font-semibold text-xs rounded-lg border border-red-500/30 transition-colors shrink-0 flex items-center gap-1.5">
+                    class="btn-error-outline shrink-0 !text-xs !py-1.5">
               <span v-if="refreshingCockpit" class="animate-spin">⟳</span>
               <span>Riprova Connessione</span>
             </button>
@@ -296,7 +296,7 @@
                   </button>
                 </div>
               </div>
-              <select v-model="store.llmSettings.provider" class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors capitalize">
+              <select v-model="store.llmSettings.provider" class="input-surface mt-1 capitalize">
                 <option v-for="p in dynamicProviders" :key="p" :value="p">{{ p === 'openai' ? 'OpenAI' : p }}</option>
                 <option value="custom">Custom (Locale / LM Studio)</option>
               </select>
@@ -304,7 +304,7 @@
             <div>
               <label class="text-sm text-on-surface-variant font-medium">Modello</label>
               <select v-model="store.llmSettings.model"
-                      class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors">
+                      class="input-surface mt-1">
                 <optgroup v-for="group in modelGroups" :key="group.category" :label="`${group.icon} ${group.label}`">
                   <option v-for="m in group.models" :key="m.id" :value="m.id">{{ m.name }}</option>
                 </optgroup>
@@ -315,19 +315,19 @@
               <div v-if="store.llmSettings.model === '__custom__' || isCustomModel" class="mt-2">
                 <input v-model="customModelId" type="text" :placeholder="`es. ${store.llmSettings.provider === 'openai' ? 'gpt-4o' : 'model-id'}`"
                        @blur="applyCustomModel"
-                       class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+                       class="input-surface" />
               </div>
             </div>
           </div>
           <div v-if="store.llmSettings.provider === 'custom'">
             <label class="text-sm text-on-surface-variant font-medium">Base URL (per LM Studio / Ollama)</label>
             <input v-model="store.llmSettings.customBaseUrl" type="text" placeholder="http://127.0.0.1:1234/v1"
-                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+                   class="input-surface mt-1" />
           </div>
           <div>
             <label class="text-sm text-on-surface-variant font-medium">API Key <span v-if="store.llmSettings.provider === 'custom'" class="text-white/30">(Opzionale)</span></label>
             <input v-model="store.llmSettings.apiKey" type="password" placeholder="sk-..."
-                   class="w-full mt-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none transition-colors" />
+                   class="input-surface mt-1" />
           </div>
           <div>
             <label class="text-sm text-on-surface-variant font-medium flex items-center justify-between">
@@ -394,7 +394,7 @@
       <!-- Save -->
       <div class="flex items-center gap-4">
         <button @click="saveSettings" :disabled="store.loading"
-                class="px-6 py-3 bg-primary text-on-primary font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:shadow-[0_0_25px_rgba(37,211,102,0.5)] transition-all disabled:opacity-50">
+                class="btn-primary !px-6 !py-3">
           {{ store.loading ? t('settings.btn_saving') : t('settings.btn_save') }}
         </button>
         <span v-if="store.saved" class="text-sm text-primary font-medium animate-fade-in">{{ t('settings.saved') }}</span>
