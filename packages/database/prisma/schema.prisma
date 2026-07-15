@@ -47,12 +47,17 @@ model Team {
   chatMessages        ChatMessage[]
   waConversations     WhatsAppConversation[]
   waScheduledMessages WhatsAppScheduledMessage[]
+  pipelineStages      PipelineStage[]
 
   planTier             String?   @default("FREE") // FREE, BASIC, PRO, ENTERPRISE
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?   @unique
   subscriptionStatus   String?   // active, past_due, canceled
   currentPeriodEnd     DateTime?
+  
+  // Feature Toggles for modular billing
+  activeFeatures       Json      @default("[]") // e.g. ["crm.base", "waforge.campaigns"]
+  limits               Json      @default("{}") // e.g. {"maxContacts": 5000, "maxDevices": 3}
 
   brandSettings Json?
   llmSettings   Json?
@@ -94,6 +99,26 @@ model ContactGroup {
   @@unique([teamId, name])
 }
 
+// ── CRM Pipeline Stages ──────────────────────────────────────────────────────
+
+model PipelineStage {
+  id     String @id @default(cuid())
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  name     String  // e.g. "Nuovo Lead", "Qualificato", "Proposta Inviata", "Chiuso Vinto"
+  color    String  @default("#6366f1") // Hex color for kanban column
+  position Int     @default(0) // Ordering within the pipeline
+
+  contacts Contact[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, name])
+  @@index([teamId, position])
+}
+
 // ── Contacts & CRM ───────────────────────────────────────────────────────────
 
 model Contact {
@@ -119,6 +144,10 @@ model Contact {
   declarantName   String? // Nome del dichiarante / referente
   declarantPhone  String? // Telefono del dichiarante / referente
 
+  // CRM Pipeline
+  pipelineStageId String? // FK to PipelineStage (null = unassigned / inbox)
+  pipelineStage   PipelineStage? @relation(fields: [pipelineStageId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -137,9 +166,28 @@ model Contact {
   chatHistory         ChatMessage[]
   waConversations     WhatsAppConversation[]
   waScheduledMessages WhatsAppScheduledMessage[]
+  contactNotes        ContactNote[]
 
   @@unique([teamId, fullPhone])
   @@index([fullPhone])
+  @@index([pipelineStageId])
+}
+
+// ── Contact Notes (CRM Activity Timeline) ────────────────────────────────────
+
+model ContactNote {
+  id        String @id @default(cuid())
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  authorId  String? // User who created the note (null = system-generated)
+  type      String  @default("note") // note, call, email, meeting, stage_change, system
+  content   String  // Rich text body
+  metadata  Json?   // Extra data: e.g. {"from": "Lead", "to": "Qualificato"} for stage changes
+
+  createdAt DateTime @default(now())
+
+  @@index([contactId])
 }
 
 // ── Templates ────────────────────────────────────────────────────────────────

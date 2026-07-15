@@ -38,6 +38,10 @@
             <Users class="w-5 h-5" />
             <span class="text-sm">{{ t('nav.contacts') }}</span>
           </NuxtLink>
+          <NuxtLink :to="localePath('/crm')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
+            <KanbanSquare class="w-5 h-5" />
+            <span class="text-sm">CRM Pipeline</span>
+          </NuxtLink>
           <NuxtLink :to="localePath('/campaigns')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
             <Megaphone class="w-5 h-5" />
             <span class="text-sm">{{ t('nav.campaigns') }}</span>
@@ -83,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { LayoutDashboard, Users, Megaphone, Settings, Sun, Moon, LogOut, MessageSquareText, MessageCircle, X, Smartphone } from 'lucide-vue-next'
+import { LayoutDashboard, Users, Megaphone, Settings, Sun, Moon, LogOut, MessageSquareText, MessageCircle, X, Smartphone, KanbanSquare } from 'lucide-vue-next'
 import { useI18n, useLocalePath } from '#i18n'
 import { useColorMode } from '#imports'
 import { useAuthStore } from '~/stores/auth'

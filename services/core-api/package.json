@@ -1,11 +1,12 @@
 {
-  "name": "@waforge/backend",
+  "name": "@waforge/core-api",
   "version": "1.0.50",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
+    "@elysiajs/jwt": "^1.4.2",
     "@waforge/database": "workspace:*",
     "elysia": "latest",
     "ioredis": "^5.11.1"

@@ -12,7 +12,7 @@ COPY package.json bun.lock ./
 
 # Copy monorepo packages
 COPY apps/dashboard/package.json apps/dashboard/
-COPY apps/backend/package.json apps/backend/
+COPY services/core-api/package.json services/core-api/
 COPY apps/frontend/package.json apps/frontend/
 COPY packages/database/package.json packages/database/
 

@@ -19,25 +19,29 @@ services:
       traefik.http.routers.waforge-frontend.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
       traefik.http.services.waforge-frontend.loadbalancer.server.port: "4321"
 
-  # ─── 2. WaForge Backend (Elysia Webhooks) ───────────────────────────────────
-  waforge-backend:
+  # ─── 2. Microservizio Core (Elysia) ───────────────────────────────────
+  api-core:
     build:
       context: .
-      dockerfile: apps/backend/Dockerfile
-    container_name: waforge-backend
+      dockerfile: services/core-api/Dockerfile
+    container_name: api-core
     restart: unless-stopped
     ports:
       - "3001:3000"
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${APP_SECRET:-change-me}
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-waforge}?schema=public
     networks:
       - wa-net
+    labels:
+      traefik.enable: "${TRAEFIK_ENABLE:-false}"
+      traefik.http.routers.api-core.rule: "Host(`api.${DOMAIN:-localhost}`) && PathPrefix(`/core`)"
+      traefik.http.routers.api-core.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
+      traefik.http.routers.api-core.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
+      traefik.http.services.api-core.loadbalancer.server.port: "3000"
     depends_on:
       db:
-        condition: service_healthy
-      redis:
         condition: service_healthy
 
   # ─── WuzAPI — WhatsApp Engine (Go + whatsmeow) ───────────────────────────
