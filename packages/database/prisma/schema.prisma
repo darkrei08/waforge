@@ -199,6 +199,9 @@ model Campaign {
   updatedAt   DateTime  @updatedAt
 
   messages Message[]
+
+  @@index([teamId])
+  @@index([templateId])
 }
 
 // ── Messages (individual send log for campaigns) ─────────────────────────────
@@ -220,6 +223,9 @@ model Message {
 
   sentAt    DateTime?
   createdAt DateTime  @default(now())
+
+  @@index([contactId])
+  @@index([campaignId])
 }
 
 // ── Live Chat History (Inbound/Outbound) ─────────────────────────────────────
@@ -250,6 +256,10 @@ model ChatMessage {
   sender   User?   @relation(fields: [senderId], references: [id])
 
   createdAt DateTime @default(now())
+
+  @@index([teamId])
+  @@index([contactId])
+  @@index([conversationId])
 }
 
 // ── WhatsApp Session (Multi-Tenant) ──────────────────────────────────────────

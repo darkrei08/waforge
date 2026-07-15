@@ -3,6 +3,12 @@
     <div class="mb-8">
       <h1 class="text-2xl font-bold">Gestione Abbonamento</h1>
       <p class="text-on-surface-variant">Gestisci il tuo piano, i limiti del team e la fatturazione.</p>
+      <div class="mt-2 text-xs text-primary flex gap-3">
+        <span>✓ Carte di Credito</span>
+        <span>✓ Apple/Google Pay</span>
+        <span>✓ PayPal</span>
+        <span>✓ Criptovalute (via Stripe)</span>
+      </div>
     </div>
 
     <div v-if="loading" class="animate-pulse flex flex-col gap-4">
