@@ -20,7 +20,10 @@ Ogni modifica a questo file si rifletterà automaticamente in tutte le pagine (H
 ## 2. Variabili d'Ambiente (.env)
 
 Il progetto richiede alcune variabili d'ambiente per funzionare correttamente.
-Assicurati di copiare il file `.env.example` in `.env` nella cartella root e nella cartella `apps/dashboard`.
+Assicurati di copiare il file `.env.example` in `.env` **SOLO nella cartella root (principale) del progetto**. 
+
+> [!NOTE]
+> *Nota: Troverai altri file `.env.example` dentro le cartelle `apps/dashboard` o `apps/frontend`. Puoi ignorarli o cancellarli, servono solo come riferimento interno per lo sviluppo. Il sistema leggerà tutto automaticamente dal file `.env` globale che hai creato nella cartella principale!*
 
 I parametri più importanti sono:
 - `DATABASE_URL`: La stringa di connessione al database PostgreSQL.

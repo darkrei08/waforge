@@ -208,8 +208,10 @@ cd waforge
 bun install
 
 # 3. Configure the environment
+# IMPORTANT: Only copy and edit the .env file in the ROOT folder! 
+# Ignore any other .env.example files inside the apps/ folders.
 cp .env.example .env
-# Edit .env with your values (APP_SECRET, WUZAPI_TOKEN, etc.)
+# Edit .env with your values (APP_SECRET, WUZAPI_TOKEN, STRIPE_SECRET_KEY, etc.)
 
 # 4. Initialize the database
 bun run db:push
