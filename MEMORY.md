@@ -411,3 +411,5 @@ Eseguito audit di sicurezza universale su waforge, Wizard-AI, nuxt-mcp-agent-sta
 3. **Docker Build Bugfix (`bun install`)**:
    - Risolto l'errore in fase di build dell'immagine `waforge-backend` e `waforge-frontend` dove `bun install` falliva non riuscendo a risolvere la versione esatta di `prisma@5.22.0`.
    - Modificati `apps/backend/Dockerfile` e `apps/frontend/Dockerfile` copiando esplicitamente il file di lock (`COPY package.json bun.lock ./`) prima dell'installazione delle dipendenze, permettendo la corretta risoluzione dal workspace root. Build e startup passati al 100%.
+
+- [2026-07-15] Fix: Converted apps/dashboard/entrypoint.sh from CRLF to LF per risolvere errore 'no such file or directory' in fase di avvio del container su WSL.
