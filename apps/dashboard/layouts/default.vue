@@ -1,5 +1,8 @@
 <template>
-  <div class="h-screen w-full flex overflow-hidden bg-[#faf9f5] dark:bg-[#141413] text-gray-900 dark:text-[#faf9f5] font-sans transition-colors duration-300">
+  <div class="h-screen w-full flex overflow-hidden bg-surface text-on-surface font-sans transition-colors duration-300 relative z-0">
+    <!-- Premium Glow Orbs -->
+    <div class="fixed top-[-15%] left-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/10 blur-[100px] rounded-full pointer-events-none -z-10"></div>
     <CookieBanner />
     <!-- Toast Notifications -->
     <ClientOnly>
@@ -36,7 +39,7 @@
       leave-from-class="translate-x-0"
       leave-to-class="-translate-x-full"
     >
-      <aside v-show="isSidebarOpen" class="w-[280px] shrink-0 bg-[#f0eee5] dark:bg-[#1a1a19] border-r border-black/5 dark:border-white/5 flex flex-col justify-between absolute md:relative z-30 h-full shadow-2xl md:shadow-none">
+      <aside v-show="isSidebarOpen" class="w-[280px] shrink-0 glass-panel !rounded-none !border-y-0 !border-l-0 flex flex-col justify-between absolute md:relative z-30 h-full shadow-2xl md:shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
         <div class="p-5 flex items-center justify-between">
           <h1 class="text-xl font-heading font-bold text-primary tracking-tighter">WaForge</h1>
           <button @click="isSidebarOpen = false" class="md:hidden p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
@@ -117,7 +120,7 @@
     <!-- Main Content Area -->
     <main class="flex-1 flex flex-col min-w-0 relative h-full">
       <!-- Chat-Centric Top Bar -->
-      <header class="h-14 shrink-0 flex items-center gap-3 px-4 border-b border-black/5 dark:border-white/5 bg-[#faf9f5]/80 dark:bg-[#141413]/80 backdrop-blur-xl z-10 sticky top-0">
+      <header class="h-14 shrink-0 flex items-center gap-3 px-4 border-b border-white/5 bg-surface-bright/40 backdrop-blur-2xl z-10 sticky top-0">
         <button @click="isSidebarOpen = !isSidebarOpen" class="p-2 -ml-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors group" title="Toggle Sidebar">
           <PanelLeft class="w-5 h-5 text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
         </button>

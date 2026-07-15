@@ -4,59 +4,23 @@
 
 @layer base {
   :root {
-    /* Light Mode */
-    --surface: 255 255 255;
-    --surface-dim: 240 240 240;
-    --surface-bright: 250 250 250;
-    --surface-variant: 230 230 230;
+    /* Premium Dark Mode Only Pattern - Default to Dark */
+    --surface: 11 14 20; /* #0B0E14 */
+    --surface-dim: 8 11 15;
+    --surface-bright: 21 25 35; /* #151923 */
+    --surface-variant: 28 33 46; /* #1C212E */
 
-    --surface-container-lowest: 255 255 255;
-    --surface-container-low: 243 244 246; /* gray-100 */
-    --surface-container: 229 231 235; /* gray-200 */
-    --surface-container-high: 209 213 219; /* gray-300 */
-    --surface-container-highest: 156 163 175; /* gray-400 */
+    --surface-container-lowest: 5 7 10;
+    --surface-container-low: 11 14 20;
+    --surface-container: 21 25 35;
+    --surface-container-high: 28 33 46;
+    --surface-container-highest: 40 47 65;
 
-    --on-surface: 5 20 36;
-    --on-surface-variant: 60 70 61;
+    --on-surface: 248 250 252; /* #F8FAFC text-primary */
+    --on-surface-variant: 148 163 184; /* #94A3B8 text-muted */
 
-    --primary: 37 211 102;
+    --primary: 37 211 102; /* WhatsApp Green */
     --primary-container: 20 180 80;
-    --primary-fixed: 102 255 142;
-    --primary-fixed-dim: 61 226 115;
-    
-    --on-primary: 255 255 255;
-    --on-primary-container: 0 57 21;
-
-    --secondary: 5 102 217;
-    --secondary-container: 173 198 255;
-    --secondary-fixed: 216 226 255;
-    --secondary-fixed-dim: 173 198 255;
-
-    --tertiary: 58 207 149;
-    --tertiary-container: 94 236 175;
-
-    --error: 255 84 73;
-    --error-container: 255 210 204;
-  }
-
-  .dark {
-    /* Dark Mode (from existing config) */
-    --surface: 5 20 36;
-    --surface-dim: 5 20 36;
-    --surface-bright: 44 58 76;
-    --surface-variant: 39 54 71;
-
-    --surface-container-lowest: 1 15 31;
-    --surface-container-low: 13 28 45;
-    --surface-container: 18 33 49;
-    --surface-container-high: 28 43 60;
-    --surface-container-highest: 39 54 71;
-
-    --on-surface: 212 228 250;
-    --on-surface-variant: 187 203 185;
-
-    --primary: 79 240 127;
-    --primary-container: 37 211 102;
     --primary-fixed: 102 255 142;
     --primary-fixed-dim: 61 226 115;
     
@@ -74,9 +38,51 @@
     --error: 255 180 171;
     --error-container: 147 0 10;
   }
+
+  .dark {
+    /* Keep identical to root for enforced dark mode feel, or allow toggles later */
+    --surface: 11 14 20;
+    --surface-dim: 8 11 15;
+    --surface-bright: 21 25 35;
+    --surface-variant: 28 33 46;
+
+    --surface-container-lowest: 5 7 10;
+    --surface-container-low: 11 14 20;
+    --surface-container: 21 25 35;
+    --surface-container-high: 28 33 46;
+    --surface-container-highest: 40 47 65;
+
+    --on-surface: 248 250 252;
+    --on-surface-variant: 148 163 184;
+
+    --primary: 37 211 102;
+    --primary-container: 20 180 80;
+    --primary-fixed: 102 255 142;
+    --primary-fixed-dim: 61 226 115;
+    
+    --on-primary: 0 57 21;
+    --on-primary-container: 0 85 35;
+
+    --error: 255 180 171;
+    --error-container: 147 0 10;
+  }
 }
 
 @layer components {
+  body {
+    @apply bg-surface text-on-surface antialiased;
+  }
+
+  /* Glassmorphism Panel */
+  .glass-panel {
+    @apply bg-surface-bright/40 backdrop-blur-2xl border-t border-l border-white/5 border-b border-r border-black/20 shadow-[0_8px_32px_rgba(0,0,0,0.37)] rounded-2xl relative overflow-hidden transition-all duration-300;
+  }
+
+  /* Bento Grid Card */
+  .bento-card {
+    @apply glass-panel p-6 flex flex-col hover:border-white/10 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] group;
+  }
+
   .btn-primary {
     @apply px-5 py-2.5 bg-primary text-on-primary font-bold text-sm rounded-xl hover:bg-primary-fixed-dim hover:shadow-[0_0_20px_rgba(37,211,102,0.4)] transition-all disabled:opacity-30 flex items-center gap-2 justify-center;
   }
@@ -86,11 +92,9 @@
   .btn-ghost {
     @apply p-2 hover:bg-white/5 text-on-surface-variant hover:text-on-surface rounded-xl transition-colors;
   }
-  .card-surface {
-    @apply bg-surface-container/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 relative overflow-hidden transition-all;
-  }
+  
   .input-surface {
-    @apply w-full p-3 bg-black/40 border border-white/10 rounded-xl text-on-surface text-sm focus:border-primary/60 outline-none transition-colors;
+    @apply w-full p-3 bg-black/40 border border-white/10 rounded-xl text-on-surface text-sm focus:border-primary/60 focus:bg-black/60 outline-none transition-colors;
   }
   .badge-primary {
     @apply px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-semibold;

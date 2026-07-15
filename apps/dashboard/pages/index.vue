@@ -37,7 +37,7 @@
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
       <div v-for="kpi in kpis" :key="kpi.label"
-           class="bg-surface-container/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 relative overflow-hidden group hover:border-white/20 transition-all">
+           class="bento-card">
         <div class="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-[60px] pointer-events-none transition-opacity group-hover:opacity-100 opacity-60"
              :class="kpi.glow"></div>
         <div class="flex items-center gap-3 mb-3">
@@ -52,7 +52,7 @@
     </div>
 
     <!-- Recent Campaigns -->
-    <div class="bg-surface-container/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+    <div class="glass-panel p-6">
       <h2 class="text-lg font-semibold text-on-surface mb-4">{{ t('dashboard.recent_campaigns') }}</h2>
       <div v-if="stats?.recentCampaigns?.length" class="space-y-3">
         <div v-for="c in stats.recentCampaigns" :key="c.id"
