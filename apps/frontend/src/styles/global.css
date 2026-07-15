@@ -92,7 +92,7 @@ body {
   }
   
   .badge-glow {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border-primary/20 text-white text-xs font-semibold tracking-wide animate-fade-in-up;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full border-primary/20 text-white text-xs font-semibold tracking-wide animate-fade-in-up;
   }
   
   .hero-bg-glow {
