@@ -3,16 +3,18 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
 import Features from '../components/Features.astro';
+import Pricing from '../components/Pricing.astro';
 import Footer from '../components/Footer.astro';
+import { SiteConfig } from '../config';
 ---
 
-<Layout title="WaForge - L'Automazione WhatsApp definitiva">
+<Layout title={`${SiteConfig.brandName} - ${SiteConfig.tagline}`}>
 	<Header />
 	
 	<main>
 		<Hero />
-		
 		<Features />
+		<Pricing />
 	</main>
 	<Footer />
 </Layout>

@@ -48,6 +48,12 @@ model Team {
   waConversations     WhatsAppConversation[]
   waScheduledMessages WhatsAppScheduledMessage[]
 
+  planTier             String?   @default("FREE") // FREE, BASIC, PRO, ENTERPRISE
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  subscriptionStatus   String?   // active, past_due, canceled
+  currentPeriodEnd     DateTime?
+
   brandSettings Json?
   llmSettings   Json?
 }

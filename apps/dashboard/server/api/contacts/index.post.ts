@@ -7,10 +7,13 @@ import { prisma } from '~/server/utils/prisma'
 import { zodReadBody } from '~/server/utils/validation'
 import { CreateContactSchema } from '~/lib/validation'
 import parsePhoneNumber from 'libphonenumber-js'
+import { checkPlanLimit } from '~/server/utils/planLimits'
 
 export default defineEventHandler(async (event) => {
   const data = await zodReadBody(event, CreateContactSchema)
   const teamId = event.context.user.teamId
+
+  await checkPlanLimit(teamId, 'contacts')
 
   const parsed = parseAndCleanPhone(data.prefix + data.phone)
   const fullPhone = parsed.fullPhone || (data.prefix + data.phone).replace(/\D/g, '')

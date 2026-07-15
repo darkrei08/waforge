@@ -21,7 +21,8 @@ export default defineEventHandler(async (event) => {
   const parsed = registerSchema.safeParse(body)
   if (!parsed.success) {
     securityLog.validationError(event.path, parsed.error)
-    throw createError({ statusCode: 400, message: 'Formato dati non valido' })
+    const errMessage = parsed.error.errors.map(e => e.message).join(', ')
+    throw createError({ statusCode: 400, message: `Formato dati non valido: ${errMessage}` })
   }
   
   const { email, password, name, teamName, inviteToken } = parsed.data
@@ -46,62 +47,67 @@ export default defineEventHandler(async (event) => {
   // Controlla se esiste già l'utente
   const existingUser = await prisma.user.findUnique({ where: { email } })
   if (existingUser) {
-    throw createError({ statusCode: 400, message: 'User already exists' })
+    throw createError({ statusCode: 400, message: 'Un account con questa email esiste già.' })
   }
 
   // Controlla se è il primo utente nel sistema (diventa superadmin)
   const usersCount = await prisma.user.count()
   const isSuperAdmin = usersCount === 0
 
-  if (!targetTeamId) {
-    // Crea il Team (Agenzia/Workspace)
-    const team = await prisma.team.create({
-      data: { name: teamName || `Team di ${name}` }
-    })
-    targetTeamId = team.id
-  }
+  try {
+    if (!targetTeamId) {
+      // Crea il Team (Agenzia/Workspace)
+      const team = await prisma.team.create({
+        data: { name: teamName || `Team di ${name}` }
+      })
+      targetTeamId = team.id
+    }
 
-  // Hash password
-  const passwordHash = await bcrypt.hash(password, 10)
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10)
 
-  // Crea Utente con ruolo assegnato nel Team
-  const user = await prisma.user.create({
-    data: {
-      email,
-      name,
-      passwordHash,
-      isSuperAdmin,
-      memberships: {
-        create: {
-          teamId: targetTeamId,
-          role: assignedRole
+    // Crea Utente con ruolo assegnato nel Team
+    const user = await prisma.user.create({
+      data: {
+        email,
+        name,
+        passwordHash,
+        isSuperAdmin,
+        memberships: {
+          create: {
+            teamId: targetTeamId,
+            role: assignedRole
+          }
         }
       }
+    })
+
+    // Genera JWT
+    const token = await signJWT({ 
+      userId: user.id, 
+      teamId: targetTeamId, 
+      role: assignedRole,
+      isSuperAdmin 
+    })
+
+    // Setta il cookie HttpOnly
+    const isSecure = process.env.NUXT_PUBLIC_APP_URL?.startsWith('https') || false
+    setCookie(event, 'auth_token', token, {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/'
+    })
+
+    securityLog.authSuccess(ip)
+
+    return { 
+      success: true, 
+      user: { id: user.id, email: user.email, name: user.name, teamId: targetTeamId } 
     }
-  })
-
-  // Genera JWT
-  const token = await signJWT({ 
-    userId: user.id, 
-    teamId: targetTeamId, 
-    role: assignedRole,
-    isSuperAdmin 
-  })
-
-  // Setta il cookie HttpOnly
-  const isSecure = process.env.NUXT_PUBLIC_APP_URL?.startsWith('https') || false
-  setCookie(event, 'auth_token', token, {
-    httpOnly: true,
-    secure: isSecure,
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    path: '/'
-  })
-
-  securityLog.authSuccess(ip)
-
-  return { 
-    success: true, 
-    user: { id: user.id, email: user.email, name: user.name, teamId: targetTeamId } 
+  } catch (error: any) {
+    securityLog.authFailure(ip, event.path)
+    throw createError({ statusCode: 500, message: `Errore durante la creazione dell'account: ${error.message}` })
   }
 })
