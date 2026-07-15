@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { SiteConfig } from '../config';
 ---
 
 <Layout title="Contatti - WaForge">
@@ -18,13 +19,13 @@ import Footer from '../components/Footer.astro';
                 <div class="bg-surface-dim/50 p-6 rounded-xl border border-white/5">
                     <h3 class="text-xl font-bold text-white mb-2">Supporto Clienti</h3>
                     <p class="text-sm mb-4">Per assistenza sull'uso della piattaforma o segnalazione di problemi.</p>
-                    <a href="mailto:support@waforge.com" class="text-primary hover:underline">support@waforge.com</a>
+                    <a href={`mailto:${SiteConfig.contactEmail}`} class="text-primary hover:underline">{SiteConfig.contactEmail}</a>
                 </div>
                 
                 <div class="bg-surface-dim/50 p-6 rounded-xl border border-white/5">
                     <h3 class="text-xl font-bold text-white mb-2">Vendite & Partnership</h3>
                     <p class="text-sm mb-4">Per piani Enterprise, agenzie o proposte commerciali.</p>
-                    <a href="mailto:sales@waforge.com" class="text-primary hover:underline">sales@waforge.com</a>
+                    <a href={`mailto:${SiteConfig.salesEmail}`} class="text-primary hover:underline">{SiteConfig.salesEmail}</a>
                 </div>
             </div>
 		</div>
