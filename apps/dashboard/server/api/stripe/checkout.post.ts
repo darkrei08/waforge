@@ -1,6 +1,5 @@
 import { defineEventHandler, readBody, createError } from 'h3'
 import { prisma } from '../../utils/prisma'
-import { requireAuth } from '../../utils/auth'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
@@ -14,7 +13,10 @@ const TIER_PRICES: Record<string, string> = {
 }
 
 export default defineEventHandler(async (event) => {
-  const auth = await requireAuth(event)
+  if (!event.context.user) throw createError({ statusCode: 401, message: 'Non autorizzato' })
+  const teamId = event.context.user.teamId
+  const userId = event.context.user.id
+  
   const body = await readBody(event)
   const { tier } = body
 
@@ -23,14 +25,14 @@ export default defineEventHandler(async (event) => {
   }
 
   const team = await prisma.team.findUnique({
-    where: { id: auth.teamId }
+    where: { id: teamId }
   })
   if (!team) throw createError({ statusCode: 404, message: 'Team non trovato' })
 
   // Recupera o crea Stripe Customer
   let customerId = team.stripeCustomerId
   if (!customerId) {
-    const user = await prisma.user.findUnique({ where: { id: auth.userId } })
+    const user = await prisma.user.findUnique({ where: { id: userId } })
     const customer = await stripe.customers.create({
       email: user?.email,
       name: team.name,

@@ -1,6 +1,5 @@
 import { defineEventHandler, createError } from 'h3'
 import { prisma } from '../../utils/prisma'
-import { requireAuth } from '../../utils/auth'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
@@ -8,10 +7,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder'
 })
 
 export default defineEventHandler(async (event) => {
-  const auth = await requireAuth(event)
+  if (!event.context.user) throw createError({ statusCode: 401, message: 'Non autorizzato' })
+  const teamId = event.context.user.teamId
   
   const team = await prisma.team.findUnique({
-    where: { id: auth.teamId }
+    where: { id: teamId }
   })
   if (!team || !team.stripeCustomerId) {
     throw createError({ statusCode: 400, message: 'Nessun account di fatturazione trovato per questo team.' })

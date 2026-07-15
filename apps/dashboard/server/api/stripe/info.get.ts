@@ -1,12 +1,13 @@
 import { defineEventHandler } from 'h3'
 import { prisma } from '../../utils/prisma'
-import { requireAuth } from '../../utils/auth'
+import { createError } from 'h3'
 
 export default defineEventHandler(async (event) => {
-  const auth = await requireAuth(event)
+  if (!event.context.user) throw createError({ statusCode: 401, message: 'Non autorizzato' })
+  const teamId = event.context.user.teamId
   
   const team = await prisma.team.findUnique({
-    where: { id: auth.teamId },
+    where: { id: teamId },
     select: {
       id: true,
       name: true,
@@ -19,8 +20,8 @@ export default defineEventHandler(async (event) => {
 
   if (!team) throw new Error('Team not found')
 
-  const contactsCount = await prisma.contact.count({ where: { teamId: auth.teamId } })
-  const devicesCount = await prisma.whatsAppSession.count({ where: { teamId: auth.teamId } })
+  const contactsCount = await prisma.contact.count({ where: { teamId } })
+  const devicesCount = await prisma.whatsAppSession.count({ where: { teamId } })
 
   return {
     team,
