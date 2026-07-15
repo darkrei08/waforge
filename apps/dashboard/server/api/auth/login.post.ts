@@ -17,7 +17,8 @@ export default defineEventHandler(async (event) => {
   const parsed = loginSchema.safeParse(body)
   if (!parsed.success) {
     securityLog.validationError(event.path, parsed.error)
-    throw createError({ statusCode: 400, message: 'Formato dati non valido' })
+    const errMessage = parsed.error.errors.map(e => e.message).join(', ')
+    throw createError({ statusCode: 400, message: `Formato dati non valido: ${errMessage}` })
   }
   
   const { email, password } = parsed.data

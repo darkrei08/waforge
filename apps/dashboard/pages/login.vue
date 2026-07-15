@@ -124,7 +124,7 @@ const toggleColorMode = () => {
 // Zod Schema for client-side validation
 const loginSchema = z.object({
   email: z.string().email('Indirizzo email non valido'),
-  password: z.string().min(1, 'La password è obbligatoria')
+  password: z.string().min(6, 'La password deve avere almeno 6 caratteri')
 })
 
 const handleLogin = async () => {
