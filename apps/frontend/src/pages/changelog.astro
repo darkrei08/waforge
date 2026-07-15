@@ -1,0 +1,43 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Changelog - WaForge">
+	<Header />
+	
+	<main class="pt-32 pb-20 max-w-4xl mx-auto px-6 text-white min-h-[60vh]">
+		<h1 class="text-4xl font-bold mb-8 animate-fade-in-up">Changelog</h1>
+		<div class="glass-panel p-8 rounded-2xl animate-fade-in-up [animation-delay:0.1s] text-text-muted">
+			<p class="text-lg mb-6">Tutte le ultime novità, aggiornamenti e bug fix della piattaforma WaForge.</p>
+            
+            <div class="space-y-8">
+                <div class="border-l-2 border-primary/30 pl-6 pb-2 relative">
+                    <div class="absolute w-4 h-4 rounded-full bg-primary -left-[9px] top-1"></div>
+                    <h3 class="text-xl font-bold text-white">Versione 2.0 (Attuale)</h3>
+                    <p class="text-sm text-primary mb-3">Rilasciata oggi</p>
+                    <ul class="space-y-2 list-disc list-inside">
+                        <li>Nuova interfaccia utente migliorata (Dark & Light Mode).</li>
+                        <li>Integrazione nativa con Cockpit Tools per gestire provider LLM multipli.</li>
+                        <li>Automazione massiva WhatsApp ottimizzata contro i ban.</li>
+                        <li>Risolto il problema di validazione login sul backend.</li>
+                    </ul>
+                </div>
+                
+                <div class="border-l-2 border-white/10 pl-6 pb-2 relative">
+                    <div class="absolute w-4 h-4 rounded-full bg-white/20 -left-[9px] top-1"></div>
+                    <h3 class="text-xl font-bold text-white">Versione 1.5</h3>
+                    <p class="text-sm text-text-muted mb-3">Mese scorso</p>
+                    <ul class="space-y-2 list-disc list-inside">
+                        <li>Lancio della Dashboard per le Agenzie.</li>
+                        <li>Gestione multicanale di WhatsApp Web e API.</li>
+                        <li>Miglioramento delle performance del 40% nel caricamento contatti.</li>
+                    </ul>
+                </div>
+            </div>
+		</div>
+	</main>
+
+	<Footer />
+</Layout>

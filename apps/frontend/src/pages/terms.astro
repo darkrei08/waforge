@@ -1,0 +1,27 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Termini di Servizio - WaForge">
+	<Header />
+	
+	<main class="pt-32 pb-20 max-w-4xl mx-auto px-6 text-white min-h-[60vh]">
+		<h1 class="text-4xl font-bold mb-8 animate-fade-in-up">Termini e Condizioni d'Uso (T&C)</h1>
+		<div class="glass-panel p-8 rounded-2xl animate-fade-in-up [animation-delay:0.1s] text-text-muted prose prose-invert max-w-none">
+            <p>L'utilizzo del software WaForge è soggetto all'accettazione dei seguenti termini e condizioni.</p>
+            
+            <h3 class="text-xl font-bold text-white mt-8 mb-4">1. Licenza d'Uso</h3>
+            <p>Il software è fornito con le relative licenze MIT o proprietarie in base alla distribuzione. L'utente si impegna a non utilizzare il software per scopi illeciti o invio di SPAM massivo non autorizzato.</p>
+
+            <h3 class="text-xl font-bold text-white mt-8 mb-4">2. Regole Anti-Spam (WhatsApp)</h3>
+            <p>L'utente dichiara di aver acquisito esplicito consenso (Opt-in) per l'invio di comunicazioni promozionali o operative verso i numeri importati nel CRM, e si impegna a rispettare le Policy Commerce e Business di WhatsApp LLC.</p>
+
+            <h3 class="text-xl font-bold text-white mt-8 mb-4">3. Limitazione di Responsabilità</h3>
+            <p>Lo sviluppatore del software WaForge non è responsabile per eventuali ban del numero WhatsApp derivanti dall'utilizzo della piattaforma in violazione delle condizioni imposte da Meta. L'utente riconosce di utilizzare l'applicativo a proprio rischio e pericolo.</p>
+		</div>
+	</main>
+
+	<Footer />
+</Layout>
