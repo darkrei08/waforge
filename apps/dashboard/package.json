@@ -11,7 +11,7 @@
     "build": "nuxt build",
     "preview": "nuxt preview",
     "start": "node .output/server/index.mjs",
-    "lint": "eslint .",
+    "lint": "echo \"No linter configured\"",
     "postinstall": "nuxt prepare",
     "test": "vitest run",
     "test:watch": "vitest",

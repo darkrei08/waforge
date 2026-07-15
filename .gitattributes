@@ -3,3 +3,7 @@
 # Force LF for bash scripts and entrypoints
 *.sh text eol=lf
 apps/dashboard/entrypoint.sh text eol=lf
+
+# Force LF for .env files to prevent Docker issues on Windows
+.env* text eol=lf
+*.env text eol=lf

@@ -6,8 +6,13 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun --cwd apps/dashboard dev & bun --cwd apps/frontend dev & bun --cwd apps/backend dev",
-    "build": "bun --cwd apps/dashboard build && bun --cwd apps/frontend build",
+    "dev": "concurrently \"cd apps/dashboard && bun run dev\" \"cd apps/frontend && bun run dev\" \"cd apps/backend && bun run dev\"",
+    "build": "cd apps/dashboard && bun run build && cd ../.. && cd apps/frontend && bun run build",
+    "lint": "cd apps/dashboard && bun run lint",
+    "test": "cd apps/dashboard && bun run test",
     "install:all": "bun install"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
   }
 }
