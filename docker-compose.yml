@@ -182,8 +182,8 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - waforge_uploads:/app/data/uploads
-      - ~/.antigravity_cockpit:/home/nuxtjs/.antigravity_cockpit:ro
-      - ~/.pi/account-switcher:/home/nuxtjs/.pi/account-switcher:ro
+      # - ~/.antigravity_cockpit:/home/nuxtjs/.antigravity_cockpit:ro
+      # - ~/.pi/account-switcher:/home/nuxtjs/.pi/account-switcher:ro
     depends_on:
       db:
         condition: service_healthy
@@ -279,8 +279,8 @@ services:
       LOG_LEVEL: ${LOG_LEVEL_COCKPIT:-info}
     networks:
       - wa-net
-    volumes:
-      - ~/.antigravity_cockpit:/home/nuxtjs/.antigravity_cockpit:ro
+    # volumes:
+    #  # - ~/.antigravity_cockpit:/home/nuxtjs/.antigravity_cockpit:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

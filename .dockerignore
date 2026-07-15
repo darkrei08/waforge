@@ -5,6 +5,8 @@
 **/dist
 npm-debug.log
 bun.lockb
+apps/*/bun.lock
+packages/*/bun.lock
 .git
 .vscode
 .gemini
