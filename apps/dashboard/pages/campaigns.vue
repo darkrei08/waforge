@@ -4,7 +4,7 @@
       <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ t('campaigns.title') }}</h1>
       <div class="flex gap-3">
         <button v-if="store.hasSelection" @click="handleBulkDelete"
-                class="px-4 py-2.5 bg-error/20 hover:bg-error/30 text-error text-sm font-semibold rounded-lg border border-error/30 transition-all">
+                class="btn-error-outline">
           <Trash2 class="w-4 h-4 inline mr-1" /> Elimina Selezionate ({{ store.selected.size }})
         </button>
         <button @click="openWizard()" class="btn-primary">
@@ -157,7 +157,7 @@
           <div v-if="wizardStep === 1" class="space-y-4">
             <label class="block text-sm font-medium text-on-surface-variant">{{ t('campaigns.name_label') }}</label>
             <input v-model="formData.name" type="text" :placeholder="t('campaigns.name_placeholder')"
-                   class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none" />
+                   class="input-surface" />
           </div>
 
           <!-- Step 2: Template -->
@@ -165,7 +165,7 @@
             <label class="block text-sm font-medium text-on-surface-variant">{{ t('campaigns.template_label') }}</label>
             <div class="flex gap-2">
               <select v-model="formData.templateId" @change="onTemplateChange"
-                      class="flex-1 p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none">
+                      class="input-surface flex-1">
                 <option value="" disabled>{{ t('campaigns.template_select') }}</option>
                 <option v-for="tmpl in templates" :key="tmpl.id" :value="tmpl.id">{{ tmpl.name }}</option>
                 <option value="new" class="font-bold text-primary">+ Crea Nuovo Template</option>
@@ -306,12 +306,12 @@
               <div>
                 <label class="text-xs text-on-surface-variant">{{ t('campaigns.delay_min') }}</label>
                 <input v-model.number="formData.delayMin" type="number" min="5" max="300"
-                       class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none" />
+                       class="input-surface" />
               </div>
               <div>
                 <label class="text-xs text-on-surface-variant">{{ t('campaigns.delay_max') }}</label>
                 <input v-model.number="formData.delayMax" type="number" min="10" max="600"
-                       class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none" />
+                       class="input-surface" />
               </div>
             </div>
             <p v-if="formData.delayMin >= formData.delayMax" class="text-xs text-error">Il ritardo minimo deve essere inferiore al massimo.</p>
@@ -351,7 +351,7 @@
               <label class="block text-sm font-medium text-on-surface-variant">Programmazione (Opzionale)</label>
               <p class="text-xs text-on-surface-variant mb-2">Seleziona data e ora se vuoi che la campagna parta in automatico in futuro.</p>
               <input v-model="formData.scheduledAt" type="datetime-local"
-                     class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none custom-datetime" />
+                     class="input-surface custom-datetime" />
             </div>
           </div>
 
@@ -366,11 +366,11 @@
               </button>
               <button v-if="wizardStep < 4" @click="wizardStep++"
                       :disabled="(wizardStep === 1 && !formData.name) || (wizardStep === 2 && (!formData.templateId || formData.templateId === 'new')) || (wizardStep === 3 && formData.delayMin >= formData.delayMax) || (wizardStep === 3 && targetMode === 'GROUPS' && (!Array.isArray(formData.contactIds) || formData.contactIds.length === 0))"
-                      class="px-5 py-2 bg-primary text-on-primary font-semibold rounded-lg transition-all disabled:opacity-30">
+                      class="btn-primary disabled:opacity-30">
                 {{ t('campaigns.btn_next') }}
               </button>
               <button v-else @click="handleSave"
-                      class="px-5 py-2 bg-primary text-on-primary font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] transition-all">
+                      class="btn-primary">
                 {{ isEditing ? 'Salva' : t('campaigns.btn_create') }}
               </button>
             </div>
@@ -390,13 +390,13 @@
           <p class="text-sm text-on-surface-variant mb-4">Seleziona la nuova data e ora di avvio.</p>
           
           <input v-model="rescheduleForm.scheduledAt" type="datetime-local" required
-                 class="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-on-surface text-sm focus:border-primary outline-none mb-6" />
+                 class="input-surface mb-6" />
                  
           <div class="flex justify-end gap-3">
             <button @click="showRescheduleModal = false" class="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors">
               Annulla
             </button>
-            <button @click="handleReschedule" class="px-5 py-2 bg-primary text-on-primary font-semibold rounded-lg shadow-[0_0_15px_rgba(37,211,102,0.3)] transition-all">
+            <button @click="handleReschedule" class="btn-primary">
               Conferma
             </button>
           </div>
