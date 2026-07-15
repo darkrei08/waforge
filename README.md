@@ -66,6 +66,8 @@
 - **🧠 Smart MCP Routing (Agent Tools):** MCP (Model Context Protocol) services and the Cockpit proxy are two independent architectural layers. To prevent token "drain" (sending the entire tool documentation to the LLM on every single message) and reduce latency, WaForge activates MCP servers **only when needed**.
   - **How to force activation?** The engine loads MCP processes only if you use specific keywords in your prompt (e.g., *"Use **tools** to read this file"*, or including words like *strument*, *mcp*) or if the base tool is vital. This triggers the filter bypass and runs MCP alongside the Cockpit proxy, guaranteeing maximum performance.
 
+- **💰 Built-in SaaS Monetization (Stripe):** WaForge includes a native SaaS billing engine powered by Stripe Checkout and Customer Portal. It natively supports the most modern payment methods (Apple Pay, Google Pay, PayPal, Klarna, Crypto USDC) dynamically activated via the Stripe Dashboard without writing extra code. Role-Based Access Control (RBAC) automatically enforces plan limits (Free, Pro, Enterprise) on WhatsApp devices, contacts, and campaigns.
+
 ---
 
 ## 🚀 Tech Stack
