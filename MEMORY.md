@@ -1,25 +1,24 @@
 # Current Project State (Session Saved: ✅)
 
 ## Cosa è stato completato
-- **Fase 1 (MVP CRM + Auth multi-tenant)**: Completata. Ristrutturazione repository (monorepo con `services/`), integrazione Prisma multi-tenant (`activeFeatures` su Team), IaC Docker/Traefik ed Elysia Auth skeleton.
-- **Fase 2 (Modulo CRM)**: Completata l'infrastruttura core e UI per il CRM Pipeline. 
-  - Aggiunti modelli `PipelineStage` e `ContactNote` al database Prisma (con `pipelineStageId` nei contatti) + rigenerato il client Prisma.
-  - Sviluppate le API CRM complete su Elysia (`/core/crm/pipeline-stages`, `/core/crm/contacts/:id/stage`, `/core/crm/contacts/:id/notes`, `/core/crm/analytics`).
-  - Creato lo store Pinia per il CRM (`stores/crm.ts`) con tipizzazioni TypeScript.
-  - Sviluppata la pagina Kanban in Nuxt (`pages/crm/index.vue`) e il componente Drag&Drop nativo `CrmKanban.vue`.
-  - Aggiunto il collegamento alla nuova Pipeline nella Sidebar.
+- **Fase 1 (MVP CRM + Auth multi-tenant)**: Ristrutturazione repository (`services/core-api`), Prisma schema con billing (JSON fields `activeFeatures`, `limits`), e IaC in Docker/Traefik.
+- **Fase 2 (Modulo CRM)**: Modelli `PipelineStage` e `ContactNote` aggiunti. API CRM sviluppate in ElysiaJS. Dashboard Kanban in Nuxt3 con HTML5 Drag&Drop.
+- **Git Flow (Branching & Versioning)**: Creato un nuovo branch dedicato `feature/crm-multi-tenant` isolato dal `main` per mantenere stabile il sistema attuale in produzione. Il branch include le Fasi 1 e 2 ed è stato caricato (push) su GitHub con successo.
 
 ## Bug irrisolti o open questions
-- Le pagine di dettaglio singolo contatto (`/crm/[id]`) e Analytics (`/crm/analytics`) al momento sono stub o da sviluppare nel dettaglio (attualmente implementata la board principale).
-- Le vecchie API per i webhook WA (`/gowa`, `/wuzapi`) risiedono ancora temporaneamente nel `core-api`, in attesa della migrazione in Fase 3 per preservare il funzionamento dell'attuale engine.
+- Le vecchie API per i webhook WA (`/gowa`, `/wuzapi`) risiedono ancora in `core-api`. Devono essere migrate in un microservizio separato in Fase 3 per preservare il funzionamento dell'attuale engine senza inquinare il core.
+- Dettaglio contatti e Analytics UI sono ancora stub (rimandati al termine dell'isolamento infrastrutturale).
 
 ## Prossimi step (TODO)
 - **Fase 3: Estrazione e Isolamento WA Forge (Plugin Campagne)**:
-  - Creare il nuovo microservizio `services/wa-forge` per spostare la logica specifica di messaggistica (BullMQ worker, integrazioni GoWA/WuzAPI).
-  - Implementare i "Feature Guard" per limitare l'accesso alla sezione campagne/templates solo ai tenant con la feature `wa.forge.campaigns` abilitata.
+  - Isolare le funzionalità WhatsApp in un nuovo microservizio indipendente `services/wa-forge`.
+  - Introdurre i "Feature Guard" per limitare l'accesso alla sezione campagne solo ai tenant con la licenza adatta abilitata nel DB.
 
 ## Decisioni architetturali prese
-- Microservizi Elysia (Bun) usati per il layer di business logic dietro a un reverse proxy Traefik (`/core` route), isolando Nuxt al ruolo di puro frontend BFF.
-- Database Multi-tenant: Isolamento logico tramite `teamId` per garantire massima sicurezza tra i vari tenant in fase B2B SaaS.
-- Drag & Drop: Sfruttate le API native HTML5 per il componente Kanban Vue al fine di evitare dipendenze superflue di terze parti e pesare sul bundle JS. 
-- Timeline Eventi: Ogni cambio di colonna (stage) Kanban di un contatto innesca la creazione automatica di un record `ContactNote` di tipo `stage_change`.
+- Modello a Microservizi Elysia (Bun) + BFF Nuxt, esposti tramite Traefik Ingress.
+- Architettura SaaS protetta in `feature/crm-multi-tenant` così da permettere uno sviluppo iterativo sul nuovo modello di multi-tenancy e billing senza compromettere la stabilità del monolite base originale.
+- State persistence eseguita regolarmente secondo le procedure della skill session-manager.
+
+## [Session State Snapshot] - 2026-07-15 20:04:46
+MEMORY.md
+
