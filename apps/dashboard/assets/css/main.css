@@ -80,7 +80,7 @@
 
   /* Bento Grid Card */
   .bento-card {
-    @apply glass-panel p-6 flex flex-col hover:border-white/10 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] group;
+    @apply bg-surface-bright/40 backdrop-blur-2xl border-t border-l border-white/5 border-b border-r border-black/20 shadow-[0_8px_32px_rgba(0,0,0,0.37)] rounded-2xl relative overflow-hidden transition-all duration-300 p-6 flex flex-col hover:border-white/10 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)];
   }
 
   /* Buttons */
