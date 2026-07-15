@@ -6,11 +6,11 @@ import IconLogo from './icons/IconLogo.astro';
 const dashboardUrl = import.meta.env.PUBLIC_DASHBOARD_URL || 'http://localhost:3000';
 ---
 
-<header class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-md bg-background/70 border-b border-white/5" id="navbar">
+<header class="glass-nav" id="navbar">
   <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
     <!-- Logo -->
     <a href="/" class="flex items-center gap-2 group">
-      <div class="w-10 h-10 bg-gradient-to-tr from-primary to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-all">
+      <div class="logo-box">
         <IconLogo />
       </div>
       <span class="text-xl font-bold tracking-tight text-white">WaForge</span>

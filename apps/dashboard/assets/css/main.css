@@ -4,39 +4,39 @@
 
 @layer base {
   :root {
-    /* Premium Dark Mode Only Pattern - Default to Dark */
-    --surface: 11 14 20; /* #0B0E14 */
-    --surface-dim: 8 11 15;
-    --surface-bright: 21 25 35; /* #151923 */
-    --surface-variant: 28 33 46; /* #1C212E */
+    /* Premium Light Mode */
+    --surface: 250 250 250; /* #FAFAFA */
+    --surface-dim: 243 244 246; /* #F3F4F6 */
+    --surface-bright: 255 255 255; /* #FFFFFF */
+    --surface-variant: 229 231 235; /* #E5E7EB */
 
-    --surface-container-lowest: 5 7 10;
-    --surface-container-low: 11 14 20;
-    --surface-container: 21 25 35;
-    --surface-container-high: 28 33 46;
-    --surface-container-highest: 40 47 65;
+    --surface-container-lowest: 255 255 255;
+    --surface-container-low: 249 250 251;
+    --surface-container: 243 244 246;
+    --surface-container-high: 229 231 235;
+    --surface-container-highest: 209 213 219;
 
-    --on-surface: 248 250 252; /* #F8FAFC text-primary */
-    --on-surface-variant: 148 163 184; /* #94A3B8 text-muted */
+    --on-surface: 15 23 42; /* #0F172A */
+    --on-surface-variant: 71 85 105; /* #475569 */
 
     --primary: 37 211 102; /* WhatsApp Green */
-    --primary-container: 20 180 80;
+    --primary-container: 220 248 198;
     --primary-fixed: 102 255 142;
     --primary-fixed-dim: 61 226 115;
     
-    --on-primary: 0 57 21;
+    --on-primary: 255 255 255; /* White text on primary button */
     --on-primary-container: 0 85 35;
 
-    --secondary: 173 198 255;
-    --secondary-container: 5 102 217;
+    --secondary: 5 102 217;
+    --secondary-container: 216 226 255;
     --secondary-fixed: 216 226 255;
     --secondary-fixed-dim: 173 198 255;
 
-    --tertiary: 94 236 175;
-    --tertiary-container: 58 207 149;
+    --tertiary: 15 164 127;
+    --tertiary-container: 167 255 216;
 
-    --error: 255 180 171;
-    --error-container: 147 0 10;
+    --error: 186 26 26;
+    --error-container: 255 218 214;
   }
 
   .dark {

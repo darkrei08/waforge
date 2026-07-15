@@ -61,17 +61,35 @@ export default defineEventHandler(async (event) => {
   if (settings.useCockpit && (!apiKey || apiKey === '')) {
     try {
       const fs = await import('fs/promises')
+      const fsSync = await import('fs')
       const os = await import('os')
       const path = await import('path')
-      const configPath = path.join(os.homedir(), '.antigravity_cockpit', 'config.json')
-      const data = await fs.readFile(configPath, 'utf-8')
-      const json = JSON.parse(data)
-      // Check if there are auth keys or accounts
-      if (json && json.secret_key) {
-        apiKey = json.secret_key
-      } else if (json && json.accounts && json.accounts.length > 0) {
-        apiKey = json.accounts[0].access_token || json.accounts[0].token || 'cockpit_dummy_token'
-      } else {
+
+      const candidateDirs = [
+        process.env.COCKPIT_DIR || path.join(os.homedir(), '.antigravity_cockpit'),
+        process.env.COCKPIT_ACCOUNTS_DIR || path.join(os.homedir(), '.pi', 'account-switcher'),
+        '/home/nuxtjs/.antigravity_cockpit',
+        '/home/nuxtjs/.pi/account-switcher',
+        '/home/node/.antigravity_cockpit',
+        '/root/.antigravity_cockpit',
+        '/root/.pi/account-switcher'
+      ].filter(Boolean)
+
+      const cockpitDir = candidateDirs.find(dir => fsSync.existsSync(path.join(dir, 'config.json'))) || candidateDirs[0]
+      const configPath = path.join(cockpitDir, 'config.json')
+
+      try {
+        const data = await fs.readFile(configPath, 'utf-8')
+        const json = JSON.parse(data)
+        // Check if there are auth keys or accounts
+        if (json && json.secret_key) {
+          apiKey = json.secret_key
+        } else if (json && json.accounts && json.accounts.length > 0) {
+          apiKey = json.accounts[0].access_token || json.accounts[0].token || 'cockpit_dummy_token'
+        } else {
+          apiKey = 'cockpit_dummy_token'
+        }
+      } catch (err) {
         apiKey = 'cockpit_dummy_token'
       }
 
@@ -79,7 +97,8 @@ export default defineEventHandler(async (event) => {
       // Use the selected cockpitAccountId if available
       if (settings.cockpitAccountId) {
         try {
-          const accountFilePath = path.join(os.homedir(), '.antigravity_cockpit', 'accounts', `${settings.cockpitAccountId}.json`)
+          const accountsDir = candidateDirs.find(dir => fsSync.existsSync(path.join(dir, 'accounts', `${settings.cockpitAccountId}.json`))) || candidateDirs[0]
+          const accountFilePath = path.join(accountsDir, 'accounts', `${settings.cockpitAccountId}.json`)
           const accountData = await fs.readFile(accountFilePath, 'utf-8')
           const accountJson = JSON.parse(accountData)
           if (accountJson.access_token || accountJson.token) {

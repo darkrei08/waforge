@@ -81,4 +81,21 @@ body {
   .nav-link {
     @apply text-sm font-medium text-text-muted hover:text-white transition-colors;
   }
+  
+  /* Semantic Structural Classes */
+  .glass-nav {
+    @apply fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-md bg-background/70 border-b border-white/5;
+  }
+  
+  .logo-box {
+    @apply w-10 h-10 bg-gradient-to-tr from-primary to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-all;
+  }
+  
+  .badge-glow {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border-primary/20 text-white text-xs font-semibold tracking-wide animate-fade-in-up;
+  }
+  
+  .hero-bg-glow {
+    @apply absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-primary/10 rounded-full blur-[120px] pointer-events-none -z-10;
+  }
 }

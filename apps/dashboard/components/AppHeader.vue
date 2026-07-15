@@ -4,14 +4,21 @@
       <PanelLeft class="w-5 h-5 text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
     </button>
     <div class="flex items-center gap-2">
-      <h2 class="font-heading font-semibold text-sm">WaForge Co-Pilot</h2>
-      <span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold tracking-widest uppercase animate-pulse-slow">Beta</span>
+      <h2 class="font-heading font-semibold text-sm capitalize text-on-surface">{{ routeName }}</h2>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
 import { PanelLeft } from 'lucide-vue-next'
+import { computed } from 'vue'
+import { useRoute } from '#imports'
 
 defineEmits(['toggleSidebar'])
+
+const route = useRoute()
+const routeName = computed(() => {
+  if (!route.name) return 'Dashboard'
+  return route.name.toString().replace(/-/g, ' ')
+})
 </script>
