@@ -52,3 +52,9 @@ graphify-out/
 credentials.json
 .cursor/
 .gemini/
+
+# Playwright (local only)
+playwright.config.ts
+tests/e2e/
+playwright-report/
+test-results/
