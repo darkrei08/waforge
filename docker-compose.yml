@@ -44,6 +44,40 @@ services:
       db:
         condition: service_healthy
 
+  # ─── 3. Microservizio WA Forge (Elysia) ───────────────────────────────
+  wa-forge:
+    build:
+      context: .
+      dockerfile: services/wa-forge/Dockerfile
+    container_name: wa-forge
+    restart: unless-stopped
+    ports:
+      - "3010:3010"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      JWT_SECRET: ${APP_SECRET:-change-me}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-waforge}?schema=public
+      REDIS_URL: redis://redis:6379
+      WUZAPI_URL: ${WUZAPI_URL:-http://wuzapi:8080}
+      WUZAPI_TOKEN: ${WUZAPI_TOKEN:-secret-token}
+      GOWA_URL: ${GOWA_URL:-http://gowa:3000}
+      GOWA_TOKEN: ${GOWA_TOKEN:-secret-token}
+      OPENWA_URL: ${OPENWA_URL:-http://openwa:2785/api}
+      OPENWA_API_KEY: ${OPENWA_API_KEY:-owa_k1_secret}
+    networks:
+      - wa-net
+    labels:
+      traefik.enable: "${TRAEFIK_ENABLE:-false}"
+      traefik.http.routers.wa-forge.rule: "Host(`api.${DOMAIN:-localhost}`) && PathPrefix(`/wa`)"
+      traefik.http.routers.wa-forge.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
+      traefik.http.routers.wa-forge.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
+      traefik.http.services.wa-forge.loadbalancer.server.port: "3010"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   # ─── WuzAPI — WhatsApp Engine (Go + whatsmeow) ───────────────────────────
   wuzapi:
     image: asternic/wuzapi:latest
@@ -79,7 +113,7 @@ services:
       - rest
       - --basic-auth=admin:${GOWA_TOKEN:-secret-token}
       - --port=3000
-      - --webhook=http://waforge-backend:3000/webhook/gowa
+      - --webhook=http://wa-forge:3010/wa/webhook/gowa
       - --webhook-secret=${GOWA_APP_SECRET:-my-secret-key}
     volumes:
       - gowa_data:/app/storages
@@ -104,7 +138,7 @@ services:
     environment:
       PORT: 2785
       API_KEY: ${OPENWA_API_KEY:-owa_k1_secret}
-      WEBHOOK_URL: http://waforge-backend:3000/webhook/openwa
+      WEBHOOK_URL: http://wa-forge:3010/wa/webhook/openwa
     volumes:
       - openwa_data:/app/sessions
     networks:

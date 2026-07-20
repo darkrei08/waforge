@@ -33,7 +33,7 @@ export const useWhatsappStore = defineStore('whatsapp', () => {
   async function fetchSessions() {
     loading.value = true
     try {
-      const res = await $fetch<{ data: WASession[] }>('/api/whatsapp/sessions')
+      const res = await $fetch<{ data: WASession[] }>('/api/wa/sessions')
       sessions.value = res.data || []
     } catch { /* silent */ }
     finally { 
@@ -48,7 +48,7 @@ export const useWhatsappStore = defineStore('whatsapp', () => {
   }
 
   async function disconnect(tokenId: string) {
-    await $fetch('/api/whatsapp/disconnect', { 
+    await $fetch('/api/wa/sessions/disconnect', { 
       method: 'POST',
       body: { tokenId }
     })
@@ -56,7 +56,7 @@ export const useWhatsappStore = defineStore('whatsapp', () => {
   }
 
   async function updateSession(id: string, payload: { name?: string, tags?: string, description?: string }) {
-    await $fetch(`/api/whatsapp/${id}`, {
+    await $fetch(`/api/wa/sessions/${id}`, {
       method: 'PATCH',
       body: payload
     })

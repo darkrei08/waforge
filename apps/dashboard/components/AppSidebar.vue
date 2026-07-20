@@ -29,7 +29,7 @@
             <LayoutDashboard class="w-5 h-5" />
             <span class="text-sm">{{ t('nav.home') }}</span>
           </NuxtLink>
-          <NuxtLink :to="localePath('/devices')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
+          <NuxtLink v-if="hasWaFeature" :to="localePath('/devices')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
             <Smartphone class="w-5 h-5" />
             <span class="text-sm">{{ t('nav.devices') }}</span>
             <span v-if="!waStore.connected" class="ml-auto w-2 h-2 rounded-full bg-amber-500 animate-pulse" title="Dispositivo WA non connesso"></span>
@@ -42,7 +42,7 @@
             <KanbanSquare class="w-5 h-5" />
             <span class="text-sm">CRM Pipeline</span>
           </NuxtLink>
-          <NuxtLink :to="localePath('/campaigns')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
+          <NuxtLink v-if="hasWaFeature" :to="localePath('/campaigns')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
             <Megaphone class="w-5 h-5" />
             <span class="text-sm">{{ t('nav.campaigns') }}</span>
           </NuxtLink>
@@ -50,7 +50,7 @@
             <MessageSquareText class="w-5 h-5" />
             <span class="text-sm">{{ t('nav.templates') }}</span>
           </NuxtLink>
-          <NuxtLink :to="localePath('/chat')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
+          <NuxtLink v-if="hasWaFeature" :to="localePath('/chat')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" active-class="bg-primary/10 text-primary font-medium">
             <MessageCircle class="w-5 h-5" />
             <span class="text-sm">Workspace AI</span>
             <span v-if="!waStore.connected" class="ml-auto w-2 h-2 rounded-full bg-amber-500" title="Dispositivo WA non connesso"></span>
@@ -87,6 +87,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { LayoutDashboard, Users, Megaphone, Settings, Sun, Moon, LogOut, MessageSquareText, MessageCircle, X, Smartphone, KanbanSquare } from 'lucide-vue-next'
 import { useI18n, useLocalePath } from '#i18n'
 import { useColorMode } from '#imports'
@@ -101,6 +102,10 @@ const localePath = useLocalePath()
 const colorMode = useColorMode()
 const authStore = useAuthStore()
 const waStore = useWhatsappStore()
+
+const hasWaFeature = computed(() => {
+  return authStore.currentTeam?.activeFeatures?.includes('waforge.campaigns')
+})
 
 const toggleColorMode = () => {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'

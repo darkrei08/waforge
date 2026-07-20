@@ -1,0 +1,22 @@
+{
+  "name": "@waforge/wa-forge",
+  "version": "1.0.0",
+  "description": "WA Forge — WhatsApp Campaigns, Webhooks & Chat Microservice",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "start": "bun run dist/index.js"
+  },
+  "dependencies": {
+    "@elysiajs/jwt": "^1.4.2",
+    "@waforge/database": "workspace:*",
+    "bullmq": "^5.34.8",
+    "elysia": "latest",
+    "ioredis": "^5.11.1",
+    "libphonenumber-js": "^1.11.0"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "module": "src/index.ts"
+}

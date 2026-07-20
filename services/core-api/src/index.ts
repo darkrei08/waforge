@@ -62,38 +62,6 @@ const app = new Elysia({ prefix: '/core' })
   // --- CRM Module (Fase 2) ---
   .use(crmRoutes)
   
-  // --- Legacy Webhooks (da migrare in Fase 3) ---
-  .group("/webhook", (app) => 
-    app
-      .post("/gowa", async ({ body }) => {
-        console.log("[GoWA Webhook] Received payload");
-        return { status: "received" };
-      })
-      .post("/wuzapi", async ({ body, query }) => {
-        const teamId = query.teamId as string;
-        if (!teamId) return { error: "Missing teamId" };
-        
-        try {
-          const payload = body as any;
-          if (payload?.type === "message" || payload?.event === "message") {
-            const sender = payload.sender || payload.from;
-            const text = payload.text || payload.message?.conversation;
-            
-            redis.publish("waforge:events", JSON.stringify({
-              teamId,
-              event: "new_message",
-              data: { sender, text, timestamp: new Date().toISOString() }
-            }));
-            
-            return { success: true, status: "processed_and_broadcasted" };
-          }
-          return { success: true, status: "ignored" };
-        } catch (err: any) {
-          console.error("[WuzAPI Webhook] Error:", err.message);
-          return { error: "Processing failed" };
-        }
-      })
-  )
   .listen(3000);
 
 console.log(`🦊 Core API running at ${app.server?.hostname}:${app.server?.port}`);

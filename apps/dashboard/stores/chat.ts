@@ -40,7 +40,7 @@ export const useChatStore = defineStore('chat', () => {
   async function fetchConversations() {
     loading.value = true
     try {
-      const res = await $fetch<{ data: ChatConversation[] }>('/api/chat')
+      const res = await $fetch<{ data: ChatConversation[] }>('/api/wa/chat')
       conversations.value = res.data
     } catch (e) {
       console.error(e)
@@ -52,7 +52,7 @@ export const useChatStore = defineStore('chat', () => {
   async function fetchMessages(contactId: string) {
     loading.value = true
     try {
-      const res = await $fetch<{ data: ChatMessage[] }>(`/api/chat/${contactId}/messages`)
+      const res = await $fetch<{ data: ChatMessage[] }>(`/api/wa/chat/${contactId}/messages`)
       messages.value[contactId] = res.data
     } catch (e) {
       console.error(e)
@@ -63,7 +63,7 @@ export const useChatStore = defineStore('chat', () => {
 
   async function sendMessage(contactId: string, text: string = '', mediaUrl?: string, mediaType?: string) {
     try {
-      const res = await $fetch<{ data: ChatMessage }>('/api/chat/send', {
+      const res = await $fetch<{ data: ChatMessage }>('/api/wa/chat/send', {
         method: 'POST',
         body: { contactId, text, mediaUrl, mediaType }
       })

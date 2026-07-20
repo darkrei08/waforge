@@ -46,25 +46,25 @@ export const useCampaignsStore = defineStore('campaigns', () => {
   async function fetchCampaigns() {
     loading.value = true
     try {
-      const res = await $fetch<{ data: Campaign[] }>('/api/campaigns', { query: { limit: 100 } })
+      const res = await $fetch<{ data: Campaign[] }>('/api/wa/campaigns', { query: { limit: 100 } })
       campaigns.value = res.data
     } finally { loading.value = false }
   }
 
   async function createCampaign(data: Record<string, unknown>) {
-    const res = await $fetch<{ data: Campaign }>('/api/campaigns', { method: 'POST', body: data })
+    const res = await $fetch<{ data: Campaign }>('/api/wa/campaigns', { method: 'POST', body: data })
     await fetchCampaigns()
     return res.data
   }
 
   async function startCampaign(id: string) {
-    await $fetch(`/api/campaigns/${id}/start`, { method: 'POST' })
+    await $fetch(`/api/wa/campaigns/${id}/start`, { method: 'POST' })
     startPolling(id)
     await fetchCampaigns()
   }
 
   async function pauseCampaign(id: string) {
-    await $fetch(`/api/campaigns/${id}/pause`, { method: 'POST' })
+    await $fetch(`/api/wa/campaigns/${id}/pause`, { method: 'POST' })
     stopPolling()
     await fetchCampaigns()
   }
@@ -73,7 +73,7 @@ export const useCampaignsStore = defineStore('campaigns', () => {
 
   async function pollProgress(id: string) {
     try {
-      const res = await $fetch<{ data: CampaignProgress }>(`/api/campaigns/${id}/status`)
+      const res = await $fetch<{ data: CampaignProgress }>(`/api/wa/campaigns/${id}/status`)
       activeProgress.value = res.data
       if (!res.data.isActive && res.data.status !== 'RUNNING') {
         stopPolling()
@@ -88,7 +88,7 @@ export const useCampaignsStore = defineStore('campaigns', () => {
     pollProgress(id)
     
     // Connect to SSE stream
-    eventSource = new EventSource(`/api/campaigns/${id}/stream`)
+    eventSource = new EventSource(`/api/wa/campaigns/${id}/stream`)
     
     eventSource.onmessage = (event) => {
       try {
@@ -127,18 +127,18 @@ export const useCampaignsStore = defineStore('campaigns', () => {
   }
 
   async function updateCampaign(id: string, data: Record<string, unknown>) {
-    const res = await $fetch<{ data: Campaign }>(`/api/campaigns/${id}`, { method: 'PATCH', body: data })
+    const res = await $fetch<{ data: Campaign }>(`/api/wa/campaigns/${id}`, { method: 'PATCH', body: data })
     await fetchCampaigns()
     return res.data
   }
 
   async function deleteCampaign(id: string) {
-    await $fetch(`/api/campaigns/${id}`, { method: 'DELETE' })
+    await $fetch(`/api/wa/campaigns/${id}`, { method: 'DELETE' })
     await fetchCampaigns()
   }
 
   async function deleteCampaigns(ids: string[]) {
-    await $fetch('/api/campaigns/bulk-delete', { method: 'POST', body: { ids } })
+    await $fetch('/api/wa/campaigns/bulk-delete', { method: 'POST', body: { ids } })
     selected.value = new Set()
     await fetchCampaigns()
   }
