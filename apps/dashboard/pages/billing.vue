@@ -1,145 +1,205 @@
 <template>
-  <div class="p-6 max-w-4xl mx-auto">
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold">Gestione Abbonamento</h1>
-      <p class="text-on-surface-variant">Gestisci il tuo piano, i limiti del team e la fatturazione.</p>
-      <div class="mt-2 text-xs text-primary flex gap-3">
-        <span>✓ Carte di Credito</span>
-        <span>✓ Apple/Google Pay</span>
-        <span>✓ PayPal</span>
-        <span>✓ Criptovalute (via Stripe)</span>
+  <div class="p-6 max-w-5xl mx-auto space-y-8 animate-fade-in">
+    <div class="mb-4 flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-on-surface">Gestione Abbonamento</h1>
+        <p class="text-on-surface-variant mt-1">Gestisci il tuo piano, i limiti e lo storico fatture.</p>
       </div>
+      <button v-if="team?.stripeCustomerId" @click="openCustomerPortal" :disabled="redirecting" class="px-5 py-2.5 bg-surface-variant hover:bg-surface-variant/80 rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
+        <CreditCard class="w-4 h-4" />
+        {{ redirecting ? 'Reindirizzamento...' : 'Gestisci su Stripe' }}
+      </button>
     </div>
 
-    <div v-if="loading" class="animate-pulse flex flex-col gap-4">
-      <div class="h-32 bg-surface-variant/50 rounded-xl"></div>
-      <div class="h-32 bg-surface-variant/50 rounded-xl"></div>
+    <div v-if="loading" class="animate-pulse space-y-6">
+      <div class="h-40 bg-surface-variant/50 rounded-2xl"></div>
+      <div class="h-64 bg-surface-variant/50 rounded-2xl"></div>
     </div>
 
-    <div v-else-if="team" class="space-y-6">
-      <!-- Current Plan Info -->
-      <div class="bg-surface-container rounded-2xl p-6 border border-white/5">
-        <div class="flex items-start justify-between">
-          <div>
-            <h2 class="text-xl font-bold mb-1">Piano Attuale: <span class="text-primary capitalize">{{ team.planTier }}</span></h2>
-            <p class="text-on-surface-variant text-sm mb-4">
-              Stato abbonamento: <span class="font-medium" :class="statusColor">{{ statusText }}</span>
-            </p>
+    <template v-else-if="team">
+      <!-- Piano & Limiti -->
+      <div class="bg-surface-container/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-xl">
+        <div class="flex flex-col md:flex-row gap-8 justify-between">
+          <div class="flex-1">
+            <h2 class="text-sm font-semibold text-primary uppercase tracking-wider mb-2">Piano Attuale</h2>
+            <div class="text-4xl font-bold text-on-surface capitalize mb-2">{{ team.planTier }}</div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/5 border border-white/10" :class="statusColor">
+              <span class="w-2 h-2 rounded-full bg-current"></span> {{ statusText }}
+            </div>
+            
+            <div class="mt-8">
+              <h3 class="text-sm font-medium text-on-surface-variant mb-4">Utilizzo Risorse</h3>
+              <div class="space-y-4">
+                <!-- Contacts Bar -->
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="text-on-surface">Contatti CRM</span>
+                    <span class="text-on-surface-variant font-medium">{{ usage.contacts }} / {{ limits.contacts === -1 ? '∞' : limits.contacts }}</span>
+                  </div>
+                  <div class="h-2 w-full bg-black/20 rounded-full overflow-hidden">
+                    <div class="h-full bg-primary rounded-full transition-all duration-1000" :style="{ width: getPercentage(usage.contacts, limits.contacts) + '%' }"></div>
+                  </div>
+                </div>
+                <!-- Devices Bar -->
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="text-on-surface">Dispositivi WhatsApp</span>
+                    <span class="text-on-surface-variant font-medium">{{ usage.devices }} / {{ limits.devices === -1 ? '∞' : limits.devices }}</span>
+                  </div>
+                  <div class="h-2 w-full bg-black/20 rounded-full overflow-hidden">
+                    <div class="h-full bg-secondary rounded-full transition-all duration-1000" :style="{ width: getPercentage(usage.devices, limits.devices) + '%' }"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="text-right">
-            <button v-if="team.stripeCustomerId" @click="openCustomerPortal" :disabled="redirecting" class="px-4 py-2 bg-surface-variant hover:bg-surface-variant/80 rounded-lg text-sm font-medium transition-colors">
-              {{ redirecting ? 'Reindirizzamento...' : 'Gestisci Fatturazione' }}
+          
+          <!-- Upgrade Banner per Free -->
+          <div v-if="team.planTier === 'FREE' || team.planTier === 'TRIAL'" class="flex-1 bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 rounded-2xl p-6 relative overflow-hidden flex flex-col justify-center">
+            <div class="absolute -right-10 -top-10 text-primary/10 blur-xl">
+              <Rocket class="w-48 h-48" />
+            </div>
+            <h3 class="text-xl font-bold text-on-surface mb-2 relative z-10">Fai l'upgrade al piano PRO</h3>
+            <p class="text-sm text-on-surface-variant mb-6 relative z-10">Sblocca contatti illimitati, automazioni avanzate e rimuovi il limite di dispositivi connessi.</p>
+            <button @click="openCheckout" class="px-5 py-3 bg-primary text-surface font-semibold rounded-xl hover:bg-primary-fixed-dim transition-colors relative z-10 inline-flex items-center justify-center gap-2 w-full md:w-auto">
+              <Zap class="w-4 h-4" /> Scopri i Piani
             </button>
           </div>
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-          <div class="p-4 bg-surface-container-highest rounded-xl border border-white/5">
-            <div class="text-sm text-on-surface-variant mb-1">Dispositivi WhatsApp</div>
-            <div class="text-2xl font-bold">{{ usage.devices }} / {{ limits.devices === -1 ? '∞' : limits.devices }}</div>
-          </div>
-          <div class="p-4 bg-surface-container-highest rounded-xl border border-white/5">
-            <div class="text-sm text-on-surface-variant mb-1">Contatti CRM</div>
-            <div class="text-2xl font-bold">{{ usage.contacts }} / {{ limits.contacts === -1 ? '∞' : limits.contacts }}</div>
-          </div>
-        </div>
       </div>
 
-      <!-- Upgrade Options -->
-      <div v-if="team.planTier === 'FREE' || team.planTier === 'TRIAL'" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-        <div class="bg-surface-container rounded-2xl p-6 border border-white/5 relative flex flex-col">
-          <h3 class="text-lg font-bold">Business</h3>
-          <p class="text-on-surface-variant text-sm mb-4">Fino a 3 dispositivi e contatti illimitati.</p>
-          <div class="text-3xl font-bold mb-6">€49<span class="text-sm font-normal text-on-surface-variant">/mese</span></div>
-          <button @click="subscribe('PRO')" :disabled="redirecting" class="mt-auto w-full py-2.5 px-4 bg-primary text-black font-semibold rounded-lg hover:bg-primary-container transition-colors">
-            Passa a Business
-          </button>
-        </div>
+      <!-- Fatture Storico -->
+      <div class="space-y-4">
+        <h3 class="text-xl font-bold text-on-surface">Storico Fatture</h3>
         
-        <div class="bg-surface-container rounded-2xl p-6 border border-white/5 relative flex flex-col">
-          <h3 class="text-lg font-bold">Enterprise</h3>
-          <p class="text-on-surface-variant text-sm mb-4">Senza limiti per grandi volumi.</p>
-          <div class="text-3xl font-bold mb-6">€149<span class="text-sm font-normal text-on-surface-variant">/mese</span></div>
-          <button @click="subscribe('ENTERPRISE')" :disabled="redirecting" class="mt-auto w-full py-2.5 px-4 bg-primary text-black font-semibold rounded-lg hover:bg-primary-container transition-colors">
-            Passa a Enterprise
-          </button>
+        <div v-if="loadingInvoices" class="animate-pulse h-32 bg-white/5 rounded-2xl"></div>
+        
+        <div v-else-if="invoices.length === 0" class="text-center p-12 border border-dashed border-white/10 rounded-3xl">
+          <FileText class="w-12 h-12 text-on-surface-variant/50 mx-auto mb-3" />
+          <h4 class="text-lg font-medium text-on-surface mb-1">Nessuna fattura disponibile</h4>
+          <p class="text-sm text-on-surface-variant">Le tue ricevute e fatture appariranno qui non appena avrai un abbonamento attivo.</p>
+        </div>
+
+        <div v-else class="bg-surface-container border border-white/10 rounded-2xl overflow-hidden overflow-x-auto">
+          <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-black/20 text-on-surface-variant">
+              <tr>
+                <th class="px-6 py-4 font-medium">Data</th>
+                <th class="px-6 py-4 font-medium">Numero</th>
+                <th class="px-6 py-4 font-medium">Importo</th>
+                <th class="px-6 py-4 font-medium">Stato</th>
+                <th class="px-6 py-4 font-medium text-right">Azione</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              <tr v-for="inv in invoices" :key="inv.id" class="hover:bg-white/5 transition-colors">
+                <td class="px-6 py-4 text-on-surface">{{ new Date(inv.date).toLocaleDateString() }}</td>
+                <td class="px-6 py-4 font-mono text-on-surface-variant">{{ inv.number || 'N/A' }}</td>
+                <td class="px-6 py-4 font-medium text-on-surface">{{ (inv.amount / 100).toFixed(2) }} {{ inv.currency.toUpperCase() }}</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                        :class="inv.status === 'paid' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'">
+                    {{ inv.status }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <a v-if="inv.pdf" :href="inv.pdf" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-on-surface rounded-lg transition-colors">
+                    <Download class="w-3.5 h-3.5" /> PDF
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { CreditCard, Download, FileText, Rocket, Zap } from 'lucide-vue-next'
+import { useAuthStore } from '~/stores/auth'
 
-const team = ref<any>(null)
-const usage = ref({ devices: 0, contacts: 0 })
+const authStore = useAuthStore()
+
 const loading = ref(true)
+const team = ref<any>(null)
+const usage = ref({ contacts: 0, devices: 0 })
+const limits = ref({ contacts: 500, devices: 1 })
 const redirecting = ref(false)
 
-const fetchBillingInfo = async () => {
-  try {
-    const res = await $fetch('/api/stripe/info')
-    team.value = res.team
-    usage.value = res.usage
-  } catch (error) {
-    console.error('Failed to load billing info:', error)
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
-  fetchBillingInfo()
-})
-
-const limits = computed(() => {
-  if (!team.value) return { devices: 1, contacts: 100 }
-  switch(team.value.planTier) {
-    case 'PRO': return { devices: 3, contacts: -1 }
-    case 'ENTERPRISE': return { devices: -1, contacts: -1 }
-    default: return { devices: 1, contacts: 100 }
-  }
-})
+const invoices = ref<any[]>([])
+const loadingInvoices = ref(false)
 
 const statusText = computed(() => {
-  if (team.value?.subscriptionStatus === 'active') return 'Attivo'
-  if (team.value?.subscriptionStatus === 'past_due') return 'Pagamento in Sospeso'
-  if (team.value?.subscriptionStatus === 'canceled') return 'Cancellato'
-  return 'Gratuito / Trial'
+  if (!team.value) return 'Sconosciuto'
+  if (team.value.planTier === 'FREE') return 'Gratuito'
+  if (team.value.subscriptionStatus === 'active') return 'Attivo'
+  if (team.value.subscriptionStatus === 'past_due') return 'Pagamento in Sospeso'
+  if (team.value.subscriptionStatus === 'canceled') return 'Cancellato'
+  return 'Sconosciuto'
 })
 
 const statusColor = computed(() => {
-  if (team.value?.subscriptionStatus === 'active') return 'text-primary'
-  if (team.value?.subscriptionStatus === 'past_due') return 'text-warning'
-  if (team.value?.subscriptionStatus === 'canceled') return 'text-error'
-  return 'text-on-surface-variant'
+  if (!team.value) return 'text-gray-400'
+  if (team.value.planTier === 'FREE') return 'text-gray-400'
+  if (team.value.subscriptionStatus === 'active') return 'text-green-400'
+  if (team.value.subscriptionStatus === 'past_due') return 'text-amber-400'
+  if (team.value.subscriptionStatus === 'canceled') return 'text-red-400'
+  return 'text-gray-400'
 })
 
-const subscribe = async (tier: string) => {
-  redirecting.value = true
+const getPercentage = (val: number, max: number) => {
+  if (max === -1) return 0
+  return Math.min(100, Math.round((val / max) * 100))
+}
+
+const fetchData = async () => {
   try {
-    const res = await $fetch('/api/stripe/checkout', {
-      method: 'POST',
-      body: { tier }
+    const res = await $fetch('/api/stripe/info', {
+      headers: { Authorization: `Bearer ${authStore.token}` }
     })
-    if (res.url) window.location.href = res.url
-  } catch (error) {
-    console.error('Checkout failed', error)
-    alert('Errore di connessione a Stripe.')
-    redirecting.value = false
+    team.value = res.team
+    usage.value = res.usage
+    limits.value = res.limits
+    
+    // Fetch invoices se lo stripe customer ID esiste
+    if (team.value?.stripeCustomerId) {
+      loadingInvoices.value = true
+      const invRes = await $fetch('/api/stripe/invoices', {
+        headers: { Authorization: `Bearer ${authStore.token}` }
+      })
+      invoices.value = invRes.invoices || []
+      loadingInvoices.value = false
+    }
+  } catch (e) {
+    console.error(e)
   }
+  loading.value = false
 }
 
 const openCustomerPortal = async () => {
+  if (redirecting.value) return
   redirecting.value = true
   try {
-    const res = await $fetch('/api/stripe/portal', { method: 'POST' })
+    const res = await $fetch('/api/stripe/portal', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
     if (res.url) window.location.href = res.url
-  } catch (error) {
-    console.error('Portal failed', error)
-    alert('Errore di connessione al Customer Portal.')
-    redirecting.value = false
+  } catch (e) {
+    alert("Errore nell'apertura del portale.")
   }
+  redirecting.value = false
 }
+
+const openCheckout = async () => {
+  // redirect a /pricing o stripe checkout
+  alert("Implementazione Checkout a seguire.")
+}
+
+onMounted(() => {
+  fetchData()
+})
 </script>

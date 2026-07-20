@@ -2,7 +2,7 @@
  * Nitro BFF Proxy per il microservizio wa-forge
  * Inoltra tutte le richieste /api/wa/** -> http://wa-forge:3010/wa/**
  */
-import { defineEventHandler, proxyRequest } from 'nitropack/runtime'
+import { defineEventHandler, proxyRequest } from 'h3'
 
 export default defineEventHandler(async (event) => {
   const target = process.env.WAFORGE_MICROSERVICE_URL || 'http://wa-forge:3010'

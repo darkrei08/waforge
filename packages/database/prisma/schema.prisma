@@ -23,6 +23,8 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  preferences Json? // e.g. { theme: 'dark', language: 'en', notifications: { emailOnLead: true } }
 
   memberships  TeamMembership[]
   messagesSent ChatMessage[] // for auditing who replied in live chat
@@ -48,6 +50,7 @@ model Team {
   waConversations     WhatsAppConversation[]
   waScheduledMessages WhatsAppScheduledMessage[]
   pipelineStages      PipelineStage[]
+  apiKeys             TeamApiKey[]
 
   planTier             String?   @default("FREE") // FREE, BASIC, PRO, ENTERPRISE
   stripeCustomerId     String?   @unique
@@ -61,6 +64,19 @@ model Team {
 
   brandSettings Json?
   llmSettings   Json?
+}
+
+model TeamApiKey {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  name      String   // e.g., "Zapier Integration"
+  key       String   @unique // Hashed or raw token depending on security needs (we'll store it raw for now since it's a demo/internal)
+  lastUsedAt DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model TeamMembership {

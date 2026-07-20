@@ -4,10 +4,20 @@ import { navigateTo } from '#app'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = useState<any>('auth-user', () => null)
+  const token = useState<string | null>('auth-token', () => null)
   
   const isAuthenticated = computed(() => !!user.value)
   const currentTeam = computed(() => {
     return user.value?.memberships?.[0]?.team || null
+  })
+
+  const currentRole = computed(() => {
+    return user.value?.memberships?.[0]?.role || null
+  })
+
+  const isAdminOrOwner = computed(() => {
+    const role = currentRole.value
+    return role === 'OWNER' || role === 'ADMIN'
   })
 
   const logout = async () => {
@@ -17,6 +27,7 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('Logout error', e)
     }
     user.value = null
+    token.value = null
     await navigateTo('/login', { replace: true })
   }
 
@@ -33,5 +44,5 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { user, isAuthenticated, currentTeam, fetchUser, logout }
+  return { user, token, isAuthenticated, currentTeam, currentRole, isAdminOrOwner, fetchUser, logout }
 })

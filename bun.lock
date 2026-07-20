@@ -91,6 +91,21 @@
         "bun-types": "latest",
       },
     },
+    "services/wa-forge": {
+      "name": "@waforge/wa-forge",
+      "version": "1.0.0",
+      "dependencies": {
+        "@elysiajs/jwt": "^1.4.2",
+        "@waforge/database": "workspace:*",
+        "bullmq": "^5.34.8",
+        "elysia": "latest",
+        "ioredis": "^5.11.1",
+        "libphonenumber-js": "^1.11.0",
+      },
+      "devDependencies": {
+        "bun-types": "latest",
+      },
+    },
   },
   "packages": {
     "@aejkatappaja/phantom-ui": ["@aejkatappaja/phantom-ui@1.4.0", "", { "dependencies": { "lit": "^3.2.0" }, "bin": { "phantom-ui": "src/cli/init.mjs" } }, "sha512-+FGxwoLFtQ3bNNbBfoCMPP0ZeJS8EY0hgtSGvt5q3B191ACBxeEol8MjorOf1MC5wjxY1aqyJEm7y0Q4UWpEzw=="],
@@ -1036,6 +1051,8 @@
     "@waforge/dashboard": ["@waforge/dashboard@workspace:apps/dashboard"],
 
     "@waforge/database": ["@waforge/database@workspace:packages/database"],
+
+    "@waforge/wa-forge": ["@waforge/wa-forge@workspace:services/wa-forge"],
 
     "abbrev": ["abbrev@3.0.1", "", {}, "sha512-AO2ac6pjRB3SJmGJo+v5/aK6Omggp6fsLrs6wN9bd35ulu4cCwaAU9+7ZhXjeqHVkaHThLuzH0nZr0YpCDhygg=="],
 

@@ -14,7 +14,8 @@ export default defineEventHandler(async (event) => {
       planTier: true,
       stripeCustomerId: true,
       subscriptionStatus: true,
-      currentPeriodEnd: true
+      currentPeriodEnd: true,
+      limits: true
     }
   })
 
@@ -23,11 +24,18 @@ export default defineEventHandler(async (event) => {
   const contactsCount = await prisma.contact.count({ where: { teamId } })
   const devicesCount = await prisma.whatsAppSession.count({ where: { teamId } })
 
+  // Parse limits from team JSON or use defaults
+  const parsedLimits = typeof team.limits === 'object' && team.limits !== null ? team.limits as Record<string, number> : {}
+
   return {
     team,
     usage: {
       contacts: contactsCount,
       devices: devicesCount
+    },
+    limits: {
+      contacts: parsedLimits.maxContacts ?? 500,
+      devices: parsedLimits.maxDevices ?? 1
     }
   }
 })
