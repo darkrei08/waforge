@@ -5,13 +5,15 @@ WORKDIR /app
 COPY package.json bun.lock ./
 
 # Copy the shared database package
+COPY packages/database/package.json packages/database/
 COPY packages/database/ ./packages/database/
 
 # Copy the wa-forge service
+COPY services/wa-forge/package.json services/wa-forge/
 COPY services/wa-forge/ ./services/wa-forge/
 
-# Install dependencies
-RUN bun install --frozen-lockfile
+# Install dependencies (without --frozen-lockfile since we only copy a subset of workspace packages)
+RUN bun install --ignore-scripts
 
 # Generate Prisma Client
 RUN cd packages/database && bunx prisma generate
