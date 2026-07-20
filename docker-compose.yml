@@ -327,150 +327,150 @@ services:
   # ============================================================================
 
   # ─── 1. Crikket Database (Isolated PostgreSQL Instance on Host Port 5434) ──
-  crikket-postgres:
-    image: postgres:17-alpine
-    container_name: crikket-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${CRIKKET_POSTGRES_USER:-crikket}
-      POSTGRES_PASSWORD: ${CRIKKET_POSTGRES_PASSWORD:-crikket_secret}
-      POSTGRES_DB: ${CRIKKET_POSTGRES_DB:-crikket}
-      POSTGRES_HOST_AUTH_METHOD: trust
-    ports:
-      - "${CRIKKET_POSTGRES_PORT:-5434}:5432"
-    expose:
-      - "5432"
-    volumes:
-      - crikket_postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${CRIKKET_POSTGRES_USER:-crikket} -d ${CRIKKET_POSTGRES_DB:-crikket}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    networks:
-      - wa-net
-
-  # ─── 2. Crikket DB Migrations (One-shot schema setup job) ─────────────────
-  crikket-migrate:
-    image: ghcr.io/redpangilinan/crikket-server:latest
-    container_name: crikket-migrate
-    restart: "no"
-    pull_policy: always
-    depends_on:
-      crikket-postgres:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: "postgresql://${CRIKKET_POSTGRES_USER:-crikket}:${CRIKKET_POSTGRES_PASSWORD:-crikket_secret}@crikket-postgres:5432/${CRIKKET_POSTGRES_DB:-crikket}"
-      NODE_ENV: development
-      STORAGE_BUCKET: "${CRIKKET_STORAGE_BUCKET:-mock-bucket}"
-      STORAGE_ACCESS_KEY_ID: "${CRIKKET_STORAGE_ACCESS_KEY_ID:-mock-key}"
-      STORAGE_SECRET_ACCESS_KEY: "${CRIKKET_STORAGE_SECRET_ACCESS_KEY:-mock-secret}"
-      STORAGE_ENDPOINT: "${CRIKKET_STORAGE_ENDPOINT:-http://localhost:9000}"
-    command: ["bun", "run", "--filter", "@crikket/db", "db:migrate"]
-    networks:
-      - wa-net
-
-  # ─── 3. Crikket Server API (Backend Service on Host Port 3150) ────────────
-  crikket-server:
-    image: ghcr.io/redpangilinan/crikket-server:latest
-    container_name: crikket-server
-    restart: unless-stopped
-    pull_policy: always
-    depends_on:
-      crikket-postgres:
-        condition: service_healthy
-      crikket-migrate:
-        condition: service_completed_successfully
-    environment:
-      DATABASE_URL: "postgresql://${CRIKKET_POSTGRES_USER:-crikket}:${CRIKKET_POSTGRES_PASSWORD:-crikket_secret}@crikket-postgres:5432/${CRIKKET_POSTGRES_DB:-crikket}"
-      NODE_ENV: development
-      PORT: 3000
-      PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_SERVER_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3150}}
-      PUBLIC_WEB_URL: ${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}}
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-crikket_super_secret_key_change_me}
-      BETTER_AUTH_URL: ${CRIKKET_PUBLIC_SERVER_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3150}}
-      BETTER_AUTH_TRUSTED_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,http://192.168.87.223:3151,${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
-      CORS_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,http://192.168.87.223:3151,${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
-      ENABLE_PAYMENTS: "false"
-      STORAGE_BUCKET: "${CRIKKET_STORAGE_BUCKET:-mock-bucket}"
-      STORAGE_ACCESS_KEY_ID: "${CRIKKET_STORAGE_ACCESS_KEY_ID:-mock-key}"
-      STORAGE_SECRET_ACCESS_KEY: "${CRIKKET_STORAGE_SECRET_ACCESS_KEY:-mock-secret}"
-      STORAGE_ENDPOINT: "${CRIKKET_STORAGE_ENDPOINT:-http://localhost:9000}"
-    ports:
-      - "${CRIKKET_SERVER_PORT:-3150}:3000"
-    expose:
-      - "3000"
-    networks:
-      - wa-net
-    labels:
-      traefik.enable: "${TRAEFIK_ENABLE:-false}"
-      traefik.http.routers.crikket-api.rule: "(Host(`${CRIKKET_DOMAIN:-crikket.localhost}`) && (PathPrefix(`/api`) || PathPrefix(`/better-auth`) || PathPrefix(`/trpc`) || PathPrefix(`/storage`) || PathPrefix(`/oauth`))) || Host(`${CRIKKET_API_DOMAIN:-crikket-api.localhost}`)"
-      traefik.http.routers.crikket-api.priority: "20"
-      traefik.http.routers.crikket-api.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
-      traefik.http.routers.crikket-api.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
-      traefik.http.services.crikket-api.loadbalancer.server.port: "3000"
-
-  # ─── 4. Crikket Web Dashboard (Frontend UI on Host Port 3151) ─────────────
-  crikket-web:
-    image: ghcr.io/redpangilinan/crikket-web:latest
-    container_name: crikket-web
-    restart: unless-stopped
-    pull_policy: always
-    depends_on:
-      - crikket-server
-    environment:
-      NEXT_PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_SERVER_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3150}}
-      NEXT_PUBLIC_APP_URL: ${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}}
-      NEXT_PUBLIC_SITE_URL: ${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}}
-      PORT: 3151
-    ports:
-      - "${CRIKKET_WEB_PORT:-3151}:3151"
-    expose:
-      - "3151"
-    command:
-      - "/bin/sh"
-      - "-c"
-      - |
-        bun -e '
-        Bun.listen({
-          port: 3150,
-          hostname: "0.0.0.0",
-          socket: {
-            async open(client) {
-              client.buf = [];
-              try {
-                const remote = await Bun.connect({
-                  hostname: "crikket-server",
-                  port: 3000,
-                  socket: {
-                    data(s, d) { client.write(d); },
-                    close() { client.end(); },
-                    error() { client.end(); }
-                  }
-                });
-                client.data = remote;
-                for (const chunk of client.buf) {
-                  remote.write(chunk);
-                }
-                client.buf = null;
-              } catch(e) { client.end(); }
-            },
-            data(client, d) { if (client.data) client.data.write(d); else if (client.buf) client.buf.push(d); },
-            close(client) { if (client.data) client.data.end(); },
-            error(client) { if (client.data) client.data.end(); }
-          }
-        });
-        ' &
-        exec bun run --cwd apps/web start -- --port 3151 --hostname 0.0.0.0
-    networks:
-      - wa-net
-    labels:
-      traefik.enable: "${TRAEFIK_ENABLE:-false}"
-      traefik.http.routers.crikket-web.rule: "Host(`${CRIKKET_DOMAIN:-crikket.localhost}`) || Host(`${CRIKKET_WEB_DOMAIN:-crikket.localhost}`)"
-      traefik.http.routers.crikket-web.priority: "10"
-      traefik.http.routers.crikket-web.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
-      traefik.http.routers.crikket-web.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
-      traefik.http.services.crikket-web.loadbalancer.server.port: "3151"
+#   crikket-postgres:
+#     image: postgres:17-alpine
+#     container_name: crikket-postgres
+#     restart: unless-stopped
+#     environment:
+#       POSTGRES_USER: ${CRIKKET_POSTGRES_USER:-crikket}
+#       POSTGRES_PASSWORD: ${CRIKKET_POSTGRES_PASSWORD:-crikket_secret}
+#       POSTGRES_DB: ${CRIKKET_POSTGRES_DB:-crikket}
+#       POSTGRES_HOST_AUTH_METHOD: trust
+#     ports:
+#       - "${CRIKKET_POSTGRES_PORT:-5434}:5432"
+#     expose:
+#       - "5432"
+#     volumes:
+#       - crikket_postgres_data:/var/lib/postgresql/data
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U ${CRIKKET_POSTGRES_USER:-crikket} -d ${CRIKKET_POSTGRES_DB:-crikket}"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 10
+#     networks:
+#       - wa-net
+# 
+#   # ─── 2. Crikket DB Migrations (One-shot schema setup job) ─────────────────
+#   crikket-migrate:
+#     image: ghcr.io/redpangilinan/crikket-server:latest
+#     container_name: crikket-migrate
+#     restart: "no"
+#     pull_policy: always
+#     depends_on:
+#       crikket-postgres:
+#         condition: service_healthy
+#     environment:
+#       DATABASE_URL: "postgresql://${CRIKKET_POSTGRES_USER:-crikket}:${CRIKKET_POSTGRES_PASSWORD:-crikket_secret}@crikket-postgres:5432/${CRIKKET_POSTGRES_DB:-crikket}"
+#       NODE_ENV: development
+#       STORAGE_BUCKET: "${CRIKKET_STORAGE_BUCKET:-mock-bucket}"
+#       STORAGE_ACCESS_KEY_ID: "${CRIKKET_STORAGE_ACCESS_KEY_ID:-mock-key}"
+#       STORAGE_SECRET_ACCESS_KEY: "${CRIKKET_STORAGE_SECRET_ACCESS_KEY:-mock-secret}"
+#       STORAGE_ENDPOINT: "${CRIKKET_STORAGE_ENDPOINT:-http://localhost:9000}"
+#     command: ["bun", "run", "--filter", "@crikket/db", "db:migrate"]
+#     networks:
+#       - wa-net
+# 
+#   # ─── 3. Crikket Server API (Backend Service on Host Port 3150) ────────────
+#   crikket-server:
+#     image: ghcr.io/redpangilinan/crikket-server:latest
+#     container_name: crikket-server
+#     restart: unless-stopped
+#     pull_policy: always
+#     depends_on:
+#       crikket-postgres:
+#         condition: service_healthy
+#       crikket-migrate:
+#         condition: service_completed_successfully
+#     environment:
+#       DATABASE_URL: "postgresql://${CRIKKET_POSTGRES_USER:-crikket}:${CRIKKET_POSTGRES_PASSWORD:-crikket_secret}@crikket-postgres:5432/${CRIKKET_POSTGRES_DB:-crikket}"
+#       NODE_ENV: development
+#       PORT: 3000
+#       PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_SERVER_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3150}}
+#       PUBLIC_WEB_URL: ${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}}
+#       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-crikket_super_secret_key_change_me}
+#       BETTER_AUTH_URL: ${CRIKKET_PUBLIC_SERVER_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3150}}
+#       BETTER_AUTH_TRUSTED_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,http://192.168.87.223:3151,${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
+#       CORS_ORIGINS: "http://localhost:3151,http://127.0.0.1:3151,http://192.168.87.223:3151,${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}},${NUXT_PUBLIC_APP_URL:-http://localhost:3000},${CRIKKET_CORS_ORIGINS:-}"
+#       ENABLE_PAYMENTS: "false"
+#       STORAGE_BUCKET: "${CRIKKET_STORAGE_BUCKET:-mock-bucket}"
+#       STORAGE_ACCESS_KEY_ID: "${CRIKKET_STORAGE_ACCESS_KEY_ID:-mock-key}"
+#       STORAGE_SECRET_ACCESS_KEY: "${CRIKKET_STORAGE_SECRET_ACCESS_KEY:-mock-secret}"
+#       STORAGE_ENDPOINT: "${CRIKKET_STORAGE_ENDPOINT:-http://localhost:9000}"
+#     ports:
+#       - "${CRIKKET_SERVER_PORT:-3150}:3000"
+#     expose:
+#       - "3000"
+#     networks:
+#       - wa-net
+#     labels:
+#       traefik.enable: "${TRAEFIK_ENABLE:-false}"
+#       traefik.http.routers.crikket-api.rule: "(Host(`${CRIKKET_DOMAIN:-crikket.localhost}`) && (PathPrefix(`/api`) || PathPrefix(`/better-auth`) || PathPrefix(`/trpc`) || PathPrefix(`/storage`) || PathPrefix(`/oauth`))) || Host(`${CRIKKET_API_DOMAIN:-crikket-api.localhost}`)"
+#       traefik.http.routers.crikket-api.priority: "20"
+#       traefik.http.routers.crikket-api.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
+#       traefik.http.routers.crikket-api.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
+#       traefik.http.services.crikket-api.loadbalancer.server.port: "3000"
+# 
+#   # ─── 4. Crikket Web Dashboard (Frontend UI on Host Port 3151) ─────────────
+#   crikket-web:
+#     image: ghcr.io/redpangilinan/crikket-web:latest
+#     container_name: crikket-web
+#     restart: unless-stopped
+#     pull_policy: always
+#     depends_on:
+#       - crikket-server
+#     environment:
+#       NEXT_PUBLIC_SERVER_URL: ${CRIKKET_PUBLIC_SERVER_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3150}}
+#       NEXT_PUBLIC_APP_URL: ${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}}
+#       NEXT_PUBLIC_SITE_URL: ${CRIKKET_PUBLIC_WEB_URL:-${CRIKKET_PUBLIC_URL:-http://localhost:3151}}
+#       PORT: 3151
+#     ports:
+#       - "${CRIKKET_WEB_PORT:-3151}:3151"
+#     expose:
+#       - "3151"
+#     command:
+#       - "/bin/sh"
+#       - "-c"
+#       - |
+#         bun -e '
+#         Bun.listen({
+#           port: 3150,
+#           hostname: "0.0.0.0",
+#           socket: {
+#             async open(client) {
+#               client.buf = [];
+#               try {
+#                 const remote = await Bun.connect({
+#                   hostname: "crikket-server",
+#                   port: 3000,
+#                   socket: {
+#                     data(s, d) { client.write(d); },
+#                     close() { client.end(); },
+#                     error() { client.end(); }
+#                   }
+#                 });
+#                 client.data = remote;
+#                 for (const chunk of client.buf) {
+#                   remote.write(chunk);
+#                 }
+#                 client.buf = null;
+#               } catch(e) { client.end(); }
+#             },
+#             data(client, d) { if (client.data) client.data.write(d); else if (client.buf) client.buf.push(d); },
+#             close(client) { if (client.data) client.data.end(); },
+#             error(client) { if (client.data) client.data.end(); }
+#           }
+#         });
+#         ' &
+#         exec bun run --cwd apps/web start -- --port 3151 --hostname 0.0.0.0
+#     networks:
+#       - wa-net
+#     labels:
+#       traefik.enable: "${TRAEFIK_ENABLE:-false}"
+#       traefik.http.routers.crikket-web.rule: "Host(`${CRIKKET_DOMAIN:-crikket.localhost}`) || Host(`${CRIKKET_WEB_DOMAIN:-crikket.localhost}`)"
+#       traefik.http.routers.crikket-web.priority: "10"
+#       traefik.http.routers.crikket-web.entrypoints: "${WEBSECURE_ENTRYPOINT:-websecure}"
+#       traefik.http.routers.crikket-web.tls.certresolver: "${CERT_RESOLVER:-myresolver}"
+#       traefik.http.services.crikket-web.loadbalancer.server.port: "3151"
 
 volumes:
   crikket_postgres_data:
