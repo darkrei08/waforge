@@ -59,5 +59,12 @@ export default defineNuxtConfig({
       database: true,
       websocket: true
     }
+  },
+
+  routeRules: {
+    '/api/campaigns/**': { proxy: 'http://wa-forge:3010/wa/campaigns/**' },
+    '/api/whatsapp/**': { proxy: 'http://wa-forge:3010/wa/sessions/**' },
+    '/api/chat/**': { proxy: 'http://wa-forge:3010/wa/chat/**' },
+    '/api/webhook/**': { proxy: 'http://wa-forge:3010/wa/webhook/**' }
   }
 })

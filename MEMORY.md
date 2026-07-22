@@ -22,3 +22,7 @@
 ## [Session State Snapshot] - 2026-07-15 20:04:46
 MEMORY.md
 
+
+## [Session State Snapshot] - 2026-07-22 10:38:02
+Avvio Fase 3: Estrazione WA Forge
+
