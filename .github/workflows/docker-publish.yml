@@ -20,12 +20,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - app: dashboard
+          - path: apps/dashboard
             image: waforge
-          - app: frontend
+          - path: apps/frontend
             image: waforge-frontend
-          - app: backend
-            image: waforge-backend
+          - path: services/core-api
+            image: waforge-core-api
+          - path: services/wa-forge
+            image: waforge-wa-forge
 
     steps:
       - name: Checkout repository
@@ -61,7 +63,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: apps/${{ matrix.app }}/Dockerfile
+          file: ${{ matrix.path }}/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
